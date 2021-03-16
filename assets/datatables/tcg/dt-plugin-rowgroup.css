@@ -1,0 +1,183 @@
+/* table.dataTable tr.dtrg-group td {
+    background-color: #e0e0e0;
+}
+
+table.dataTable tr.dtrg-group.dtrg-level-0 td {
+    font-weight: bold;
+}
+
+table.dataTable tr.dtrg-group.dtrg-level-1 td,
+table.dataTable tr.dtrg-group.dtrg-level-2 td {
+    background-color: #f0f0f0;
+    padding-top: 0.25em;
+    padding-bottom: 0.25em;
+    padding-left: 2em;
+    font-size: 0.9em;
+} */
+
+/* table.dataTable tr.dtrg-group.dtrg-level-2 td {
+    background-color: #f3f3f3;
+} */
+
+table.dataTable tr.dtrg-group.dtrg-expandable td.dtrg-selector:before {
+    top: 12px;
+    left: 10px;
+    height: 14px;
+    width: 14px;
+    display: block; 
+    position: absolute;
+    color: white;
+    border: 2px solid white;
+    border-radius: 14px;
+    box-shadow: 0 0 3px #444;
+    box-sizing: content-box;
+    text-align: center; 
+    text-indent: 0 !important;
+    font-family: "Font Awesome 5 Free";
+    line-height: 14px; 
+    content: "\f0da";
+    /* content: "\f054"; */
+    background-color: #31b131;
+}
+
+table.dataTable tr.dtrg-group.dtrg-expandable td.dtrg-selector.dtrg-expanded:before {
+    font-family: "Font Awesome 5 Free";
+    content: "\f0d7" !important;
+    /* content: "\f078"; */
+    background-color: #d33333 !important;
+}
+
+table.dataTable tr.dtrg-group.dtrg-level-0.dtrg-expandable td {
+    font-weight: bold;
+}
+
+table.dataTable tr.dtrg-group.dtrg-level-0.dtrg-not-expandable td {
+    font-weight: bold;
+}
+
+table.dataTable tr td.dtrg-selector-level-0 {
+    position: relative;
+    padding-left: 40px !important;
+}
+
+table.dataTable tr.dtrg-group.dtrg-level-0.dtrg-expandable td.dtrg-selector {
+    position: relative;
+    padding-left: 30px !important;
+}
+
+table.dataTable tr.dtrg-group.dtrg-level-0.dtrg-not-expandable td.dtrg-selector {
+    position: relative;
+    padding-left: 30px !important;
+}
+
+table.dataTable tr.dtrg-group.dtrg-level-0.dtrg-expandable td.dtrg-selector:before {
+    left: 10px;
+}
+
+table.dataTable tr.dtrg-group.dtrg-level-1.dtrg-expandable td {
+    font-weight: bold;
+}
+
+table.dataTable tr.dtrg-group.dtrg-level-1.dtrg-not-expandable td {
+    font-weight: normal;
+}
+
+table.dataTable tr td.dtrg-selector-level-1 {
+    position: relative;
+    padding-left: 70px !important;
+}
+
+table.dataTable tr.dtrg-group.dtrg-level-1.dtrg-expandable td.dtrg-selector {
+    position: relative;
+    padding-left: 60px !important;
+}
+
+table.dataTable tr.dtrg-group.dtrg-level-1.dtrg-not-expandable td.dtrg-selector {
+    position: relative;
+    padding-left: 60px !important;
+}
+
+table.dataTable tr.dtrg-group.dtrg-level-1.dtrg-expandable td.dtrg-selector:before {
+    left: 40px;
+}
+
+table.dataTable tr.dtrg-group.dtrg-level-2.dtrg-expandable td {
+    font-weight: bold;
+}
+
+table.dataTable tr.dtrg-group.dtrg-level-2.dtrg-not-expandable td {
+    font-weight: normal;
+}
+
+table.dataTable tr td.dtrg-selector-level-2 {
+    position: relative;
+    padding-left: 100px !important;
+}
+
+table.dataTable tr.dtrg-group.dtrg-level-2.dtrg-expandable td.dtrg-selector {
+    position: relative;
+    padding-left: 90px !important;
+}
+
+table.dataTable tr.dtrg-group.dtrg-level-2.dtrg-not-expandable td.dtrg-selector {
+    position: relative;
+    padding-left: 90px !important;
+}
+
+table.dataTable tr.dtrg-group.dtrg-level-2.dtrg-expandable td.dtrg-selector:before {
+    left: 70px;
+}
+
+table.dataTable tr.dtrg-group.dtrg-level-3.dtrg-expandable td {
+    font-weight: bold;
+}
+
+table.dataTable tr.dtrg-group.dtrg-level-3.dtrg-not-expandable td {
+    font-weight: normal;
+}
+
+table.dataTable tr td.dtrg-selector-level-3 {
+    position: relative;
+    padding-left: 130px !important;
+}
+
+table.dataTable tr.dtrg-group.dtrg-level-3.dtrg-expandable td.dtrg-selector {
+    position: relative;
+    padding-left: 120px !important;
+}
+
+table.dataTable tr.dtrg-group.dtrg-level-3.dtrg-not-expandable td.dtrg-selector {
+    position: relative;
+    padding-left: 120px !important;
+}
+
+table.dataTable tr.dtrg-group.dtrg-level-3.dtrg-expandable td.dtrg-selector:before {
+    left: 100px;
+}
+
+table.dataTable tr.dtrg-group.dtrg-level-4.dtrg-expandable td {
+    font-weight: bold;
+}
+
+table.dataTable tr.dtrg-group.dtrg-level-4.dtrg-not-expandable td {
+    font-weight: normal;
+}
+
+table.dataTable tr td.dtrg-selector-level-3 {
+    position: relative;
+    padding-left: 160px !important;
+}
+
+table.dataTable tr.dtrg-group.dtrg-level-4.dtrg-expandable td.dtrg-selector {
+    position: relative;
+    padding-left: 150px !important;
+}
+
+table.dataTable tr.dtrg-group.dtrg-level-4.dtrg-not-expandable td.dtrg-selector {
+    position: relative;
+    padding-left: 150px !important;
+}
+
+table.dataTable tr.dtrg-group.dtrg-level-4.dtrg-expandable td.dtrg-selector:before {
+    left: 130px;
+}

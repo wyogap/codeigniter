@@ -1,0 +1,45 @@
+<div class="row ">
+    <div class="col-xl-12">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="page-title"> <i class="mdi {$page_icon} title_icon"></i>
+                    {$page_title}
+                </h4>
+            </div> <!-- end card body-->
+        </div> <!-- end card -->
+    </div><!-- end col-->
+</div>
+
+{if !$crud}
+
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card">
+            <div class="card-body">
+            <div> No CRUD definition </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{else}
+
+    {include file="crud/_css.tpl"}
+
+    {if $crud.filter}
+    {include file='crud/crud-filter.tpl'}
+    {/if}
+
+    <div class="row">
+        <div class="col-xl-12">
+            <div class="card">
+                <div class="card-body">
+                {include file='crud/crud-table.tpl'}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {include file="crud/_js-crud-table.tpl"}
+
+{/if}

@@ -1,0 +1,212 @@
+.tcg-select2-container {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+/* .tcg-select2-container {
+  width: 100%;
+  display: flex;
+} */
+
+.tcg-select2-select {
+  flex-grow: 1;
+}
+
+.tcg-select2-info-inline > .tcg-select2-info {
+  margin-left: 8px;
+  width: 50% !important;
+}
+
+.tcg-select2-info-newline > .tcg-select2-info {
+  margin-left: 0px;
+  margin-top: 12px;
+  width: 100% !important;
+}
+
+  .DTE .form-group .select2-container .select2-selection--single .select2-selection__rendered {
+    padding-left: 4px !important;
+    padding-right: 4px !important;  
+  }
+
+  .DTE_Field_InputControl .select2-selection {
+    min-height: calc(2.25rem + 2px) !important;
+    padding: 0px 10px !important;
+    overflow: hidden;
+  }
+
+  .DTE_Field_InputControl .select2-selection__arrow {
+    top: 0px !important;
+  }
+  
+  .DTE_Field_InputControl .select2-selection__rendered {
+    padding-left: 6px !important;
+    padding-right: 20px !important;  
+    text-overflow: ellipsis; 
+    /* white-space: normal; 
+    word-break: break-all; */
+  }
+
+  .DTE_Field_InputControl .select2-container--open {
+    z-index: 100002 !important;
+  }
+
+  .DTE_Field_InputControl .select2-selection.select2-selection--multiple .select2-selection__choice {
+    color: black !important;
+  }
+ 
+  .DTE_Field_InputControl .select2-selection.select2-selection--multiple .select2-search__field {
+    display: none !important;
+    width: 100% !important;
+  }
+  
+  /* .DTE_Field_InputControl select {padding:10px;} */
+
+  .DTE li.select2-results__option {
+      padding: 6px 7px !important;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis; 
+  }
+
+  .select-option-level-1 {
+    padding-left: 0px !important;
+  }
+
+  .select-option-level-2 {
+    padding-left: 12px !important;
+  }
+
+  .select-option-level-3 {
+    padding-left: 24px !important;
+  }
+
+  .select-option-level-4 {
+    padding-left: 36px !important;
+  }
+
+ .select-option-level-5 {
+    padding-left: 48px !important;
+  }
+
+  .select-option-group {
+    font-weight: bold !important;
+    color: black;
+  }
+
+  .DTE .select2-container.select2-container--open {
+    z-index: 183648 !important;
+  }
+
+  /* Dirty hack for long option text */
+  .DTE .select2 {
+    flex-grow: 1;
+    max-width: 100%;
+  }
+
+  .DTE .select2-container--default.select2-container--focus .select2-selection--single {
+    border: 1px solid #80bdff !important;
+    outline-offset: 0px !important;
+    outline: none !important;
+    background-color: #ffffee;
+  }
+
+  .DTE .select2-container--default.select2-container--open .select2-selection--single {
+    border: 1px solid #80bdff !important;
+    outline-offset: 0px !important;
+    outline: none !important;
+    background-color: #ffffee;
+  }
+
+  .DTE .select2-container--default.select2-container--focus .select2-selection--multiple {
+    border: 1px solid #80bdff !important;
+    outline-offset: 0px !important;
+    outline: none !important;
+    background-color: #ffffee;
+  }
+
+  .DTE .select2-container--default.select2-container--open .select2-selection--multiple {
+    border: 1px solid #80bdff !important;
+    outline-offset: 0px !important;
+    outline: none !important;
+    background-color: #ffffee;
+  }
+
+  /* .DTE_Field_InputControl .select2-dropdown {
+    background-color: #ffffee;
+  } */
+
+  .DTE .select2-container--default.select2-container--open .select2-dropdown {
+    /* border: 1px solid #80bdff !important;
+    outline-offset: 0px !important;
+    outline: none !important; */
+    box-shadow: -1px 1px 1px #888888;
+    background-color: #ffffee;
+  }
+
+    
+  .DTE.DTE_Select2 {
+    position: relative;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 0px;
+    z-index: 183648;      
+    background-color: rgba(0,0,0,0.5);
+  } 
+
+  .DTE.DTE_Select2 .select2-dropdown {
+    position: absolute;
+    top: unset;
+    left: unset;
+    background: #ffffee;
+    height: unset;
+    width: unset;
+    z-index: 3000 !important;
+    padding: unset;
+    border-radius: unset;
+  }
+
+  @media screen and (min-width: 768px) {
+    div.DTE_Body div.DTE_Body_Content div.DTE_Field {
+      padding: 5px 10% !important;
+    }
+  }
+
+  @media screen and (max-width: 767px) {
+    .tcg-select2-info-inline > .tcg-select2-info {
+      margin-left: 0px;
+      margin-top: 12px;
+      width: 100% !important;
+    }
+    
+    .DTE.DTE_Select2 {
+      position: fixed;
+      height: 100%;
+      font-size: 18px;
+      -webkit-transition: all .4s;
+      transition: all .4s;
+    }
+
+    .DTE.DTE_Select2 .select2-dropdown {
+      position: fixed !important;
+      top: 10% !important;
+      left: 5% !important;
+      background: white !important;
+      height: 80%;
+      width: 90%;
+      z-index: 3000 !important;
+      padding: 16px 8px;
+      border-radius: 4px;
+    }
+
+    .DTE.DTE_Select2 .select2-results {   
+        height: 90% !important;
+    }
+  
+    .DTE.DTE_Select2 .select2-results__options {
+        max-height: 100% !important;
+        height: 100% !important;
+        overflow-y: scroll !important;
+    }    
+  }

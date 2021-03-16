@@ -1,0 +1,18 @@
+div.DTE_Field_Type_tcg_geolocation .DTE_Label {
+    width: 100% !important;
+}
+
+div.DTE_Field_Type_tcg_geolocation div.DTE_Field_Input {
+    float: none !important;
+    clear: both !important;
+    width: 100% !important;
+}
+
+.tcg-geo-location .info {
+    font-size: 11px;
+    line-height: 1em;
+}
+
+.tcg-geo-location .map-button {
+    font-size: 2em;
+}

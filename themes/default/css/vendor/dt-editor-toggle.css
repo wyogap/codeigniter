@@ -1,0 +1,8 @@
+div.DTE_Field_Type_tcg_toggle div.DTE_Field_Input>div label {
+    margin-left: 0.75em;
+    vertical-align: middle;
+}
+
+div.DTE_Field_Type_tcg_toggle .DTE_Label {
+    display: none;
+}

@@ -1,0 +1,23 @@
+
+.tcg-unitprice-container {
+    display: flex;
+
+}
+
+.tcg-unitprice-quantity {
+    width: 80px !important;
+    margin-right: 0px;
+}
+
+.tcg-unitprice-unitprice {
+    width: 100px !important;
+    margin-right: 0px;
+}
+
+.tcg-unitprice-text {
+    margin-top: 8px;
+}
+
+.tcg-unitprice-total {
+    flex-grow: 1;
+}

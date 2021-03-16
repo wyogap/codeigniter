@@ -1,0 +1,93 @@
+div.DTE_Field_Type_tcg_table .DTE_Label {
+    width: 100% !important;
+}
+
+div.DTE_Field_Type_tcg_table div.DTE_Field_Input {
+    float: none !important;
+    clear: both !important;
+    width: 100% !important;
+}
+
+.dt-editor-table .dt-button-container {
+    text-align: left!important;
+}
+
+.dt-editor-table .dt-button-group {
+    float: left;
+}
+
+.dt-editor-table .dt-button-group:not(:last-child), .dt-editor-table .dt-button:not(:last-child) {
+    margin-right: 8px;
+}
+
+.dt-editor-table .dt-button-group:last-child, .dt-editor-table .dt-button:last-child {
+    margin-right: 0px;
+}
+
+.dt-editor-table .dt-filter-container {
+    text-align: right!important;
+}
+
+.dt-editor-table .dt-filter {
+    float: right;
+    width: fit-content !important;
+    display: inline-flex !important;
+}
+
+.dt-editor-table .dt-filter > .dt-filter-input {
+    max-width: 175px;
+}
+
+.dt-editor-table .dt-col-action {
+    max-width: 20px;
+    padding: 8px 10px;
+}
+
+/* .dt-editor-table table.dataTable thead th, .dt-editor-table table.dataTable thead td {
+    border-top: 1px solid #111;
+    padding: 8px 10px;
+} */
+
+/* max-width to 100% viewport */
+.dt-editor-table {
+    max-width: 100vw;
+}
+
+
+@media screen and (max-width: 640px) {
+
+    div.DTE_Field_Type_tcg_table .DTE_Label {
+        width: 100% !important;
+    }
+    
+    div.DTE_Field_Type_tcg_table div.DTE_Field_Input {
+        width: 100% !important;
+    }
+
+    .dt-editor-table > .dt-button-container {
+        text-align: center!important;
+    }
+
+    .dt-editor-table > .dt-button-container > .dt-button-group {
+        float: none !important; 
+        display: inline-flex;
+    }
+
+    .dt-editor-table .dt-button-group:not(:last-child), .dt-editor-table .dt-button:not(:last-child) {
+        margin-right: 4px;
+    }
+
+    .dt-editor-table > .dt-filter-container {
+        margin-top: 4px;
+        text-align: center!important;
+    }
+
+    .dt-editor-table > .dt-filter-container > .dt-filter {
+        float: none !important; 
+        /* width: fit-content !important; */
+    }
+
+    /* .dt-buttons {
+        display: inline-flex;
+    } */
+}    

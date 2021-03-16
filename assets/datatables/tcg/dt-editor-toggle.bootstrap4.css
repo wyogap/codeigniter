@@ -1,0 +1,12 @@
+div.DTE_Field_Type_tcg_toggle input[type=checkbox] {
+    margin-right: 0.75em;
+    vertical-align: middle;
+}
+
+/* div.DTE_Field_Type_tcg_toggle label.col-form-label {
+    display: none;
+} */
+
+div.DTE_Field_Type_tcg_toggle {
+    margin-bottom: 0px !important;
+}
