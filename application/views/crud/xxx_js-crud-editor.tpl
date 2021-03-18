@@ -218,6 +218,10 @@
             editor_{$crud.table_id}.bubble( $('span.dtr-data', this) );
         });
 
+        editor_{$crud.table_id}.on('open', function () {
+            $('div.DTE_Footer').after( $('div.DTE_Body') );
+        });
+
     });
 
 </script>

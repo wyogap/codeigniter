@@ -14,7 +14,13 @@ class Mpermission extends CI_Model
         $this->initialized = false;
         
         $this->table_name = $name;
-        $this->permissions = array();
+        $this->permissions = array(
+            'no_access'     => 0,
+            'allow_view'    => 0,
+            'allow_add'     => 0,
+            'allow_edit'    => 0,
+            'allow_delete'  => 0
+        );
 
         //table metas
         $this->db->select('*');

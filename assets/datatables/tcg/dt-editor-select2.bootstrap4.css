@@ -108,41 +108,40 @@
     border: 1px solid #80bdff !important;
     outline-offset: 0px !important;
     outline: none !important;
-    background-color: #ffffee;
+    /* background-color: #ffffee; */
   }
 
   .DTE .select2-container--default.select2-container--open .select2-selection--single {
     border: 1px solid #80bdff !important;
     outline-offset: 0px !important;
     outline: none !important;
-    background-color: #ffffee;
+    /* background-color: #ffffee; */
   }
 
   .DTE .select2-container--default.select2-container--focus .select2-selection--multiple {
     border: 1px solid #80bdff !important;
     outline-offset: 0px !important;
     outline: none !important;
-    background-color: #ffffee;
+    /* background-color: #ffffee; */
   }
 
   .DTE .select2-container--default.select2-container--open .select2-selection--multiple {
     border: 1px solid #80bdff !important;
     outline-offset: 0px !important;
     outline: none !important;
-    background-color: #ffffee;
+    /* background-color: #ffffee; */
   }
 
   /* .DTE_Field_InputControl .select2-dropdown {
     background-color: #ffffee;
   } */
 
+  /*
   .DTE .select2-container--default.select2-container--open .select2-dropdown {
-    /* border: 1px solid #80bdff !important;
-    outline-offset: 0px !important;
-    outline: none !important; */
     box-shadow: -1px 1px 1px #888888;
     background-color: #ffffee;
   }
+	*/
 
     
   .DTE.DTE_Select2 {
@@ -159,7 +158,7 @@
     position: absolute;
     top: unset;
     left: unset;
-    background: #ffffee;
+    /* background: #ffffee; */
     height: unset;
     width: unset;
     z-index: 3000 !important;

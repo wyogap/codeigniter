@@ -1,12 +1,65 @@
-div.DTE_Field_Type_tcg_toggle input[type=checkbox] {
-    margin-right: 0.75em;
-    vertical-align: middle;
+div.DTE_Field_Type_tcg_toggle div.DTE_Field_InputControl .switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+    margin: 0;
 }
 
-/* div.DTE_Field_Type_tcg_toggle label.col-form-label {
+div.DTE_Field_Type_tcg_toggle div.DTE_Field_InputControl .switch input {
     display: none;
-} */
+}
 
-div.DTE_Field_Type_tcg_toggle {
-    margin-bottom: 0px !important;
+div.DTE_Field_Type_tcg_toggle div.DTE_Field_InputControl .switch .slider.round {
+    border-radius: 34px;
+}
+
+div.DTE_Field_Type_tcg_toggle div.DTE_Field_InputControl .switch .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+div.DTE_Field_Type_tcg_toggle div.DTE_Field_InputControl .switch .slider.round:before {
+    border-radius: 50%;
+}
+
+div.DTE_Field_Type_tcg_toggle div.DTE_Field_InputControl .switch .slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: #fff;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+div.DTE_Field_Type_tcg_toggle div.DTE_Field_InputControl .switch input:checked+.slider {
+    background-color: var(--blue);
+}
+
+div.DTE_Field_Type_tcg_toggle div.DTE_Field_InputControl .switch input:checked+.slider:before {
+    -webkit-transform: translateX(26px);
+    -ms-transform: translateX(26px);
+    transform: translateX(26px);
+}
+
+div.DTE_Field_Type_tcg_toggle div.DTE_Field_InputControl .switch.readonly .slider {
+    cursor: default;
+}
+
+div.DTE_Field_Type_tcg_toggle div.DTE_Field_InputControl .switch.readonly input:checked+.slider {
+    background-color: #ccc;
+}
+
+div.DTE_Field_Type_tcg_toggle div.DTE_Field_InputControl .switch.readonly input:checked+.slider.round:before {
+    background-color: var(--blue);
 }

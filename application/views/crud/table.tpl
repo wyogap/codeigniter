@@ -34,12 +34,20 @@
         <div class="col-xl-12">
             <div class="card">
                 <div class="card-body">
-                {include file='crud/crud-table.tpl'}
+                {include file='crud/crud-table.tpl' tbl=$crud}
+                {if !empty($subtables) && count($subtables)}
+                <div class=" my-3"></div>
+                {include file='crud/crud-subtables.tpl'}
+                {/if}
                 </div>
             </div>
         </div>
     </div>
 
-    {include file="crud/_js-crud-table.tpl"}
+    {include file="crud/_js-crud-table.tpl" tbl=$crud}
+
+    {if !empty($subtables) && count($subtables)}
+    {include file="crud/_js-crud-subtables.tpl" tbl=$crud}
+    {/if}
 
 {/if}

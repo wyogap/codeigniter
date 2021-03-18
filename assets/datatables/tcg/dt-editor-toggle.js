@@ -89,7 +89,7 @@
         },
       
         set: function ( conf, val ) {
-            let checked = (val) ? true : false;
+            let checked = (val == 1) ? true : false;
 
             let _chkbox = conf._input.find('input');
             if (_chkbox[0].checked != checked) {

@@ -52,12 +52,12 @@
 }
 
 .DTE_Body.modal-body .row.form-group:last-child {
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.5rem;
 }
 
-.DTE_Footer.modal-footer {
+/* .DTE_Footer.modal-footer {
     padding-bottom: 0px;
-}
+} */
 
 /* .DTE.modal-header .row.form-group:last-child {
     margin-bottom: 0.5rem;

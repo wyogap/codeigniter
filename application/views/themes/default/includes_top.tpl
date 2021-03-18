@@ -37,7 +37,12 @@
 <link href="{$base_url}assets/fontawesome/css/all.min.css" rel="stylesheet" type="text/css" />
 <!-- <link href="{$base_url}assets/fontawesome-iconpicker/css/fontawesome-iconpicker.min.css" rel="stylesheet" type="text/css" /> -->
 <link href="{$base_url}assets/dripicons/icons.min.css" rel="stylesheet" type="text/css" />
-<link href="{$base_url}assets/materialdesignicons/css/icons.min.css" rel="stylesheet" type="text/css" />
+
+<!-- many of the 3rd-party library (including datatables) require older version of materialdesign icon -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/MaterialDesign-Webfont/3.4.93/css/materialdesignicons.min.css" integrity="sha512-9hrcuHFRJBsyfJiotGL1U+zraOkuI5fzlo0X0C8s7gkkgV1wLkmiP1JbUjVAws4Wo8FcSK82Goj64vT8ERocgg==" crossorigin="anonymous" />
+
+<!-- materialdesignicon v5 -->
+<!-- <link href="{$base_url}assets/materialdesignicons/css/icons.min.css" rel="stylesheet" type="text/css" /> -->
 
 <!-- utilities -->
 <link href="{$base_url}assets/utilities.css" rel="stylesheet" type="text/css" />
@@ -54,6 +59,9 @@
 <link href="{$base_url}{$theme_prefix}/css/main.css" rel="stylesheet" type="text/css" />
 
 <script src="{$base_url}{$theme_prefix}/js/onDomChange.js"></script>
+
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;display=swap" rel="stylesheet">
 
 <style>
 
@@ -85,6 +93,19 @@
 .toast-warning {
     background-color: var(--warning) !important;
 }
+
+/* hack */
+.select2-container--default .select2-results__option[aria-selected=true] {
+    background-color: #ddd;
+    color: #313a46;
+}
+
+.nav-tabs .nav-item {
+    min-width: 100px;
+    text-align: center;
+    margin-bottom: -1px;
+}
+
 
 @media (min-width: 576px) {
     .modal-dialog {
@@ -126,6 +147,36 @@
     .container-fluid.header {
         padding-right: 8px;
         padding-left: 8px;
+    }
+
+    .nav-tabs .nav-item {
+        width: 100%;
+        text-align: center;
+        margin-bottom: -1px;
+    }
+
+    .nav-tabs .nav-item .nav-link {
+        border-color: #dee2e6;
+        border-radius: .25rem;
+    }
+
+    .btn-icon-circle {
+        width: 28px !important;
+        height: 28px !important;
+        margin: 0px 2px 2px !important;
+    }
+
+    .btn-icon-circle .fa {
+        font-size: .75em !important;
+    }
+
+    .btn-dropdown {
+        width: 28px !important;
+        height: 28px !important;
+    }
+
+    .btn-dropdown .fa {
+        font-size: .75em !important;
     }
 }
 

@@ -7,6 +7,15 @@
     {include "$theme_prefix/metas.tpl"}
     <!-- all the css files -->
     {include "$theme_prefix/includes_top.tpl"}
+
+    <!-- page header -->
+    {if !empty($header_view)}
+    {include "$theme_prefix/$header_view"}
+    {/if}
+
+    {if !empty($page_header)}
+    {$page_header}
+    {/if}
 </head>
 <body data-layout="detached">
     <!-- HEADER -->
@@ -15,7 +24,7 @@
         <div class="wrapper">
             <!-- BEGIN CONTENT -->
             <!-- SIDEBAR -->
-            {include "$theme_prefix/$page_role/navigation.tpl"}
+            {include "$theme_prefix/navigation.tpl"}
             <!-- PAGE CONTAINER-->
             <div class="content-page">
                 <div class="content">
@@ -31,5 +40,14 @@
     {include "$theme_prefix/includes_bottom.tpl"}
     {include "$theme_prefix/modal.tpl"}
     {include "$theme_prefix/common_scripts.tpl"}
+
+    <!-- page footer -->
+    {if !empty($footer_view)}
+    {include "$theme_prefix/$footer_view"}
+    {/if}
+
+    {if !empty($page_footer)}
+    {$page_footer}
+    {/if}
 </body>
 </html>

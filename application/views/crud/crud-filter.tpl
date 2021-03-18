@@ -1,6 +1,6 @@
 {assign var=num_visible_filter value=0 }
-{foreach $crud.filters as $f} 
-    {if $f.type != "js"}
+{foreach $crud.filter_columns as $f} 
+    {if $f.filter_type != "js"}
         {assign var=num_visible_filter value=$num_visible_filter+1 }
     {/if}
 {/foreach}
@@ -11,11 +11,12 @@
         <div class="card widget-inline">
             <div class="card-body">
                 <div class="row"  style="display: flex;">
-                {foreach $crud.filters as $f} 
+                {foreach $crud.filter_columns as $f} 
                     {if $f.filter_type != 'js'}
-                    <div class="form-group {$f.filter_css}">
-                        {if $f.filter_type == 'select' || $f.filter_type == 'select2'}
-                            <select id="f_{$f.edit_field}" name="{$f.edit_field}" class="form-control" placeholder="{__($f.label)}">
+                    <div class="form-group col-md-4 mb-0 {$f.filter_css}">
+                        <label>{__($f.filter_label)}</label>
+                        {if $f.filter_type == 'select' || $f.filter_type == 'select2' || $f.filter_type == 'distinct'}
+                            <select id="f_{$f.name}" name="{$f.name}" class="form-control" placeholder="{__($f.filter_label)}">
                                 <option value=''>-- {__($f.filter_label)} --</option>
                                 {if isset($f.filter_options)}
                                     {foreach from=$f.filter_options key=k item=v}
@@ -28,7 +29,7 @@
                                 {/if}
                             </select>
                         {else}
-                            <input class="form-control" type="text" id="f_{$f.edit_field}" name="{$f.edit_field}" placeholder="{__($f.label)}"/>
+                            <input class="form-control" type="text" id="f_{$f.name}" name="{$f.name}" placeholder="{__($f.filter_label)}"/>
                         {/if}
                     </div>
                     {/if}
@@ -50,12 +51,12 @@
 
 <script type="text/javascript">
 
-    {foreach $crud.filters as $f} 
+    {foreach $crud.filter_columns as $f} 
         {if $f.filter_type != 'js'}
-            {if isset($userdata['f_$f.edit_field'])}
-            var v_{$f.edit_field} = "{$userdata['f_$f.edit_field']}";
+            {if isset($userdata['f_$f.name'])}
+            var v_{$f.name} = "{$userdata['f_$f.name']}";
             {else}
-            var v_{$f.edit_field} = "";
+            var v_{$f.name} = "";
             {/if}
         {/if}
     {/foreach}
@@ -64,7 +65,7 @@
         let _options = [];
         let _attr = {};
 
-        {foreach $crud.filters as $f} 
+        {foreach $crud.filter_columns as $f} 
             {if ($f.filter_type == 'select' || $f.filter_type == 'select2') && !isset($f.filter_options) && isset($f.filter_attr)}
                 _attr = {
                     multiple: {if empty($f.filter_attr.multiple)}false{else}true{/if},
@@ -91,35 +92,35 @@
                             _options = response.data;
                         }
 
-                        {if $f.type == 'select2'}
-                        select2_build($('#f_{$f.edit_field}'), "-- {__($f.label)} --", "", v_{$f.edit_field}, _options, _attr, null);
+                        {if $f.filter_type == 'select2'}
+                        select2_build($('#f_{$f.name}'), "-- {__($f.name)} --", "", v_{$f.name}, _options, _attr, null);
                         {else}
-                        select_build($('#f_{$f.edit_field}'), "-- {__($f.label)} --", "", v_{$f.edit_field}, _options, _attr);
+                        select_build($('#f_{$f.name}'), "-- {__($f.name)} --", "", v_{$f.name}, _options, _attr);
                         {/if}
                     },
                     error: function(jqXhr, textStatus, errorMessage) {
                         {if $f.type == 'select2'}
-                        select2_build($('#f_{$f.edit_field}'), "-- {__($f.label)} --", "", v_{$f.edit_field}, _options, _attr, null);
+                        select2_build($('#f_{$f.name}'), "-- {__($f.name)} --", "", v_{$f.name}, _options, _attr, null);
                         {else}
-                        select_build($('#f_{$f.edit_field}'), "-- {__($f.label)} --", "", v_{$f.edit_field}, _options, _attr);
+                        select_build($('#f_{$f.name}'), "-- {__($f.name)} --", "", v_{$f.name}, _options, _attr);
                         {/if}
                     }
                 });
             {/if}
         {/foreach}
 
-        {foreach $crud.filters as $f} 
+        {foreach $crud.filter_columns as $f} 
             {if $f.filter_type != 'js'}
-                $("#f_{$f.edit_field}").val(v_{$f.edit_field});
-                $('#f_{$f.edit_field}').on('change', function() {
-                    v_{$f.edit_field} = $("#f_{$f.edit_field}").val();
+                $("#f_{$f.name}").val(v_{$f.name});
+                $('#f_{$f.name}').on('change', function() {
+                    v_{$f.name} = $("#f_{$f.name}").val();
                 });        
             {/if}
         {/foreach}
 
         $('#btn_crud_filter').click(function(e) {
             e.stopPropagation();
-            dt.ajax.reload();
+            dt_{$crud.table_id}.ajax.reload();
         });
     });
 

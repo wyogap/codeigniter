@@ -1,6 +1,6 @@
 
-<div class="crud-form" id="{$crud.table_id}_form" data-table-id="{$crud.table_id}" {if $detail}data-id="{$detail[$crud.key_column]}"{/if}>
-    {foreach $crud.editor_columns as $col}
+<div class="crud-form" id="{$tbl.table_id}_form" data-table-id="{$tbl.table_id}" {if $detail}data-id="{$detail[$tbl.key_column]}"{/if}>
+    {foreach $tbl.editor_columns as $col}
     <div class="form-group row {if $col.edit_css}{$col.edit_css}{/if}">
         {if $col.edit_type == 'readonly'}
             <label class="col-md-3 col-form-label" for="{$col.edit_field}">{__($col.edit_label)} {if $col.edit_compulsory}<span class="required">*</span>{/if} </label>
@@ -70,13 +70,27 @@
                     {/if}
                 </select>
             </div>
-        {else if $col.edit_type == 'select2' || $col.edit_type == 'tcg_select'}
+        {else if $col.edit_type == 'select2' || $col.edit_type == 'tcg_select2'}
             <label class="col-md-3 col-form-label" for="{$col.edit_field}">{__($col.edit_label)} {if $col.edit_compulsory}<span class="required">*</span>{/if} </label>
             <div class="col-md-9">
                 <select id="{$col.edit_field}" name="{$col.edit_field}" class="form-control"
                     placeholder="{__($col.edit_label)}" {if $col.edit_compulsory}required="" data-validation="required"{/if}>
                     <option value=''>-- {__($col.edit_label)} --</option>
+                    {if isset($col.edit_options)}
+                    {foreach from=$col.edit_options key=k item=v}
+                    {if is_array($v)}
+                    <option value="{$v.value}" {if $detail}{if $detail[$col.edit_field] == $v.value}selected{/if}{/if}>{$v.label}</option>
+                    {else}
+                    <option value="{$k}" {if $detail}{if $detail[$col.edit_field] == $k}selected{/if}{/if}>{$v}</option>
+                    {/if}
+                    {/foreach}
+                    {/if}
                 </select>
+            </div>
+        {else}
+            <label class="col-md-3 col-form-label" for="{$col.edit_field}">{__($col.edit_label)} {if $col.edit_compulsory}<span class="required">*</span>{/if} </label>
+            <div class="col-md-9">
+            {$col.edit_type}
             </div>
         {/if}
     </div>

@@ -18,8 +18,8 @@ class Crud extends MY_Crud_Controller {
 		}
     }
 
-    function get_ajax_url($table) {
-        return base_url('/crud/' .$table. '/json');
+    function get_ajax_url($page) {
+        return base_url('/crud/' .$page);
     }
 
 }

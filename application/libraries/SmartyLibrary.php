@@ -24,6 +24,13 @@ class SmartyLibrary extends Smarty {
         $this->assign('app_logo', config_item('app_logo'));
         $this->assign('app_captcha_key', config_item('app_captcha_key'));
 
+        if (ENVIRONMENT === 'development') {
+			$this->assign('version', 'CodeIgniter Version <strong>' . CI_VERSION . '</strong>');
+		}
+        else {
+            $this->assign('version', '');
+        }
+
         //init reference
         $ci =& get_instance();
     }

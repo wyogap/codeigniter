@@ -265,4 +265,21 @@
 		}
 	}
 
+	if ( ! function_exists('array_insert'))
+	{
+		function array_insert($array, $index, $val)
+		{
+			$size = count($array); //because I am going to use this more than one time
+			if (!is_int($index) || $index < 0 || $index > $size)
+			{
+				return -1;
+			}
+			else
+			{
+				$temp   = array_slice($array, 0, $index);
+				$temp[] = $val;
+				return array_merge($temp, array_slice($array, $index, $size));
+			}
+		}
+	}
 ?>

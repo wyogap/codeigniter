@@ -4,7 +4,7 @@
         let _options = [];
         let _attr = {};
 
-        {foreach $crud.editor_columns as $col} 
+        {foreach $tbl.editor_columns as $col} 
             {if ($col.edit_type == 'select' || $col.edit_type == 'select2') && !isset($col.edit_options) && isset($col.edit_attr)}
             //default attr
             _attr = {
@@ -50,8 +50,8 @@
             {/if} 
         {/foreach}
 
-        $(".crud-form-submit[data-table-id='{$crud.table_id}']").on("click", function(e) {
-            let form = $(".crud-form[data-table-id='{$crud.table_id}']");
+        $(".crud-form-submit[data-table-id='{$tbl.table_id}']").on("click", function(e) {
+            let form = $(".crud-form[data-table-id='{$tbl.table_id}']");
             let id = form.data('id');
             if (typeof id === "undefined" || id === null) {
                 id = 0;
@@ -61,7 +61,7 @@
             let data = {};
 
             let item = {};
-            {foreach $crud.editor_columns as $col}
+            {foreach $tbl.editor_columns as $col}
             {if $col.edit_type == 'readonly'}
                 //ignore
             {else if $col.edit_type == 'upload'}
@@ -85,7 +85,7 @@
             form_data['data'] = data;
 
             $.ajax({
-                url: "{$crud.ajax}",
+                url: "{$tbl.ajax}",
                 type: 'POST',
                 dataType: 'json',
                 data: form_data,
@@ -104,7 +104,7 @@
                         else if (typeof response.data !== "undefined" && response.data.length > 0) {
                             let item = response.data[0];
                             if (typeof item !== "undefined" && item != null) {
-                                let id = item["{$crud.key_column}"];
+                                let id = item["{$tbl.key_column}"];
                                 form.data('id', id);
                             }
 
@@ -139,7 +139,7 @@
 
         });
 
-        // $(".crud-form[data-table-id='{$crud.table_id}']").on("crud.updated", function(e, json, form_data) {
+        // $(".crud-form[data-table-id='{$tbl.table_id}']").on("crud.updated", function(e, json, form_data) {
         //     alert(JSON.stringify(json));
         // }) ;
 

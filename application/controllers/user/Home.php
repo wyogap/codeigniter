@@ -40,6 +40,10 @@ class Home extends CI_Controller {
 
 		$page_data['page_role']           	 = 'user';
 
+		$this->load->model(array('crud/Mnavigation'));
+		$navigation = $this->Mnavigation->get_navigation($this->session->userdata('role_id'));
+		$page_data['navigation']	 = $navigation;
+
 		$this->smarty->render_theme('user/home.tpl', $page_data);
 	}
 

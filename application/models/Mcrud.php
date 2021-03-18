@@ -22,6 +22,40 @@ class Mcrud extends CI_Model
         }
     }
 
+    function distinct_lookup($column_name, $filter = null) {
+        if (empty(static::$COL_LABEL) || empty(static::$COL_VALUE)) return null;
+
+        if ($filter == null || !is_array($filter)) {
+            $filter = array();
+        }
+
+        //clean up non existing filter columns
+        if (isset(static::$FILTERS) && is_array(static::$FILTERS) && count(static::$FILTERS) > 0 && count($filter)) {
+            foreach($filter as $id => $value) {
+                if (false === array_search($id, static::$FILTERS)) {
+                    //invalid filter columns
+                    unset($filter[$id]);
+                }
+            }
+        }
+
+        if (static::$SOFT_DELETE)   $filter['is_deleted'] = 0;
+
+        //use view if specified
+        $table_name = static::$VIEW_TABLE_NAME != null ? static::$VIEW_TABLE_NAME : static::$TABLE_NAME;
+
+        $this->db->distinct();
+        $this->db->select($column_name .' as value ');
+        $arr = $this->db->get_where($table_name, $filter)->result_array();
+        if ($arr == null)       return $arr;
+
+        foreach($arr as $key => $row) {
+            $arr[$key]['label'] = $row['value'];
+        }
+
+        return $arr;
+    }
+    
     function lookup($filter = null) {
         if (empty(static::$COL_LABEL) || empty(static::$COL_VALUE)) return null;
 
