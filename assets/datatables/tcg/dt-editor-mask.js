@@ -50,6 +50,10 @@
               conf._masked_input.attr("type",conf.attr.type).mask(conf.attr.mask, conf.attr);
             }
 
+            if (conf.attr.readonly == true) {
+              conf._masked_input.attr('readonly', true);
+            }
+    
             return conf._input;
         },
       

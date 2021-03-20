@@ -53,8 +53,8 @@
 				}
 
 				let html = $(
-					'<div class="col-md-4 mb-2 ' + conf.attr.className + '">'
-					+ '<select id="'+conf._safeId+'-select-'+i+'" class="tcg-cascade-select" data-level="'+i+'" style="width: 100%;">'
+					'<div class="col-md-4 col-form-control ' + conf.attr.className + '">'
+					+ '<select id="'+conf._safeId+'-select-'+i+'" class="tcg-cascade-select form-control" data-level="'+i+'" style="width: 100%;">'
 					+   '<option value="">-- '+levelName+' --</option>'
 					+ '</select>'
 					+ '</div>');
@@ -241,7 +241,7 @@
 		editorId: "",
 
 		//whether to convert to select2
-		select2: false,
+		select2: true,
 
 		//if using select2, minimum entries when the search will show
 		minimumResultsForSearch: 10,

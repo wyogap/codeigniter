@@ -16,3 +16,11 @@ div.DTE_Field_Type_tcg_geolocation div.DTE_Field_Input {
 .tcg-geo-location .map-button {
     font-size: 2em;
 }
+
+.tcg-geo-location .geocoder-control {
+    height: 36px;
+	min-width: 27px;
+	box-shadow: 0 1px 5px rgb(0 0 0 / 40%);
+    background: #fff;
+    border-radius: 4px;
+}

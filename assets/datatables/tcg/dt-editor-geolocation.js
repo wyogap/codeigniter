@@ -36,8 +36,8 @@
             conf._input.append(html);
 
             html = '<div class="row">' 
-                    +'<div class="col-md-6"><div class="form-group has-feedback mb-2"><label for="lintang">'+conf.language.latitude+'</label><input type="text" class="lintang" id="'+conf._safeId+'_lintang" name="lintang" placeholder="'+conf.language.latitude+'" value=""></div></div>'
-                    +'<div class="col-md-6"><div class="form-group has-feedback mb-2"><label for="bujur">'+conf.language.longitude+'</label><input type="text" class="bujur" id="'+conf._safeId+'_bujur" name="bujur" placeholder="'+conf.language.longitude+'" value=""></div></div>'
+                    +'<div class="col-md-6"><div class="form-group has-feedback mb-2"><label for="lintang">'+conf.language.latitude+'</label><input type="text" class="lintang form-control" id="'+conf._safeId+'_lintang" name="lintang" placeholder="'+conf.language.latitude+'" value=""></div></div>'
+                    +'<div class="col-md-6"><div class="form-group has-feedback mb-2"><label for="bujur">'+conf.language.longitude+'</label><input type="text" class="bujur form-control" id="'+conf._safeId+'_bujur" name="bujur" placeholder="'+conf.language.longitude+'" value=""></div></div>'
                     +'</div>';
             conf._input.append(html);
 
@@ -123,7 +123,7 @@
             conf._mapObj = map;
             conf._mapLayerGroup = layerGroup;
 
-            if (conf.attr.readonly == true) {
+            if (conf.attr.readonly == true || !conf.attr.allowManualInput) {
                 conf._lat.attr('readonly', true);
                 conf._long.attr('readonly', true);
             }
@@ -241,6 +241,9 @@
 
 		//in case more than 1 editor has the same field name, this editor id can be used to distinguish it
 		editorId: "",
+		
+		//allow to enter long-lat manually
+		allowManualInput: false,
 	};
 
 	tcg_geolocation.messages = {

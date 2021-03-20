@@ -25,11 +25,11 @@
             // Create the elements to use for the input
             conf._input = $(
                 '<div id="'+conf._safeId+'" class="tcg-unitprice-container">'
-                + '<input id="'+conf._safeId+'-quantity" type="number" min="0" class="tcg-unitprice-quantity"/>' 
+                + '<input id="'+conf._safeId+'-quantity" type="number" min="0" class="tcg-unitprice-quantity form-control"/>' 
                 + "<span class='tcg-unitprice-text'>&nbsp;&nbsp;x&nbsp;&nbsp;</span>"
-                + '<input id="'+conf._safeId+'-unitprice" type="number" min="0" class="tcg-unitprice-unitprice" tabindex="-1"/>'
+                + '<input id="'+conf._safeId+'-unitprice" type="number" min="0" class="tcg-unitprice-unitprice form-control" tabindex="-1"/>'
                 + "<span class='tcg-unitprice-text'>&nbsp;&nbsp;=&nbsp;&nbsp;</span>" 
-                + '<input id="'+conf._safeId+'-total" type="text" class="tcg-unitprice-total" tabindex="-1"/>'
+                + '<input id="'+conf._safeId+'-total" type="text" class="tcg-unitprice-total form-control" tabindex="-1"/>'
                 + '</div>');
       
             conf._quantity = $('.tcg-unitprice-quantity', conf._input);

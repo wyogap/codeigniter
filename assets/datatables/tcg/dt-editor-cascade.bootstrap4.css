@@ -1,16 +1,21 @@
 /* Full length input field */
-div.DTE_Field_Type_tcg_cascade .DTE_Label {
-	width: 100% !important;
+div.DTE_Field_Type_tcg_cascade label[data-dte-e='label'] {
+    max-width: 100% !important;
+    flex-grow: 1;
+    flex-shrink: 0;
+    flex-basis: 100%;
+	margin-top: -0.25rem;
 }
 
-div.DTE_Field_Type_tcg_cascade div.DTE_Field_Input {
-	float: none !important;
-	clear: both !important;
-	width: 100% !important;
+div.DTE_Field_Type_tcg_cascade div[data-dte-e='input'] {
+	max-width: 100% !important;
+    flex-grow: 1;
+    flex-shrink: 0;
+    flex-basis: 100%;
 }
 
-.DTE div.DTE_Field_Type_tcg_cascade .col-form-control {
-	margin-bottom: .5rem!important;
+div.DTE_Field_Type_tcg_cascade.form-group {
+	margin-bottom: 0.5rem!important;
 }
 
 /* Dirty hack for long option text */
