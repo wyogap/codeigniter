@@ -96,7 +96,7 @@
                 function(){
                         map.setView(mapCenter,conf.attr.mapZoom);;
                 }, 
-                {position: 'topleft'}
+                {position: 'bottomleft'}
             ).addTo(map);
 
             //default marker

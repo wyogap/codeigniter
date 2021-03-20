@@ -130,20 +130,49 @@
 				if (_dte.length == 0) {
 					//since field is created before the DT Editor is created, we just create a dummy editor
 					//this allows for customization and styling without affecting global/generic style
-					_body.append("<div class='DTE DTE_Select2 d-none'></div>");
+					_body.append("<div class='DTE DTE_Select2'></div>");
 					_dte = _body.find('.DTE');
 				}
 
-				$(".tcg-cascade-select", conf._input).select2({
+				let selects = $(".tcg-cascade-select", conf._input);
+				
+				selects.select2({
 					minimumResultsForSearch: conf.attr.minimumResultsForSearch,
 					dropdownParent: _dte,
 					minimumInputLength: conf.attr.minimumInputLength,
+					//theme: "bootstrap",
 				});
 
 				// //read-only?
 				// if (conf.attr.readonly == true) {
 				// 	$(".tcg-cascade-select", conf._input).select2("readonly", true);
 				// }
+							
+				selects.on('select2:opening', function (e) {
+					e.stopPropagation();
+
+					let overlay = $(".DTE_Select2");
+					overlay.removeClass("x-hidden");
+
+					//since DTED_Lightbox_Mobile hides/moves other dom element under DTED_Lightbox_Shown, we need to move back the select2 overlay background.
+					$("body").append(overlay);
+
+					// //throttle
+					// _attr.flag = 1;
+					// setTimeout(function(){ _attr.flag=0; }, 500);
+				});
+
+				selects.on('select2:closing', function (e) {
+					e.stopPropagation();
+					
+					// //throttle
+					// if (_attr.flag == 1) {
+					// 	return;
+					// }
+
+					let overlay = $(".DTE_Select2");
+					overlay.addClass("x-hidden");
+				});
 			}
 			
 			//easy access
@@ -257,6 +286,9 @@
 
 		//function to get level name/label
 		fnLevelName: null,
+		
+		//theme: classic or bootstrap
+		theme: null,
 	};
 
 	tcg_cascade.messages = {

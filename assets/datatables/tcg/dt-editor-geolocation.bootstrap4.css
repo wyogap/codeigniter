@@ -23,13 +23,30 @@ div.DTE_Field_Type_tcg_geolocation.form-group {
 }
 
 .tcg-geo-location .map-button {
-    font-size: 2em;
+    font-size: 2.5em;
+    margin-left: -2px;
+	color: #404040;
 }
 
+/*
 .tcg-geo-location .geocoder-control {
     height: 36px;
 	min-width: 27px;
 	box-shadow: 0 1px 5px rgb(0 0 0 / 40%);
     background: #fff;
     border-radius: 4px;
+}
+*/
+
+.tcg-geo-location .geocoder-control-input.form-control {
+	border: none;
+    padding: 0;
+	box-shadow: 0 1px 5px rgb(0 0 0 / 65%);
+    border-radius: 4px;
+	font-size: 13px;
+    line-height: normal;
+    height: auto;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    width: 100%;
 }
