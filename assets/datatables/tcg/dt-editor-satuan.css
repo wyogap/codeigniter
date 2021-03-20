@@ -1,0 +1,23 @@
+
+.tcg-satuan-container {
+    display: flex;
+
+}
+
+.tcg-satuan-jumlah {
+    width: 80px !important;
+    margin-right: 0px;
+}
+
+.tcg-satuan-nilai {
+    width: 100px !important;
+    margin-right: 0px;
+}
+
+.tcg-satuan-text {
+    margin-top: 8px;
+}
+
+.tcg-satuan-total {
+    flex-grow: 1;
+}
