@@ -46,6 +46,11 @@
             //     return false;
             // } );
   
+			//default value
+			if (typeof conf.def !== 'undefined' && conf.def != null) {
+				conf._masked_input.val(conf.def);
+			}
+
             if (conf.attr.mask != "") {
               conf._masked_input.attr("type",conf.attr.type).mask(conf.attr.mask, conf.attr);
             }
@@ -68,6 +73,8 @@
         },
       
         set: function ( conf, val ) {
+			if (typeof val === 'undefined' || val == null)		val = "";
+			
           let curtotal = conf._masked_input.unmask().val();
           conf._masked_input.mask(conf.attr.mask, conf.attr);
 

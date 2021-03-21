@@ -221,13 +221,13 @@
 			return val;
 		},
 
-		set: function (conf, val) {
+		set: function (conf, val) {			
 			if (conf.attr.ajax == null || conf.attr.ajax == '') {
 				return;
 			}
 			
 			//standardize the value
-			if (val == null)	val = '';
+			if (typeof val === 'undefined' || val == null)		val = "";
 
 			//no change
 			if (val == conf._currentValue) {

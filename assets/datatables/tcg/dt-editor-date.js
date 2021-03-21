@@ -31,6 +31,8 @@
 
           conf._input.append(conf._input_control);
     
+		  //TODO: default value
+		  
           if (conf.attr.readonly == true) {
             conf._input_control.attr('readonly', true);
           }
@@ -43,6 +45,8 @@
       },
     
       set: function ( conf, val ) {
+		  //TODO: set value not working yet!
+			if (typeof val === 'undefined' || val == null)		val = "";
         conf._input_control.val(val).trigger("input");
 
         //trigger change event

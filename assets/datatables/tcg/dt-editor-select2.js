@@ -37,7 +37,7 @@
 					+ '<input id="'+conf._safeId+'-info" type="text" class="tcg-select2-info"/>'
 					+ '</div>');
 
-				conf._select = $('.tcg-select2-select', conf._input);
+				conf._select = $('select', conf._input);
 				conf._info = $('.tcg-select2-info', conf._input);
 
 				conf._info.attr('readonly', true);
@@ -52,7 +52,7 @@
 					+ '<input id="'+conf._safeId+'-info" type="text" class="tcg-select2-info"/>'
 					+ '</div>');
 
-				conf._select = $('.tcg-select2-select', conf._input);
+				conf._select = $('select', conf._input);
 				conf._info = $('.tcg-select2-info', conf._input);
 
 				conf._info.attr('readonly', true);
@@ -66,7 +66,7 @@
 					+ '<select id="'+conf._safeId+'-select" class="tcg-select2-select"></select>'
 					+ '</div>');
 
-				conf._select = $('.tcg-select2-select', conf._input);
+				conf._select = $('select', conf._input);
 				conf._info = null;		
 			}
 
@@ -82,7 +82,7 @@
 			let _options = null;
 			if (typeof conf.options !== 'undefined' && conf.options != null && Array.isArray(conf.options) && conf.options.length > 0) {
 				_options = conf.options;
-				tcg_select2.helpers._select2_build(conf._input, _options, conf.attr);
+				tcg_select2.helpers._select2_build(conf._input, _options, conf.attr, conf.def);
 			} 
 			else if (typeof conf.attr.ajax !== 'undefined' && conf.attr.ajax != null && conf.attr.ajax != "") {
 				//retrieve list from json
@@ -101,7 +101,7 @@
 						} else {
 							_options = response.data;
 						}
-						tcg_select2.helpers._select2_build(conf._input, _options, conf.attr);
+						tcg_select2.helpers._select2_build(conf._input, _options, conf.attr, conf.def);
 					},
 					error: function (jqXhr, textStatus, errorMessage) {
 						conf.error = errorMessage;
@@ -109,9 +109,9 @@
 				});
 			} 
 			else {
-				tcg_select2.helpers._select2_build(conf._input, null, conf.attr);
+				tcg_select2.helpers._select2_build(conf._input, null, conf.attr, conf.def);
 			}
-
+			
 			return conf._input;
 		},
 
@@ -121,7 +121,7 @@
 		},
 
 		set: function (conf, val) {
-			if (val == null) {
+			if (typeof val === 'undefined' || val == null) {
 				val = conf.def;
 			}
 			conf._select.val(val).trigger('change');
@@ -251,7 +251,7 @@
 		/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 		 * Private methods
 		 */
-		_select2_build: function (_input, _options, _attr) {
+		_select2_build: function (_input, _options, _attr, _defvalue = null) {
 			let _select = _input.find('select');
 
 			//add class for easy identification
@@ -259,6 +259,11 @@
 
 			//store current value
 			let _value = _select.val();
+
+			//default value
+			if (typeof _defvalue !== 'undefined' && _defvalue !== null) {
+				_value = _defvalue;
+			}
 
 			//rebuild the option list
 			_select.empty();
@@ -302,6 +307,11 @@
 						_option.attr("data-tag-2", item.tag2)
 					}
 
+					//selected
+					if (item.value == _value) {
+						_option.attr("selected", true);
+					}
+					
 					_select.append(_option);
 
 				});

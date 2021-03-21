@@ -31,6 +31,11 @@
 
           conf._input.append(conf._input_control);
     
+			//default value
+			if (typeof conf.def !== 'undefined' && conf.def != null) {
+				conf._input_control.val(conf.def);
+			}
+
           if (conf.attr.readonly == true) {
             conf._input_control.attr('readonly', true);
           }
@@ -47,6 +52,7 @@
       },
     
       set: function ( conf, val ) {
+			if (typeof val === 'undefined' || val == null)		val = "";
         conf._input_control.val(val).trigger("input");
 
         //trigger change event

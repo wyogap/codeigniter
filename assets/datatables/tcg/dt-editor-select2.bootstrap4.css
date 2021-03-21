@@ -22,30 +22,59 @@
   width: 100% !important;
 }
 
-  .select-option-level-1 {
-    padding-left: 0px !important;
-  }
+/** READ-ONLY **/
+.tcg-select2-select[readonly] option, 
+.tcg-select2-select[readonly] optgroup {
+	display: none;
+}
 
-  .select-option-level-2 {
-    padding-left: 12px !important;
-  }
+.tcg-select2-select[readonly] {
+	background-color: rgb(232, 233, 235) !important;
+}
 
-  .select-option-level-3 {
-    padding-left: 24px !important;
-  }
+.tcg-select2-select[readonly].select2-hidden-accessible+ .select2-container {
+	pointer-events: none;
+	touch-action: none;
+}
 
-  .select-option-level-4 {
-    padding-left: 36px !important;
-  }
+.tcg-select2-select[readonly].select2-hidden-accessible+ .select2-container .select2-selection {
+	background: #eee;
+	box-shadow: none;
+}
 
- .select-option-level-5 {
-    padding-left: 48px !important;
-  }
+.tcg-select2-select[readonly].select2-hidden-accessible+ .select2-container .select2-selection__arrow,
+.tcg-select2-select[readonly].select2-hidden-accessible+ .select2-container .select2-selection__clear
+{
+	display: none;
+}
+/** END-READ-ONLY **/
 
-  .select-option-group {
-    font-weight: bold !important;
-    color: black;
-  }
+/** OPTION DROPDOWN **/
+.DTE.DTE_Select2 .select-option-level-1 {
+	padding-left: 0px !important;
+}
+
+.DTE.DTE_Select2 .select-option-level-2 {
+	padding-left: 12px !important;
+}
+
+.DTE.DTE_Select2 .select-option-level-3 {
+	padding-left: 24px !important;
+}
+
+.DTE.DTE_Select2 .select-option-level-4 {
+	padding-left: 36px !important;
+}
+
+.DTE.DTE_Select2 .select-option-level-5 {
+	padding-left: 48px !important;
+}
+
+.DTE.DTE_Select2 .select-option-group {
+	font-weight: bold !important;
+	color: black;
+}
+/** END OPTION-DROPDOWN **/
 
   @media screen and (min-width: 768px) {
     div.DTE_Body div.DTE_Body_Content div.DTE_Field {

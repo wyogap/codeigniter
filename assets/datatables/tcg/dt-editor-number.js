@@ -31,6 +31,11 @@
 
           conf._input.append(conf._input_control);
     
+			//default value
+			if (!isNaN(conf.def)) {
+				conf._input_control.val(conf.def);
+			}
+
           if (conf.attr.readonly == true) {
             conf._input_control.attr('readonly', true);
           }
@@ -51,6 +56,7 @@
       },
     
       set: function ( conf, val ) {
+			if (isNaN(val))		val = 0;
         conf._input_control.val(val).trigger("input");
 
         //trigger change event

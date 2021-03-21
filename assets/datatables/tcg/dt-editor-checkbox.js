@@ -62,6 +62,7 @@
         },
       
         set: function ( conf, val ) {
+			if (typeof val === 'undefined' || val == null)		val = "";
           let checked = (val == conf.attr.value) ? true : false;
 
           let chkbox = conf._input.find('input');

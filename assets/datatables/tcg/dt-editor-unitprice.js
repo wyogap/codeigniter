@@ -46,6 +46,13 @@
             //     return false;
             // } );
 
+			//default value
+			if (!isNaN(conf.def)) {
+				conf._total.val(conf.def).trigger("input");
+				conf._quantity.val(1);
+				conf._unitprice.val(conf.def).trigger("input");
+			}
+			
             conf._quantity.change( function () {
               let qty = conf._quantity.val();
               if (isNaN(qty)) {
