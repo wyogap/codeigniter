@@ -51,6 +51,12 @@
 				if (typeof conf.attr.fnLevelName === 'function') {
 					levelName = conf.attr.fnLevelName(i);
 				}
+				else if (typeof conf.attr.fnLevelName == 'object'){
+					let val = conf.attr.fnLevelName[i];
+					if (typeof val !== "undefined" && val != null) {
+						levelName = conf.attr.fnLevelName[i];
+					}
+				}
 
 				let html = $(
 					'<div class="col-md-4 col-form-control ' + conf.attr.className + '">'
@@ -71,25 +77,41 @@
 
 			conf._input.append(row);
 
+			// for (var i=conf.attr.minLevel; i<=conf.attr.maxLevel; i++) {
+			// 	let idx = i-conf.attr.minLevel;
+			// 	let field = fields[idx];
+
+			// 	console.log(field);
+			// }
+
+			
 			//initial value
 			if (conf.attr.ajax == null || conf.attr.ajax == '') {
 				//do nothing. for now
 			}
 			else {
-				for (var i=conf.attr.minLevel; i<=conf.attr.maxLevel; i++) {
+				//only initialize top level
+				let field = fields[0];
+				//console.log(field);
+
+				var data = {value:"", level:conf.attr.maxLevel, target:conf.attr.minLevel};
+				$.ajax({
+					type: "GET",
+					url : conf.attr.ajax,
+					data: data,
+					success: function(msg){
+						$(fields[0]).html(msg);
+					}
+				});
+
+				//reset lower level
+				for (var i=conf.attr.minLevel+1; i<=conf.attr.maxLevel; i++) {
 					let idx = i-conf.attr.minLevel;
-					let field = fields[idx];
-	
-					var data = {value:null, level:conf.attr.maxLevel, target:i};
-					$.ajax({
-						type: "GET",
-						url : conf.attr.ajax,
-						data: data,
-						success: function(msg){
-							$(field).html(msg);
-						}
-					});
+					field = fields[idx];
+					$(field).val('');
 				}
+
+				conf._currentValue = "";
 			}
 
 			//change event
@@ -105,16 +127,19 @@
 
 					//current value of target field
 					let field = $(targetField);
-					let val = field.val();
 
-					var data = {value:$(this).val(), level:i, target:i+1};
+					let val = $(this).val();
+					let level = $(this).data('level');
+					let target_level = field.data('level');
+
+					var data = {value:val, level:level, target:target_level};
 					$.ajax({
 						type: "GET",
 						url : conf.attr.ajax,
 						data: data,
 						success: function(msg){
 							field.html(msg);
-							field.val(val);
+							//field.val(val);
 						}
 					});
 
@@ -122,6 +147,14 @@
 				});
 			}
 
+			//change event (last select)
+			if (fields.length > 0) {
+				let field = fields[fields.length-1];
+				$(field).on('change', function() {
+					conf._currentValue = $(this).val();
+				});
+			}
+			
 			//convert to select2
 			if (conf.attr.select2) {
 				//dropdown parent
@@ -130,7 +163,8 @@
 				if (_dte.length == 0) {
 					//since field is created before the DT Editor is created, we just create a dummy editor
 					//this allows for customization and styling without affecting global/generic style
-					_body.append("<div class='DTE DTE_Select2'></div>");
+					//Important: add d-none class to hide it on load, especially on mobile!
+					_body.append("<div class='DTE DTE_Select2 d-none'></div>");
 					_dte = _body.find('.DTE');
 				}
 
@@ -152,7 +186,7 @@
 					e.stopPropagation();
 
 					let overlay = $(".DTE_Select2");
-					overlay.removeClass("x-hidden");
+					overlay.removeClass("d-none");
 
 					//since DTED_Lightbox_Mobile hides/moves other dom element under DTED_Lightbox_Shown, we need to move back the select2 overlay background.
 					$("body").append(overlay);
@@ -171,7 +205,7 @@
 					// }
 
 					let overlay = $(".DTE_Select2");
-					overlay.addClass("x-hidden");
+					overlay.addClass("d-none");
 				});
 			}
 			
@@ -192,7 +226,15 @@
 				return;
 			}
 			
-			if (val == null || val == '') {
+			//standardize the value
+			if (val == null)	val = '';
+
+			//no change
+			if (val == conf._currentValue) {
+				return;
+			}
+			
+			if (val == '') {
 				//only initialize top level
 				let field = conf._fields[0];
 
@@ -202,15 +244,59 @@
 					url : conf.attr.ajax,
 					data: data,
 					success: function(msg){
-						$(conf._fields[0]).html(msg);
+						let _field = $(conf._fields[0]);
+						_field.html(msg);
+
+						// //reset lower level
+						// let level = _field.data("level");
+						// for (var i=level+1; i<=conf.attr.maxLevel; i++) {
+						// 	let idx = i-conf.attr.minLevel;
+						// 	let _field = $(conf._fields[idx]);
+
+						// 	//clear the field
+						// 	_field.empty();
+
+						// 	//build default option
+						// 	let levelName = '-- Level ' +i+ " --";
+						// 	if (typeof conf.attr.fnLevelName === 'function') {
+						// 		levelName = "-- " +conf.attr.fnLevelName(i)+ " --";
+						// 	}
+
+						// 	let opt = $("<option>").val("").text(levelName);
+						// 	_field.append(opt);
+
+						// 	//set the default option
+						// 	_field.val('');
+						// }
+
 					}
 				});
 
 				//reset lower level
 				for (var i=conf.attr.minLevel+1; i<=conf.attr.maxLevel; i++) {
 					let idx = i-conf.attr.minLevel;
-					field = conf._fields[idx];
-					$(field).val('');
+					let _field = $(conf._fields[idx]);
+
+					//clear the field
+					_field.empty();
+
+					//build default option
+					let levelName = '-- Level ' +i+ " --";
+					if (typeof conf.attr.fnLevelName === 'function') {
+						levelName = "-- " +conf.attr.fnLevelName(i)+ " --";
+					}
+					else if (typeof conf.attr.fnLevelName == 'object'){
+						let val = conf.attr.fnLevelName[i];
+						if (typeof val !== "undefined" && val != null) {
+							levelName = "-- " +conf.attr.fnLevelName[i]+ " --";
+						}
+					}
+
+					let opt = $("<option>").val("").text(levelName);
+					_field.append(opt);
+
+					//set the default option
+					_field.val('');
 				}
 			}
 			else {
@@ -219,7 +305,12 @@
 					let idx = i-conf.attr.minLevel;
 					let field = conf._fields[idx];
 					
-					var data = {value:val, level:conf.attr.maxLevel, target:i};
+					let data = {value:val, level:conf.attr.maxLevel, target:i};
+
+					//top level -> retrieve all
+					if (idx == 0)	data['top'] = 1;
+					
+					//populate the list
 					$.ajax({
 						type: "GET",
 						url : conf.attr.ajax,
@@ -231,6 +322,7 @@
 				}
 			}
 
+			conf._currentValue = val;
 		},
 
 		enable: function (conf) {

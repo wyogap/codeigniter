@@ -42,8 +42,9 @@
         },
       
         set: function ( conf, val ) {
-          //readonly. ignore
-          return;
+          conf._input_control.val(val).trigger("input");
+          //readonly. dont trigger change event
+          //conf._input.trigger("change");
         },
       
         enable: function ( conf ) {

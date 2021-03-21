@@ -63,3 +63,19 @@ div.DTE_Field_Type_tcg_toggle div.DTE_Field_InputControl .switch.readonly input:
 div.DTE_Field_Type_tcg_toggle div.DTE_Field_InputControl .switch.readonly input:checked+.slider.round:before {
     background-color: var(--blue);
 }
+
+@media screen and (max-width: 767px) {
+	.crud-form div.DTE_Field_Type_tcg_toggle {
+		padding-top: 0.5rem;
+	}
+	
+	.crud-form div.DTE_Field_Type_tcg_toggle .form-label {
+	    float: left;
+		/* display: inline-grid; */
+		position: absolute;
+	}
+	
+	.crud-form div.DTE_Field_Type_tcg_toggle .form-input {
+		text-align: right;
+	}
+}

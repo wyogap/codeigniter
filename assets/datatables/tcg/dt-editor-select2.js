@@ -245,9 +245,6 @@
 
 		//ajax url to retrieve the options
 		ajax: null,
-		
-		//theme: classic or bootstrap
-		theme: null,
 	};
 
 	tcg_select2.helpers = {
@@ -324,7 +321,8 @@
 			if (_dte.length == 0) {
 				//since field is created before the DT Editor is created, we just create a dummy editor
 				//this allows for customization and styling without affecting global/generic style
-				_body.append("<div class='DTE DTE_Select2'></div>");
+				//Important: add d-none class to hide it on load, especially on mobile!
+				_body.append("<div class='DTE DTE_Select2 d-none'></div>");
 				_dte = _body.find('.DTE');
 			}
 
@@ -420,7 +418,6 @@
 						  return "Hasil pencarian terlalu banyak";
 						}
 					},
-					//theme: "bootstrap",
 				});
 
 				// //read-only?
@@ -436,7 +433,7 @@
 				e.stopPropagation();
 
 				let overlay = $(".DTE_Select2");
-				overlay.removeClass("x-hidden");
+				overlay.removeClass("d-none");
 
 				//since DTED_Lightbox_Mobile hides/moves other dom element under DTED_Lightbox_Shown, we need to move back the select2 overlay background.
 				$("body").append(overlay);
@@ -455,7 +452,7 @@
 				// }
 
 				let overlay = $(".DTE_Select2");
-				overlay.addClass("x-hidden");
+				overlay.addClass("d-none");
 			});
 			
 
