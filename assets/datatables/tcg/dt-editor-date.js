@@ -47,6 +47,8 @@
       set: function ( conf, val ) {
 		  //TODO: set value not working yet!
 			if (typeof val === 'undefined' || val == null)		val = "";
+			
+			val = moment(val).format("YYYY-MM-DD");
         conf._input_control.val(val).trigger("input");
 
         //trigger change event

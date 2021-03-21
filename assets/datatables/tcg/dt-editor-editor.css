@@ -1,3 +1,18 @@
-/* .tcg-mask-placeholder {
+div.DTE_Field_Type_tcg_editor label[data-dte-e='label'] {
+    max-width: 100% !important;
+    flex-grow: 1;
+    flex-shrink: 0;
+    flex-basis: 100%;
+	margin-top: -0.25rem;
+}
 
-} */
+div.DTE_Field_Type_tcg_editor div[data-dte-e='input'] {
+	max-width: 100% !important;
+    flex-grow: 1;
+    flex-shrink: 0;
+    flex-basis: 100%;
+}
+
+div.DTE_Field_Type_tcg_editor.form-group {
+	margin-bottom: 0.5rem!important;
+}
