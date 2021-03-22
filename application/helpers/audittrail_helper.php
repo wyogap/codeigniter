@@ -212,6 +212,4 @@ if ( ! function_exists('audittrail_softdelete'))
 }
 
 
-?>        
-
-        
+?>

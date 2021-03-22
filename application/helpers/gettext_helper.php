@@ -4,12 +4,8 @@ defined('BASEPATH') || exit('No direct script access allowed');
 // @codeCoverageIgnoreEnd
 
 /**
- * CodeIgniter Gettext Helpers
+ * CodeIgniter Dummy Gettext Helpers
  *
- * @package        CodeIgniter
- * @subpackage    Helpers
- * @category    Gettext
- * @author        Joël Gaujard <j.gaujard@gmail.com>
  */
 
 if (!function_exists('__')) {
@@ -19,7 +15,7 @@ if (!function_exists('__')) {
      */
     function __($expression)
     {
-        return (gettext($expression));
+        return $expression;
     }
 }
 
@@ -29,7 +25,7 @@ if (!function_exists('_e')) {
      */
     function _e($expression)
     {
-        echo (__($expression));
+        echo $expression;
     }
 }
 
@@ -42,6 +38,6 @@ if (!function_exists('_n')) {
      */
     function _n($expression_singular, $expression_plural, $number)
     {
-        return (ngettext($expression_singular, $expression_plural, (int) $number));
+        return ($number == 1) ? $expression_singular : $expression_plural;
     }
 }

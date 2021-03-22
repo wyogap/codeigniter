@@ -1,0 +1,30 @@
+.content-header {
+    padding-bottom: 0px;
+}
+
+.crud-form .form-group {
+    margin-bottom: 1rem;
+}
+
+.crud-form .form-group:last-child {
+    margin-bottom: 0.5rem;
+}
+
+.DTE .form-group {
+    margin-bottom: 1rem;
+}
+
+.DTE .form-group:last-child {
+    margin-bottom: 0.5rem;
+}
+
+@media (max-width: 768px) {
+
+    .crud-form .form-group {
+        margin-bottom: 0.5rem;
+    }
+		
+    .DTE .form-group {
+        margin-bottom: 0.5rem;
+    }
+}

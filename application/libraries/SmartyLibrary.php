@@ -130,4 +130,5 @@ class SmartyLibrary extends Smarty {
 
         //display the tempalte
         parent::display($template);
-    }}
+    }
+}

@@ -42,7 +42,7 @@
                         <div class="row">
                         <div class="col-sm-3">
                             <button type="submit" class="btn btn-primary btn-block" id='btn_crud_filter'
-                                    name="button">{__('View')}</button>
+                                    name="button">{__('Tampilkan')}</button>
                         </div>
                         </div>
                     </div>

@@ -133,6 +133,10 @@
     color: var(--danger);
 }
 
+table.dataTable.nowrap th, table.dataTable.nowrap td {
+    white-space: normal;
+}
+
 @media (min-width: 576px) {
     .modal-dialog {
         max-width: 500px;

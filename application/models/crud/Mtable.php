@@ -352,13 +352,25 @@ class Mtable extends CI_Model
                     //use alias in case multiple reference of the same table (ie. lookup table)
                     $ref['reference_alias'] = 'lookup_' .$lookup_idx++;
 
-                    $this->join_tables[] = $ref;
+                    if ($col['type'] == 'tcg_select2') {
+                        $this->join_tables[] = $ref;
 
-                    //add into select
-                    $this->select_columns[] = $ref['reference_alias'].".".$ref['reference_lookup_column']." as ".$ref['name']."_label";
+                        //add into select
+                        $this->select_columns[] = $ref['reference_alias'].".".$ref['reference_lookup_column']." as ".$ref['name']."_label";
+                    }
+                    else if ($col['type'] == 'tcg_multi_select') {
+                        $subquery = "select group_concat(" .$ref['reference_lookup_column']. ") from " .$ref['reference_table_name']. " where find_in_set(" .$ref['reference_key_column']. ", " .$ref['column_name']. ") > 0";
+
+                        if ($ref['reference_soft_delete']) {
+                            $subquery .= " AND is_deleted=0";
+                        }
+
+                        //add into select
+                        $this->select_columns[] = "(" .$subquery. ") as ".$ref['name']."_label";
+                    }
 
                     //get lookup if not specified manually
-                    if (empty($col['options'])) {
+                    if (empty($col['options']) && ($row['edit_type'] == 'tcg_select2' || $row['filter_type'] == 'tcg_select2')) {
                         $col['options'] = $this->get_lookup_options($ref['reference_table_name'], $ref['reference_key_column'], $ref['reference_lookup_column'], $ref['reference_soft_delete'], $ref['reference_where_clause']);
                     }
 
@@ -728,7 +740,21 @@ class Mtable extends CI_Model
             }
         }
 
-        return $this->db->get($limit, $offset)->result_array();
+        $arr = $this->db->get($limit, $offset)->result_array();
+        if ($arr == null)       return $arr;
+
+        //special transformation
+        foreach($this->table_metas['columns'] as $key => $col) {
+            if ($col['type'] == "tcg_multi_select") {
+                foreach($arr as $idx => $row) {
+                    if (isset( $row[$col['name']] )) {
+                        $arr[$idx][$col['name']] = explode(',', $row[$col['name']]);
+                    }
+                }
+            }
+        }
+        
+        return $arr;
     }
 
     function detail($id, $filter = null) {
@@ -770,7 +796,19 @@ class Mtable extends CI_Model
             $this->db->join($row['reference_table_name'] .' as '. $row['reference_alias'], $where_clause, 'LEFT OUTER');
         }
         
-        return $this->db->get($table_name)->row_array();       
+        $arr = $this->db->get($table_name)->row_array();       
+        if ($arr == null)       return $arr;
+
+        //special transformation
+        foreach($this->table_metas['columns'] as $key => $col) {
+            if ($col['type'] == "tcg_multi_select") {
+                if (isset( $arr[$col['name']] )) {
+                    $arr[$col['name']] = explode(',', $arr[$col['name']]);
+                }
+            }
+        }
+        
+        return $arr;
     }
 
     function update($id, $valuepair, $filter = null) {
@@ -789,6 +827,17 @@ class Mtable extends CI_Model
             if (false === array_search($key, $this->edit_columns)) {
                 //invalid columns
                 unset($valuepair[$key]);
+            }
+        }
+
+        //special transformation
+        foreach($this->table_metas['columns'] as $key => $col) {
+            if ($col['type'] == "tcg_multi_select" && isset($valuepair[ $col['name'] ])) {
+                $val =  $valuepair[ $col['name'] ];
+                if (is_array($val)) {
+                    $val = implode(",", $val);
+                }
+                $valuepair[ $col['name'] ] = $val;
             }
         }
 
@@ -872,6 +921,17 @@ class Mtable extends CI_Model
             if (false === array_search($key, $this->edit_columns)) {
                 //invalid columns
                 unset($valuepair[$key]);
+            }
+        }
+
+        //special transformation
+        foreach($this->table_metas['columns'] as $key => $col) {
+            if ($col['type'] == "tcg_multi_select" && isset($valuepair[ $col['name'] ])) {
+                $val =  $valuepair[ $col['name'] ];
+                if (is_array($val)) {
+                    $val = implode(",", $val);
+                }
+                $valuepair[ $col['name'] ] = $val;
             }
         }
 

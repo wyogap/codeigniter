@@ -265,7 +265,7 @@
 				_value = _defvalue;
 			}
 
-			console.log(_options);
+			//console.log(_options);
 			
 			//rebuild the option list
 			_select.empty();

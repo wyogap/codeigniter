@@ -6,7 +6,7 @@
                     <div class="card-body">
                         {if $detail && $crud.table_actions.edit}
                         <div class="float-right">
-                            <button class="btn btn-primary crud-form-submit" data-table-id="{$crud.table_id}">{__('Save')}</button>
+                            <button class="btn btn-primary crud-form-submit" data-table-id="{$crud.table_id}">{__('Simpan')}</button>
                             {if !empty($show_table_link)}
                             <button class="btn btn-primary crud-form-table" data-table-id="{$crud.table_id}"><i class="fa fa-table fas"></i></button>
                             {/if}
@@ -14,7 +14,7 @@
                         {else if $crud.table_actions.add}
                         <div class="float-right">
                             <button class="btn btn-primary crud-form-submit"
-                                data-table-id="{$crud.table_id}">{__('Create')}</button>
+                                data-table-id="{$crud.table_id}">{__('Tambah')}</button>
                             {if !empty($show_table_link)}
                             <button class="btn btn-primary crud-form-table" data-table-id="{$crud.table_id}"><i class="fa fa-table fas"></i></button>
                             {/if}

@@ -46,6 +46,16 @@
             conf._long = conf._input.find('.bujur');
 
             let mapCenter = JSON.parse(conf.attr.mapCenter);
+			
+			//use default value as map center
+			if (typeof conf.def !== 'undefined' && conf.def !== null && conf.def != '') {
+				try {
+					mapCenter = JSON.parse(conf.def);
+				} 
+				catch(err) {
+					//ignore
+				}
+			}
 
             var map = L.map(conf._map[0],{zoomControl:false}).setView(mapCenter,conf.attr.mapZoom);
 	

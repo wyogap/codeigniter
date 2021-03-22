@@ -78,4 +78,3 @@ class Setting
         return $arr;
     }
 }
-

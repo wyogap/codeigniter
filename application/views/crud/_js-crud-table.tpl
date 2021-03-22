@@ -71,68 +71,68 @@ $(document).ready(function() {
                             return "";
                         }
                     },
-                    clearText: "{__('Delete')}",
+                    clearText: "{__('Hapus')}",
                     noImageText: "{__('No image')}",
-                    uploadText: "{__('Choose file...')}",
+                    uploadText: "{__('Pilih fail...')}",
                     noFileText: "{__('No file')}",
-                    processingText: "{__('Uploading')}",
-                    fileReadText: "{__('Reading file')}",
-                    dragDropText: "{__('Drag and drop a file here to upload')}"
+                    processingText: "{__('Mengunggah')}",
+                    fileReadText: "{__('Membaca fail')}",
+                    dragDropText: "{__('Tarik dan taruh fail di sini untuk mengunggah')}"
                     {/if}
                 },
                 {/foreach}
             ],
             i18n: {
                 create: {
-                    button: "{__('Add')}",
-                    title: "{__('Add')} {$tbl.name}",
-                    submit: "{__('Save')}"
+                    button: "{__('Baru')}",
+                    title: "{__('Buat')} {$tbl.name}",
+                    submit: "{__('Simpan')}"
                 },
                 edit: {
-                    button: "{__('Edit')}",
-                    title: "{__('Edit')} {$tbl.name}",
-                    submit: "{__('Save')}"
+                    button: "{__('Ubah')}",
+                    title: "{__('Ubah')} {$tbl.name}",
+                    submit: "{__('Simpan')}"
                 },
                 remove: {
-                    button: "{__('Delete')}",
-                    title: "{__('Delete')} {$tbl.name}",
-                    submit: "{__('Delete')}",
+                    button: "{__('Hapus')}",
+                    title: "{__('Hapus')} {$tbl.name}",
+                    submit: "{__('Hapus')}",
                     confirm: {
-                        _: "{__('Do you want to delete')} %d {$tbl.name}?",
-                        1: "{__('Do you want to delete')} 1 {$tbl.name}?"
+                        _: "{__('Konfirmasi menghapus')} %d {$tbl.name}?",
+                        1: "{__('Konfirmasi menghapus')} 1 {$tbl.name}?"
                     }
                 },
                 error: {
-                    system: "{__('System error. Please contact system administrator.')}"
+                    system: "{__('System error. Hubungi system administrator.')}"
                 },
                 datetime: {
-                    previous: "{__('Previous')}",
-                    next: "{__('Next')}",
+                    previous: "{__('Sebelum')}",
+                    next: "{__('Setelah')}",
                     months: [
-                        "{__('January')}", 
-                        "{__('February')}", 
-                        "{__('March')}", 
+                        "{__('Januari')}", 
+                        "{__('Februari')}", 
+                        "{__('Maret')}", 
                         "{__('April')}", 
-                        "{__('May')}", 
-                        "{__('June')}", 
-                        "{__('July')}", 
+                        "{__('Mei')}", 
+                        "{__('Juni')}", 
+                        "{__('Juli')}", 
                         "{__('Augustus')}",
                         "{__('September')}", 
-                        "{__('October')}", 
+                        "{__('Oktober')}", 
                         "{__('November')}", 
-                        "{__('December')}"
+                        "{__('Desember')}"
                     ],
                     weekdays: [
-                        "{__('Mon')}", 
-                        "{__('Tue')}", 
-                        "{__('Wed')}", 
-                        "{__('Thu')}", 
-                        "{__('Wed')}", 
-                        "{__('Fri')}", 
-                        "{__('Sat')}"
+                        "{__('Min')}", 
+                        "{__('Sen')}", 
+                        "{__('Sel')}", 
+                        "{__('Rab')}", 
+                        "{__('Kam')}", 
+                        "{__('Jum')}", 
+                        "{__('Sab')}"
                     ],
-                    hour: "{__('Hour')}",
-                    minute: "{__('Minute')}"
+                    hour: "{__('Jam')}",
+                    minute: "{__('Menit')}"
                 }
             }
         });
@@ -154,7 +154,7 @@ $(document).ready(function() {
                     field = this.field('{$col.edit_field}');
                     if (!field.isMultiValue()) {
                         if (!field.val() || field.val() == 0) {
-                            field.error('{__("Compulsory field")}');
+                            field.error('{__("Harus diisi")}');
                         }
                     }
                     {/if}
@@ -162,7 +162,7 @@ $(document).ready(function() {
 
                 /* If any error was reported, cancel the submission so it can be corrected */
                 if (this.inError()) {
-                    this.error('{__("Compulsory fields is not set")}');
+                    this.error('{__("Data wajib belum diisi")}');
                     return false;
                 }
             }
@@ -207,22 +207,22 @@ $(document).ready(function() {
             editor_{$tbl.table_id}.bubble( this );
         } );
 
-        /* Inline editing in responsive cell */
-        $('#{$tbl.table_id}').on( 'click', 'tbody ul.dtr-details li', function (e) {
-            /* Ignore the Responsive control and checkbox columns */
-            if ( $(this).hasClass( 'control' ) || $(this).hasClass('select-checkbox') ) {
-                return;
-            }
+        // /* Inline editing in responsive cell */
+        // $('#{$tbl.table_id}').on( 'click', 'tbody ul.dtr-details li', function (e) {
+        //     /* Ignore the Responsive control and checkbox columns */
+        //     if ( $(this).hasClass( 'control' ) || $(this).hasClass('select-checkbox') ) {
+        //         return;
+        //     }
     
-            /* ignore read-only column */
-            var colnum = $(this).attr( 'data-dt-column' );
-            if ( colnum == 1 ) {
-                return;
-            }
+        //     /* ignore read-only column */
+        //     var colnum = $(this).attr( 'data-dt-column' );
+        //     if ( colnum == 1 ) {
+        //         return;
+        //     }
         
-            /* Edit the value, but this method allows clicking on label as well */
-            editor_{$tbl.table_id}.bubble( $('span.dtr-data', this) );
-        });
+        //     /* Edit the value, but this method allows clicking on label as well */
+        //     editor_{$tbl.table_id}.bubble( $('span.dtr-data', this) );
+        // });
 
         //hack: somehow the footer is nested inside the body.
         //TODO: find the real reason why it happens (note: in most cases, it does not happen)
@@ -280,19 +280,19 @@ $(document).ready(function() {
         },
         "language": {
             "sProcessing": "{__('Processing')}",
-            "sLengthMenu": "{__('Showing')} _MENU_ {__('entries')}",
+            "sLengthMenu": "{__('Menampilkan')} _MENU_ {__('baris')}",
             "sZeroRecords": "{__('No data')}",
-            "sInfo": "{__('Showing')} _START_ - _END_ {__('from')} _TOTAL_ {__('entries')}",
-            "sInfoEmpty": "{__('Showing')} 0 {__('from')} 0 {__('entries')}",
-            "sInfoFiltered": "{__('Filtered_from')} _MAX_ {__('total_entries')}",
+            "sInfo": "{__('Menampilan')} _START_ - _END_ {__('dari')} _TOTAL_ {__('baris')}",
+            "sInfoEmpty": "{__('Menampilan')} 0 {__('dari')} 0 {__('baris')}",
+            "sInfoFiltered": "{__('Difilter dari')} _MAX_ {__('total baris')}",
             "sInfoPostFix": "",
-            "sSearch": "{__('Search')}",
+            "sSearch": "{__('Mencari')}",
             "sUrl": "",
             "oPaginate": {
-                "sFirst": "{__('First')}",
-                "sPrevious": "{__('Previous')}",
-                "sNext": "{__('Next')}",
-                "sLast": "{__('Last')}"
+                "sFirst": "{__('Pertama')}",
+                "sPrevious": "{__('Sebelum')}",
+                "sNext": "{__('Setelah')}",
+                "sLast": "{__('Terakhir')}"
             }
         },
         {if !$tbl.initial_load}
@@ -346,7 +346,7 @@ $(document).ready(function() {
                         editField: "{$x.edit_field}",
                         {/if}
                     {/if}
-                    className: "{$x.css} {if !empty($x.edit_bubble)}editable{/if}",
+                    className: "col_{$x.type} {$x.css} {if !empty($x.edit_bubble)}editable{/if}",
                     {if !empty($x.type) && $x.type=="upload"}
                     render: function ( data, type, row ) {
                         if (type == "display") {
@@ -358,7 +358,7 @@ $(document).ready(function() {
                         return data;
                     },
                     {/if}
-                    {if !empty($x.type) && $x.type=="date"}
+                    {if !empty($x.type) && $x.type=="tcg_date"}
                     render: function ( data, type, row ) {
                         if (type == "display") {
                             return moment(data).format('YYYY-MM-DD');
@@ -458,7 +458,7 @@ $(document).ready(function() {
             {if isset($tbl.table_actions) && $tbl.table_actions.export}
             {
                 extend: 'excelHtml5',
-                text: '{__("Export")}',
+                text: '{__("Ekspor")}',
                 className: 'btn-sm btn-primary',
                 exportOptions: {
                     modifier: {
@@ -578,7 +578,7 @@ function dt_{$tbl.table_id}_ajax_load(data) {
             success: function(response) {
                 let data = [];
                 if (response.data === null) {
-                    alert("{__('Fail to load data via ajax')}");
+                    alert("{__('Gagal mengambil data via ajax')}");
                     data = [];
                 } else if (typeof response.error !== 'undefined' && response.error !== null &&
                     response
@@ -594,7 +594,7 @@ function dt_{$tbl.table_id}_ajax_load(data) {
                 });
             },
             error: function(jqXhr, textStatus, errorMessage) {
-                alert("{__('Fail to load data via ajax')}");
+                alert("{__('Gagal mengambil data via ajax')}");
                 resolve({
                     data: [],
                 });
@@ -606,27 +606,39 @@ function dt_{$tbl.table_id}_ajax_load(data) {
 function dt_{$tbl.table_id}_edit_row(row_id, dt) {
     let row = dt.row(row_id);
 
-    // editor_{$tbl.table_id}.title("{__('Edit')} {$page_title}")
-    //         .buttons("{__('Save')}")
-    //         .edit(row.index());
+    editor_{$tbl.table_id}
+            .title("{__('Ubah')} {$tbl.name}")
+            .buttons([
+                { label: "{__('Simpan')}", className: "btn-primary", fn: function () { this.submit(); } },
+            ])
+            .edit(row.index(), true);
 
-    row.edit( {
-        buttons: [
-            { label: "{__('Save')}", className: "btn-primary", fn: function () { this.submit(); } },
-        ]
-    }, false );
+    // row.edit( {
+    //     editor: editor_{$tbl.table_id},
+    //     buttons: [
+    //         { label: "{__('Save')}", className: "btn-primary", fn: function () { this.submit(); } },
+    //     ]
+    // }, false );
 
     return;
 }
 
 function dt_{$tbl.table_id}_delete_row(row_id, dt) {
     let row = dt.row(row_id);
- 
-    row.delete( {
-        buttons: [
-            { label: "{__('Delete')}", className: "btn-danger", fn: function () { this.submit(); } },
-        ]
-    } );
+
+    editor_{$tbl.table_id}
+            .title("{__('Hapus')} {$tbl.name}")
+            .buttons([
+                { label: "{__('Hapus')}", className: "btn-danger", fn: function () { this.submit(); } },
+            ])
+            .message( "{__('Konfirmasi menghapus')} 1 {$tbl.name}?" )
+            .remove(row.index(), true);
+
+    // row.delete( {
+    //     buttons: [
+    //         { label: "{__('Delete')}", className: "btn-danger", fn: function () { this.submit(); } },
+    //     ]
+    // } );
 }
 
 </script>

@@ -231,7 +231,7 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		
 		$tablemeta = $model->tablemeta();
 
-		$page_data['page_title']             = __("Add") ." ". $tablemeta['name'];
+		$page_data['page_title']             = __("Buat") ." ". $tablemeta['name'];
 		$page_data['page_icon']              = $page['page_icon'];
 
 		//ajax url for data loading
@@ -303,7 +303,7 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		
 		$tablemeta = $model->tablemeta();
 
-		$page_data['page_title']             = __("Edit") ." ". $tablemeta['name'];
+		$page_data['page_title']             = __("Ubah") ." ". $tablemeta['name'];
 		$page_data['page_icon']              = $page['page_icon'];
 
 		//ajax url for data loading

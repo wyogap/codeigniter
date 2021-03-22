@@ -1,3 +1,7 @@
 /* .tcg-mask-placeholder {
 
 } */
+
+td.col_tcg_date {
+	white-space: nowrap!important;
+}

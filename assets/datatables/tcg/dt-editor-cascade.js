@@ -213,6 +213,11 @@
 			conf._fields = fields;
 			conf._fieldValue = select;
 			
+			//default value
+			if (typeof conf.def !== 'undefined' && conf.def !== null && conf.def != "") {
+				that.set(conf, conf.def);
+			}
+			
 			return conf._input;
 		},
 
