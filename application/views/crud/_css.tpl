@@ -1,11 +1,11 @@
 <style>
 .btn-icon-circle{
     display: inline-block;
-    width: 36px;
-    height: 36px;
+    width: 30px;
+    height: 30px;
     border: 1px solid #909090;
     border-radius: 50%;
-    margin: 0px 5px 5px; /*space between*/
+    margin: 0px 2px 2px; /*space between*/
     padding: 0px;
     cursor: pointer;
     box-shadow: 0px 0px 2px #dee2e6;
@@ -17,6 +17,10 @@
     width: 25px;
     height: 25px;
 } 
+
+.btn-icon-circle .fa {
+    font-size: .75em !important;
+}
 
 .btn-icon-circle.active {
     color: #fff;
@@ -47,13 +51,13 @@
     padding: 0px;
 }
 
-.DTE_Body.modal-body .row.form-group {
+/* .DTE_Body.modal-body .row.form-group {
     margin-bottom: 1rem;
 }
 
 .DTE_Body.modal-body .row.form-group:last-child {
     margin-bottom: 0.5rem;
-}
+} */
 
 /* .DTE_Footer.modal-footer {
     padding-bottom: 0px;
@@ -73,11 +77,7 @@
     float: right !important;
 }
 
-.crud-form .row.form-group {
-    margin-bottom: 1.5rem;
-}
-
-.crud-form .row.form-group:last-child {
+.dt-action-buttons {
     margin-bottom: 0.5rem;
 }
 
@@ -119,9 +119,6 @@
         padding: 1rem;
     }
 
-    .row.form-group {
-        margin-bottom: 0.5rem;
-    }
 }
 
 </style>

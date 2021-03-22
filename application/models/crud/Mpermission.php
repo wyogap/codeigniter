@@ -4,16 +4,16 @@ class Mpermission extends CI_Model
 {
     private static $ADMIN_ROLE_ID = 1;
 
-    protected $table_name = '';
+    protected $page_name = '';
     protected $permissions = array();
     protected $initialized = false;
 
-    public function init($table) {
-        if ($table == $table_name)      return true;
+    public function init($page) {
+        if ($page == $this->page_name)      return true;
 
         $this->initialized = false;
         
-        $this->table_name = $name;
+        $this->page_name = $page;
         $this->permissions = array(
             'no_access'     => 0,
             'allow_view'    => 0,
@@ -22,9 +22,12 @@ class Mpermission extends CI_Model
             'allow_delete'  => 0
         );
 
+        $role_id = $this->session->userdata('role_id');
+
+        $sql = "select a.* from dbo_crud_permissions a join dbo_crud_pages b on b.id=a.page_id and b.is_deleted=0 where a.is_deleted=0 and a.role_id=? and b.name=?";
+
         //table metas
-        $this->db->select('*');
-        $arr = $this->db->get_where('dbo_crud_permissions', array('name'=>$name, 'is_deleted'=>0))->row_array();
+        $arr = $this->db->query($sql, array($role_id, $page))->row_array();
         if ($arr == null) {
             return false;
         }
@@ -36,15 +39,13 @@ class Mpermission extends CI_Model
         return true;
     }
 
-    public function can_view($table) {
-        $role_id = $this->session->userdata('role_id');
-
+    public function can_view($page) {
         //admin pass-through
-        if ($role_id == static::$ADMIN_ROLE_ID)     return true;
+        if ($this->is_admin())      return true;
 
-        if ($table !== $this->$table_name) {
+        if ($page !== $this->page_name) {
             //reinit
-            $this->init($table);
+            $this->init($page);
         }
 
         //blocked access
@@ -66,15 +67,13 @@ class Mpermission extends CI_Model
         return false;
     }
 
-    public function can_add($table) {
-        $role_id = $this->session->userdata('role_id');
-
+    public function can_add($page) {
         //admin pass-through
-        if ($role_id == static::$ADMIN_ROLE_ID)     return true;
+        if ($this->is_admin())      return true;
 
-        if ($table !== $this->$table_name) {
+        if ($page !== $this->page_name) {
             //reinit
-            $this->init($table);
+            $this->init($page);
         }
 
         //blocked access
@@ -87,15 +86,13 @@ class Mpermission extends CI_Model
         return false;
     }
 
-    public function can_edit($table) {
-        $role_id = $this->session->userdata('role_id');
-
+    public function can_edit($page) {
         //admin pass-through
-        if ($role_id == static::$ADMIN_ROLE_ID)     return true;
+        if ($this->is_admin())      return true;
 
-        if ($table !== $this->$table_name) {
+        if ($page !== $this->page_name) {
             //reinit
-            $this->init($table);
+            $this->init($page);
         }
 
         //blocked access
@@ -108,15 +105,13 @@ class Mpermission extends CI_Model
         return false;
     }
 
-    public function can_delete($table) {
-        $role_id = $this->session->userdata('role_id');
-
+    public function can_delete($page) {
         //admin pass-through
-        if ($role_id == static::$ADMIN_ROLE_ID)     return true;
+        if ($this->is_admin())      return true;
 
-        if ($table !== $this->$table_name) {
+        if ($page !== $this->page_name) {
             //reinit
-            $this->init($table);
+            $this->init($page);
         }
 
         //blocked access
@@ -127,5 +122,10 @@ class Mpermission extends CI_Model
             return true;
 
         return false;
+    }
+
+    public function is_admin() {
+        $role_id = $this->session->userdata('role_id');
+        return ($role_id == static::$ADMIN_ROLE_ID);
     }
 }

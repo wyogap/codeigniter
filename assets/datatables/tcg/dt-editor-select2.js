@@ -265,6 +265,8 @@
 				_value = _defvalue;
 			}
 
+			console.log(_options);
+			
 			//rebuild the option list
 			_select.empty();
 			if (_options != null && Array.isArray(_options)) {

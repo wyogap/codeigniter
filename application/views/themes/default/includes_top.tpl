@@ -5,6 +5,16 @@
 <!-- bootstrap -->
 <link href="{$base_url}assets/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
 
+<!-- leaflet -->
+<link href="{$base_url}assets/leaflet/leaflet/leaflet.css" rel="stylesheet" />
+<link href="{$base_url}assets/leaflet/esri/esri-leaflet-geocoder.css" rel="stylesheet" />
+<link href="{$base_url}assets/leaflet/fullscreen/leaflet.fullscreen.css" rel="stylesheet" />
+<link href="{$base_url}assets/leaflet/easybutton/easy-button.css" rel="stylesheet" />
+
+<!-- select2 -->
+<link href="{$base_url}assets/select2/css/select2.min.css" rel="stylesheet" type="text/css" />
+<link href="{$base_url}assets/select2/css/select2-bootstrap.min.css" rel="stylesheet" type="text/css" />
+
 <!-- datatables -->
 <link href="{$base_url}assets/datatables/DataTables-1.10.20/css/dataTables.bootstrap4.css" rel="stylesheet" type="text/css" />
 <link href="{$base_url}assets/datatables/Responsive-2.2.3/css/responsive.bootstrap4.css" rel="stylesheet" type="text/css" />
@@ -13,10 +23,22 @@
 <link href="{$base_url}assets/datatables/KeyTable-2.5.1/css/keyTable.bootstrap4.css" rel="stylesheet" type="text/css" >
 <link href="{$base_url}assets/datatables/Editor-1.9.2/css/editor.bootstrap4.css" rel="stylesheet" type="text/css" >
 
-<link href="{$base_url}assets/select2/css/select2.min.css" rel="stylesheet" type="text/css" />
 <link href="{$base_url}assets/datatables/tcg/dt-editor-select2.bootstrap4.css" rel="stylesheet" />
 <link href="{$base_url}assets/datatables/tcg/dt-editor-mask.css" rel="stylesheet" />
 <link href="{$base_url}assets/datatables/tcg/dt-editor-toggle.bootstrap4.css" rel="stylesheet" />
+<link href="{$base_url}assets/datatables/tcg/dt-editor-checkbox.css" rel="stylesheet" />
+<link href="{$base_url}assets/datatables/tcg/dt-editor-cascade.bootstrap4.css" rel="stylesheet" />
+<link href="{$base_url}assets/datatables/tcg/dt-editor-geolocation.bootstrap4.css" rel="stylesheet" />
+<link href="{$base_url}assets/datatables/tcg/dt-editor-unitprice.css" rel="stylesheet" />
+<link href="{$base_url}assets/datatables/tcg/dt-editor-table.bootstrap4.css" rel="stylesheet" />
+<link href="{$base_url}assets/datatables/tcg/dt-plugin-rowgroup.css" rel="stylesheet" />
+
+<link href="{$base_url}assets/datatables/tcg/dt-editor-text.css" rel="stylesheet" />
+<link href="{$base_url}assets/datatables/tcg/dt-editor-number.css" rel="stylesheet" />
+<link href="{$base_url}assets/datatables/tcg/dt-editor-readonly.css" rel="stylesheet" />
+<link href="{$base_url}assets/datatables/tcg/dt-editor-date.css" rel="stylesheet" />
+<link href="{$base_url}assets/datatables/tcg/dt-editor-textarea.css" rel="stylesheet" />
+<link href="{$base_url}assets/datatables/tcg/dt-editor-editor.css" rel="stylesheet" />
 
 <!-- WYSIWYG editor -->
 <!-- <link href="{$base_url}assets/backend/css/vendor/summernote-bs4.css" rel="stylesheet" type="text/css" /> -->
@@ -57,6 +79,7 @@
 <!-- App css -->
 <link href="{$base_url}{$theme_prefix}/css/app.min.css" rel="stylesheet" type="text/css" />
 <link href="{$base_url}{$theme_prefix}/css/main.css" rel="stylesheet" type="text/css" />
+<link href="{$base_url}{$theme_prefix}/app.css" rel="stylesheet" type="text/css" />
 
 <script src="{$base_url}{$theme_prefix}/js/onDomChange.js"></script>
 
@@ -106,6 +129,9 @@
     margin-bottom: -1px;
 }
 
+.form-group label .required {
+    color: var(--danger);
+}
 
 @media (min-width: 576px) {
     .modal-dialog {

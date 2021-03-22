@@ -1,54 +1,86 @@
 
-<script type="text/javascript">
+<script type="text/javascript" defer>
+    var field_list = [];
+
+    var edit_list = null;
+    var detail = null;
+
     $(document).ready(function() {
         let _options = [];
         let _attr = {};
 
-        {foreach $tbl.editor_columns as $col} 
-            {if ($col.edit_type == 'select' || $col.edit_type == 'select2') && !isset($col.edit_options) && isset($col.edit_attr)}
-            //default attr
-            _attr = {
-                multiple: {if empty($col.edit_attr.multiple)}false{else}true{/if},
-                minimumResultsForSearch: {if empty($col.edit_attr.minimumResultsForSearch)}25{else}{$col.edit_attr.minimumResultsForSearch}{/if},
-            };
+        // let conf = null;
+        // let field = null;
+        // let dom = null;
+        // let edit_type = null;
+        // let input_container = null;
+        let form_container = $('#{$tbl.table_id}_form');
+        // let val = null;
 
-            //retrieve list from json
-            $.ajax({
-                url: "{$col.edit_attr.ajax}",
-                type: 'GET',
-                dataType: 'json',
-                beforeSend: function(request) {
-                    request.setRequestHeader("Content-Type", "application/json");
-                },
-                success: function(response) {
-                    if (response.data === null) {
-                        //error("Gagal mendapatkan daftar kas.");
-                        _options = null;
-                    } else if (typeof response.error !== 'undefined' && response.error !==
-                        null && response
-                        .error != "") {
-                        //error(response.error);
-                        _options = null;
-                    } else {
-                        _options = response.data;
-                    }
+        {if !empty($detail)}
+        detail = {$detail|@json_encode nofilter};
+        {/if}
 
-                    {if $col.edit_type == 'select2'}
-                    select2_build($('#f_{$col.edit_field}'), "-- {__($col.label)} --", "{if $detail}{$detail[$col.edit_field]}{/if}", v_{$col.edit_field}, _options, _attr, null); 
-                    {else}
-                    select_build($('#f_{$col.edit_field}'), "-- {__($col.label)} --", "{if $detail}{$detail[$col.edit_field]}{/if}", v_{$coledit_field}, _options, _attr); 
-                    {/if}
-                },
-                error: function(jqXhr, textStatus, errorMessage) {
-                    {if $col.edit_type == 'select2'}
-                    select2_build($('#f_{$col.edit_field}'), "-- {__($col.label)} --", "{if $detail}{$detail[$col.edit_field]}{/if}", v_{$col.edit_field}, _options, _attr, null); 
-                    {else}
-                    select_build($('#f_{$col.edit_field}'), "-- {__($col.label)} --", "{if $detail}{$detail[$col.edit_field]}{/if}", v_{$col.edit_field}, _options, _attr); 
-                    {/if}
-                }    
-            }); 
-            {/if} 
-        {/foreach}
+        edit_list = [
+            {foreach $tbl.editor_columns as $col}
+            {
+                'name'      : "{$col.edit_field}",
+                'type'      : "{$col.edit_type}",
+                'label'     : "{$col.edit_label} {if $col.edit_label && $col.edit_compulsory}<span class='text-danger font-weight-bold'>*</span>{/if}",
+                'info'      : "{$col.edit_info}",
+                'className' : "{$col.edit_css}",
+                'def'       : "{$col.edit_def_value}",
+                'labelInfo' : "",
+                'message'   : "",
+                'attr'      : {$col.edit_attr|@json_encode nofilter},
+                'options'   : {$col.edit_options|@json_encode nofilter},
+                'compulsory': {$col.edit_compulsory|@json_encode nofilter},
+            },
+            {/foreach}
+        ];
+
+        edit_list.forEach(function(conf, index, arr) {
+            conf['id'] = "DTE_Field_" +conf['name'];
+
+            let dom = $(render_template('#crud-form-row', {
+                'name'      : conf.name,
+                'type'      : conf.type,
+                'fieldInfo' : conf.info
+            }));
+
+            //show info if necessary
+            if (conf.info.length > 0) {
+                dom.find('#{$col.name}_input_info').show();
+            }
+
+            //the input field
+            let input_field = null;
+
+            //get the edit-type
+            let edit_type = jQuery.fn.dataTable.ext.editorFields[ conf.type ];
+            if (typeof edit_type === 'undefined') {
+                input_field = $("<span>" +conf.type+ "</span>");
+            }
+            else {
+                input_field = edit_type.create(conf);
+            }
+
+            let label_container = dom.find("label[data-dte-e=label]");
+            label_container.html(conf.label);
+
+            let input_container = dom.find("#" +conf.name+ "_input_control");
+            input_container.prepend(input_field);
+
+            form_container.append(dom);
+
+            //set the value if necessary
+            if (detail != null) {
+                edit_type.set( conf, detail[conf.name] );
+            }
+
+            //update the stored value
+            arr[index] = conf;
+        });
 
         $(".crud-form-submit[data-table-id='{$tbl.table_id}']").on("click", function(e) {
             let form = $(".crud-form[data-table-id='{$tbl.table_id}']");
@@ -57,20 +89,36 @@
                 id = 0;
             }
 
-            let field = null;
             let data = {};
-
             let item = {};
-            {foreach $tbl.editor_columns as $col}
-            {if $col.edit_type == 'readonly'}
-                //ignore
-            {else if $col.edit_type == 'upload'}
-                //TODO
-            {else}
-                field = form.find(".form-control[name='{$col.edit_field}']");
-                item['{$col.edit_field}'] = field.val();
-            {/if}
-            {/foreach}
+            let error = false;
+
+            edit_list.forEach(function(conf, index, arr) {
+                let edit_type = jQuery.fn.dataTable.ext.editorFields[ conf.type ];
+                if (typeof edit_type === 'undefined') {
+                    return;
+                }
+
+                let val = edit_type.get(conf);
+                item[ conf.name ] = val;
+
+                //reset any error first
+                let field = $("#" +conf.id, form_container).find('[data-dte-e="msg-error"]');
+                field.addClass("d-none");
+
+                //check for compulsory field
+                if (conf.compulsory && (typeof val === 'undefined' || val === null || val == "")) {
+                    field.html("{__('Harus diisi')}");
+                    field.removeClass("d-none");
+                    error = true;
+                    return;
+                }
+
+                //TODO: other validation
+            })
+
+            //check for error
+            if (error)  return;
 
             data[id] = item;
 
@@ -139,9 +187,30 @@
 
         });
 
-        // $(".crud-form[data-table-id='{$tbl.table_id}']").on("crud.updated", function(e, json, form_data) {
-        //     alert(JSON.stringify(json));
-        // }) ;
+        $(".crud-form-table[data-table-id='{$tbl.table_id}']").on("click", function(e) {
+
+            //TODO: get confirmation!
+
+            window.location.href = "{$tbl.crud_url}";
+
+        });
 
     });
+</script>
+
+<script id="crud-form-row" type="text/template">
+    <div class="form-group row DTE_Field DTE_Field_Type_{literal}{{type}}{/literal} DTE_Field_Name_{literal}{{name}}{/literal}" id="DTE_Field_{literal}{{name}}{/literal}" data-id="{literal}{{name}}{/literal}">
+        <label data-dte-e="label" class="col-md-3 col-form-label form-label" for="DTE_Field_{literal}{{name}}{/literal}"></label>
+        <div data-dte-e="input" class="col-md-9 form-input">
+            <div data-dte-e="input-control" id="{literal}{{name}}{/literal}_input_control" class="DTE_Field_InputControl form-input-control" style="display: block;">
+                <!-- actual input field here -->
+                <div data-dte-e="msg-error" class="form-text text-danger small d-none"></div>
+                <div data-dte-e="msg-message" class="form-text text-secondary small d-none"></div>
+                <div data-dte-e="msg-info" class="form-text text-secondary small d-none"></div>
+            </div>   
+            <div data-dte-e="info" id="{literal}{{name}}{/literal}_input_info" class="DTE_Field_Info form-input-info d-none">
+            {literal}{{fieldInfo}}{/literal}
+            </div>    
+        </div>
+    </div>
 </script>

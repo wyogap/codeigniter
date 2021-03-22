@@ -5,6 +5,7 @@ require_once(APPPATH . 'third_party/smarty/libs/Smarty.class.php');
 class SmartyLibrary extends Smarty {
 
     protected $ci = null;
+    protected $theme = 'default';
 
     function __construct() {
         parent::__construct();
@@ -18,11 +19,20 @@ class SmartyLibrary extends Smarty {
         $this->assign('base_url', base_url());
 
         //general setting
-        $this->assign('app_name', config_item('app_name'));
-        $this->assign('app_short_name', config_item('app_short_name'));
-        $this->assign('app_icon', config_item('app_icon'));
-        $this->assign('app_logo', config_item('app_logo'));
+        // $this->assign('app_name', config_item('app_name'));
+        // $this->assign('app_short_name', config_item('app_short_name'));
+        // $this->assign('app_icon', config_item('app_icon'));
+        // $this->assign('app_logo', config_item('app_logo'));
         $this->assign('app_captcha_key', config_item('app_captcha_key'));
+
+        $ci =& get_instance();
+        $arr = $ci->setting->list_group('system');
+        foreach($arr as $key => $val) {
+            $this->assign($val['name'], $val['value']);
+            if ($val['name'] == 'app_theme' && !empty($val['value'])) {
+                $this->theme = $val['value'];
+            }
+        }
 
         if (ENVIRONMENT === 'development') {
 			$this->assign('version', 'CodeIgniter Version <strong>' . CI_VERSION . '</strong>');
@@ -68,8 +78,12 @@ class SmartyLibrary extends Smarty {
         parent::display($template);
     }
 
-    function render_theme($template, $data = array(), $theme = 'default') {
+    function render_theme($template, $data = array(), $theme = null) {
         $ci =& get_instance();
+
+        if ($theme == null) {
+            $theme = $this->theme;
+        }
 
         //assign form validation
         $validation_error = validation_errors();

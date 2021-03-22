@@ -118,6 +118,54 @@ class Mauth extends CI_Model
         $this->db->where('email', $email);
         $this->db->delete('dbo_reset_password');
     }
+
+    function reset_password($user_id, $password) {
+        $filter = array(
+            'user_id' => $user_id,
+            'is_deleted' => 0
+        );
+
+        $valuepair = array(
+            'password' => password_hash($password, PASSWORD_DEFAULT)
+        );
+
+        $table_name = 'dbo_users';
+
+        $this->db->update($table_name, $valuepair, $filter);
+        $affected = $this->db->affected_rows();
+        if ($affected > 0) {
+            //audit trail
+            audittrail_trail($table_name, $user_id, "PASSWORD RESET", "Password reset by administrator");
+            return $user_id;
+        }
+
+        return 0;
+    }
+
+    function profile($user_id)
+    {
+        $this->db->select('Users.*, Roles.role, Roles.page_role');
+        $this->db->from('dbo_users as Users');
+        $this->db->join('dbo_roles as Roles','Roles.role_id = Users.role_id');
+        $this->db->where('Users.user_id', $user_id);
+        $this->db->where('Users.is_deleted', 0);
+        $query = $this->db->get();
+        
+        $user = $query->row_array();
+        if ($user == null)  return $user;
+        
+        if ($user != null) {
+            unset($user['password']);
+            unset($user['created_on']);
+            unset($user['created_by']);
+            unset($user['updated_on']);
+            unset($user['updated_by']);
+            unset($user['is_deleted']);
+        }
+ 
+        return $user;
+    }
+    
 }
 
 ?>

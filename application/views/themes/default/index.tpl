@@ -10,7 +10,7 @@
 
     <!-- page header -->
     {if !empty($header_view)}
-    {include "$theme_prefix/$header_view"}
+    {include "$header_view"}
     {/if}
 
     {if !empty($page_header)}
@@ -36,6 +36,7 @@
             <!-- END CONTENT -->
         </div>
     </div>
+
     <!-- all the js files -->
     {include "$theme_prefix/includes_bottom.tpl"}
     {include "$theme_prefix/modal.tpl"}
@@ -43,7 +44,7 @@
 
     <!-- page footer -->
     {if !empty($footer_view)}
-    {include "$theme_prefix/$footer_view"}
+    {include "$footer_view"}
     {/if}
 
     {if !empty($page_footer)}

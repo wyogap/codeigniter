@@ -5,7 +5,7 @@ if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
 if ( ! function_exists('audittrail_trail'))
 {
-	function audittrail_trail($table, $reference, $action, $description, $keys, $values = null) {
+	function audittrail_trail($table, $reference, $action, $description, $keys = null, $values = null) {
         $ci =& get_instance();
         $pengguna_id = $ci->session->userdata("user_id");
 
@@ -19,6 +19,9 @@ if ( ! function_exists('audittrail_trail'))
             unset($keys['updated_by']);
             unset($keys['is_deleted']);
         }
+
+        //for consistency
+        if ($keys == null)      $values = null;
 
         if ($values == null) {
             if (is_array($keys)) {

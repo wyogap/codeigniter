@@ -32,6 +32,14 @@
           conf._input.append(conf._input_control);
     
 		  //TODO: default value
+		  if (typeof conf.def !== 'undefined' && conf.def !== null && conf.def != "") {
+			let val = moment(conf.def).format("YYYY-MM-DD");
+			conf._input_control.val(val);
+		  }
+		  else {
+			let val = moment().format("YYYY-MM-DD");
+			conf._input_control.val(val);
+		  }
 		  
           if (conf.attr.readonly == true) {
             conf._input_control.attr('readonly', true);

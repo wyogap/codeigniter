@@ -24,6 +24,12 @@
                     </div>
 
                     <!-- Logout-->
+                    <a href="{$base_url}crud/profile" class="dropdown-item notify-item">
+                        <i class="mdi mdi-account mr-1"></i>
+                        <span>{__('Profil')}</span>
+                    </a>
+
+                    <!-- Logout-->
                     <a href="{$base_url}auth/logout" class="dropdown-item notify-item">
                         <i class="mdi mdi-logout mr-1"></i>
                         <span>{__('Logout')}</span>

@@ -33,18 +33,20 @@ class Home extends CI_Controller {
 	 */
 	public function index()
 	{
-		$page_data['page_name']              = 'home';
-		$page_data['page_title']             = 'Home';
-		$page_data['page_icon']              = "mdi-view-dashboard-outline";
-		$page_data['query_params']           = null;
+		redirect(base_url('crud/laporan_pengguna/add'));
 
-		$page_data['page_role']           	 = 'user';
+		// $page_data['page_name']              = 'home';
+		// $page_data['page_title']             = 'Home';
+		// $page_data['page_icon']              = "mdi-view-dashboard-outline";
+		// $page_data['query_params']           = null;
 
-		$this->load->model(array('crud/Mnavigation'));
-		$navigation = $this->Mnavigation->get_navigation($this->session->userdata('role_id'));
-		$page_data['navigation']	 = $navigation;
+		// $page_data['page_role']           	 = 'user';
 
-		$this->smarty->render_theme('user/home.tpl', $page_data);
+		// $this->load->model(array('crud/Mnavigation'));
+		// $navigation = $this->Mnavigation->get_navigation($this->session->userdata('role_id'));
+		// $page_data['navigation']	 = $navigation;
+
+		// $this->smarty->render_theme('user/home.tpl', $page_data);
 	}
 
 

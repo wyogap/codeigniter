@@ -3,6 +3,7 @@
 class Mtable extends CI_Model
 {
     protected static $DEF_PAGE_SIZE = 25;
+    protected static $REGEX_USERDATA = '/{{(\w+)}}/';
 
     protected $table_id = 0;
     protected $table_name = '';
@@ -76,6 +77,7 @@ class Mtable extends CI_Model
         'edit_attr' => array(),
         'edit_onchange_js' => '',
         'edit_bubble' => false,
+        'edit_def_value' => null,
     );
     
     public static $FILTER = array (
@@ -194,7 +196,11 @@ class Mtable extends CI_Model
             $this->table_metas['editable_table_name'] = $this->table_metas['table_name'];
         }
 
-        $this->table_metas['where_clause'] = $arr['where_clause'];
+        $this->table_metas['where_clause'] = "";
+        if (!empty($arr['where_clause'])) {
+            $this->table_metas['where_clause'] = replace_userdata($arr['where_clause']);
+        }
+
         $this->table_metas['orderby_clause'] = $arr['orderby_clause'];
         $this->table_metas['limit_selection'] = $arr['limit_selection'];
         $this->table_metas['soft_delete'] = ($arr['soft_delete'] == 1);
@@ -330,9 +336,6 @@ class Mtable extends CI_Model
                     $col['edit_field'] = $col['name'];
                 }
 
-                $this->column_metas[] = $col;
-                $this->select_columns[] = $col['column_name']." as ".$col['name'];
-
                 if ($col['foreign_key']) {
                     $ref = static::$TABLE_JOIN;
                     $ref['name'] = $col['name'];
@@ -358,6 +361,11 @@ class Mtable extends CI_Model
                     if (empty($col['options'])) {
                         $col['options'] = $this->get_lookup_options($ref['reference_table_name'], $ref['reference_key_column'], $ref['reference_lookup_column'], $ref['reference_soft_delete'], $ref['reference_where_clause']);
                     }
+
+                    // //force select2
+                    // if (!empty($col['options'])) {
+                    //     $col['type'] = 'tcg_select2';
+                    // }
                 }
 
                 if ($col['allow_insert'] || $col['allow_edit']) {
@@ -371,17 +379,18 @@ class Mtable extends CI_Model
                     if (empty($editor['edit_label'])) {
                         $editor['edit_label'] = ucwords($col['label']);
                     }
-                        
-                    $editor['edit_type'] = $row['edit_type'];
-                    if (empty($editor['edit_type'])) {
-                        $editor['edit_type'] = $col['type'];
-                    }
-                    
+                                   
                     $editor['edit_css'] = $row['edit_css'];
                     $editor['edit_compulsory'] = ($row['edit_compulsory'] == 1);
                     $editor['edit_info'] = $row['edit_info'];
                     $editor['edit_onchange_js'] = $row['edit_onchange_js'];
                     $editor['edit_bubble'] = ($row['edit_bubble'] == 1);
+
+                    $editor['edit_def_value'] = $row['edit_def_value'];
+
+                    if (!empty($editor['edit_def_value'])) {
+                        $editor['edit_def_value'] = replace_userdata(trim($editor['edit_def_value']));
+                    }
 
                     if (!empty($row['edit_options_array'])) {
                         $editor['edit_options'] = json_decode($row['edit_options_array']);
@@ -390,13 +399,23 @@ class Mtable extends CI_Model
                     }
 
                     if (!empty($row['edit_attr_array'])) {
+                        //echo ($row['edit_attr_array']);
+                        //$row['edit_attr_array'] = '{"a": true,"b":2,"c":3,"d":4,"e":5}';
+                        //echo ($row['edit_attr_array']);
                         $editor['edit_attr'] = json_decode($row['edit_attr_array']);
+                        //TODO: append base url for ajax parameter
                     }
 
                     //force select2
-                    if (!empty($editor['edit_options'])) {
-                        $editor['edit_type'] = 'select2';
+                    $editor['edit_type'] = $row['edit_type'];
+                    if (!empty($editor['edit_options']) && empty($editor['edit_type'])) {
+                        $editor['edit_type'] = 'tcg_select2';
                     }
+                    if (empty($editor['edit_type'])) {
+                        $editor['edit_type'] = $col['type'];
+                    }
+
+                    //var_dump($editor);
 
                     $this->editor_metas[] = $editor;
                     $this->edit_columns[] = $col['name'];
@@ -410,11 +429,6 @@ class Mtable extends CI_Model
                     $filter['filter_label'] = __($row['filter_label']);
                     if (empty($filter['filter_label'])) {
                         $filter['filter_label'] = ucwords($col['label']);
-                    }
-
-                    $filter['filter_type'] = $row['filter_type'];
-                    if (empty($filter['filter_type'])) {
-                        $filter['filter_type'] = $col['type'];
                     }
 
                     $filter['filter_css'] = $row['filter_css'];
@@ -431,13 +445,20 @@ class Mtable extends CI_Model
                     }
 
                     //force select2
-                    if (!empty($filter['filter_options'])) {
-                        $filter['filter_type'] = 'select2';
+                    $filter['filter_type'] = $row['filter_type'];
+                    if (!empty($filter['filter_options']) && empty($filter['filter_type'])) {
+                        $filter['filter_type'] = 'tcg_select2';
+                    }
+                    if (empty($filter['filter_type'])) {
+                        $filter['filter_type'] = $col['type'];
                     }
 
                     $this->filter_metas[] = $filter;
                     $this->filter_columns[] = $col['name'];
                 }
+
+                $this->column_metas[] = $col;
+                $this->select_columns[] = $col['column_name']." as ".$col['name'];
             }
 
         } while (false);
@@ -498,6 +519,7 @@ class Mtable extends CI_Model
                 $action['icon_only'] = ($row['icon_only'] == 1);
                 $action['css'] = $row['css'];
                 $action['onclick_js'] = $row['onclick_js'];
+                $action['selected'] = $row['selected'];
 
                 $this->custom_actions[] = $action;
             }
@@ -605,6 +627,7 @@ class Mtable extends CI_Model
         if (!empty($this->table_metas['where_clause']))   
             $this->db->where($this->table_metas['where_clause']);
 
+        $this->db->order_by($column);
         $this->db->distinct();
         $this->db->select($column .' as value');
         $arr = $this->db->get($table_name)->result_array();
@@ -886,7 +909,6 @@ class Mtable extends CI_Model
         $this->db->select($lookup_column .' as label, '. $key_column .' as value');
         return $this->db->get($table_name)->result_array();
 	}
-
 }
 
   

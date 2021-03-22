@@ -17,20 +17,39 @@ abstract class MY_Crud_Controller extends CI_Controller {
 	protected function table($name = '', $params = array())
 	{
 		if (empty($name)) {
-			$this->show_404();		//not-found
+			theme_404();		//not-found
 			return;
 		}
 
 		//check for permission
 		$this->load->model(array('crud/Mpages', 'crud/Mpermission', 'crud/Mnavigation'));
 		if (!$this->Mpermission->can_view($name)) {
-			$this->show_403();		//not-authorized
+			theme_403();		//not-authorized
 			return;
 		}
 		
 		$page = $this->Mpages->get_page($name);
 		if ($page == null) {
-			$this->show_404();
+			theme_404();
+			return;
+		}
+
+
+		if (isset($params) && count($params) > 0 && $params[0] == 'add') {
+			unset($params[0]);
+			$this->table_add($page);
+			return;
+		}
+
+		if (isset($params) && count($params) > 0 && $params[0] == 'edit') {
+			unset($params[0]);
+
+			//var_dump($params);
+
+			$id = array_shift($params);
+			if ($id != null)		$this->table_edit($page, $id);
+			else					$this->table_add($page);
+			
 			return;
 		}
 
@@ -84,7 +103,7 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		//crud pages
 		$model = $this->get_model($page['crud_table_id']);
 		if ($model == null) {
-			$this->show_404();
+			theme_404();
 			return;
 		}
 
@@ -120,6 +139,7 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		$base_ajax_url = $this->get_ajax_url($name);
 
 		$tablemeta['ajax'] = $base_ajax_url .'/json';
+		$tablemeta['crud_url'] = $base_ajax_url;
 
 		//override paging size if necessary
 		if (!empty($page['page_size'])) {
@@ -134,6 +154,8 @@ abstract class MY_Crud_Controller extends CI_Controller {
 			if (!empty($val['page_size'])) {
 				$subtables[$key]['crud']['page_size'] = $val['page_size'];
 			}
+			//override always autoload
+			$subtables[$key]['crud']['initial_load'] = false;
 		}
 
 		if ($page_type == 'table') {
@@ -172,9 +194,182 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		$this->smarty->render_theme($template, $page_data);
 	}
 
+	protected function table_add($page) {
+		$page_type = $page['page_type'];
+		if ($page_type != 'table') {
+			theme_404();		//not-found
+			return;
+		}
+
+		//navigation
+		$navigation = $this->Mnavigation->get_navigation($this->session->userdata('role_id'));
+
+		//var_dump($navigation); exit;
+
+		$page_data['page_name']              = $page['name'];
+		$page_data['page_title']             = $page['page_title'];
+		$page_data['page_icon']              = $page['page_icon'];
+
+		$page_data['page_role']           	 = $this->session->userdata('page_role');
+
+		$page_data['page_header'] 			 = $page['page_header'];
+		$page_data['page_footer'] 			 = $page['page_footer'];
+
+		if (!empty($page['header_view'])) 		$page_data['header_view'] = $page['header_view'];
+		if (!empty($page['footer_view'])) 		$page_data['footer_view'] = $page['footer_view'];
+		
+		//easy access
+		$page_data['page']			 = $page; 
+		$page_data['navigation']	 = $navigation;
+
+		//crud pages
+		$model = $this->get_model($page['crud_table_id']);
+		if ($model == null) {
+			theme_404();
+			return;
+		}
+		
+		$tablemeta = $model->tablemeta();
+
+		$page_data['page_title']             = __("Add") ." ". $tablemeta['name'];
+		$page_data['page_icon']              = $page['page_icon'];
+
+		//ajax url for data loading
+		//Important: we only provide the base path! ie. /crud/page-name
+		$base_ajax_url = $this->get_ajax_url($page['name']);
+
+		$tablemeta['ajax'] = $base_ajax_url .'/json';
+		$tablemeta['crud_url'] = $base_ajax_url;
+
+		//show link back to table
+		$page_data['show_table_link'] = true;
+
+		//override paging size if necessary
+		if (!empty($page['page_size'])) {
+			$tablemeta['page_size'] = $page['page_size'];
+		}
+
+		$page_data['crud']			 = $tablemeta; 
+
+		// //get subtables if necessary
+		// $subtables = $this->Mpages->subtables($page['id'], true);
+		// foreach($subtables as $key => $val) {
+		// 	$subtables[$key]['crud']['ajax'] = $base_ajax_url .'/subtable/'. $val['subtable_id'];
+		// 	//override paging size if necessary
+		// 	if (!empty($val['page_size'])) {
+		// 		$subtables[$key]['crud']['page_size'] = $val['page_size'];
+		// 	}
+		// }
+
+		// //easy access for everything
+		// $page_data['subtables']		 = $subtables;
+
+		$page_data['detail'] = null; 
+
+		$template = '/crud/form.tpl';
+		$this->smarty->render_theme($template, $page_data);
+	}
+
+	protected function table_edit($page, $id=null) {
+		$page_type = $page['page_type'];
+		if ($page_type != 'table') {
+			theme_404();		//not-found
+			return;
+		}
+
+		//navigation
+		$navigation = $this->Mnavigation->get_navigation($this->session->userdata('role_id'));
+
+		$page_data['page_name']              = $page['name'];
+
+		$page_data['page_role']           	 = $this->session->userdata('page_role');
+
+		$page_data['page_header'] 			 = $page['page_header'];
+		$page_data['page_footer'] 			 = $page['page_footer'];
+
+		if (!empty($page['header_view'])) 		$page_data['header_view'] = $page['header_view'];
+		if (!empty($page['footer_view'])) 		$page_data['footer_view'] = $page['footer_view'];
+		
+		//easy access
+		$page_data['page']			 = $page; 
+		$page_data['navigation']	 = $navigation;
+
+		//crud pages
+		$model = $this->get_model($page['crud_table_id']);
+		if ($model == null) {
+			theme_404();
+			return;
+		}
+		
+		$tablemeta = $model->tablemeta();
+
+		$page_data['page_title']             = __("Edit") ." ". $tablemeta['name'];
+		$page_data['page_icon']              = $page['page_icon'];
+
+		//ajax url for data loading
+		//Important: we only provide the base path! ie. /crud/page-name
+		$base_ajax_url = $this->get_ajax_url($page['name']);
+
+		$tablemeta['ajax'] = $base_ajax_url .'/json';
+		$tablemeta['crud_url'] = $base_ajax_url;
+
+		//show link back to table
+		$page_data['show_table_link'] = true;
+
+		//override paging size if necessary
+		if (!empty($page['page_size'])) {
+			$tablemeta['page_size'] = $page['page_size'];
+		}
+
+		$page_data['crud']			 = $tablemeta; 
+
+		//get detail
+		$detail = null;
+
+		$key = $page['userdata_key'];
+		if (!empty($key)) {
+			//actual key is from userdata
+			$key = $this->session->userdata($key);
+			$detail = $model->detail($key);
+		}
+		else if ($id != null) {
+			//get from param
+			$detail = $model->detail($id);
+		}
+		
+		$page_data['detail'] = $detail; 
+
+		if ($detail != null) {
+			$parent_key = $detail[ $tablemeta['key_column'] ];
+
+			//get subtables if necessary
+			$subtables = $this->Mpages->subtables($page['id'], true);
+			foreach($subtables as $key => $val) {
+				//override paging size if necessary
+				if (!empty($val['page_size'])) {
+					$subtables[$key]['crud']['page_size'] = $val['page_size'];
+				}
+				//override always autoload
+				$subtables[$key]['crud']['initial_load'] = true;
+				$subtables[$key]['crud']['parent_key'] = $parent_key;
+				//override ajax with the parent key
+				$subtables[$key]['crud']['ajax'] = $base_ajax_url .'/subtable/'. $val['subtable_id'] .'/'. $parent_key;
+
+			}
+
+			//easy access for everything
+			$page_data['subtables']		 = $subtables;
+		}
+
+		//var_dump($page_data);
+
+		$template = '/crud/form.tpl';
+		$this->smarty->render_theme($template, $page_data);
+	}
+
 	protected function table_detail($model, $params = null) {
 		if ($params == null || count($params) == 0) {
-			show_404();
+			theme_404();
 			return;
 		}
 
@@ -450,24 +645,35 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		return $this->Mtable;
 	}
 
-	protected function show_404() {
-		$theme = $this->session->userdata('theme');
-		if (!isset($theme)) {
-			$theme = 'default';
-		}
+	// protected function theme_404() {
+	// 	$theme = $this->session->userdata('theme');
+	// 	if (!isset($theme)) {
+	// 		$theme = 'default';
+	// 	}
 
-		$template = "themes/$theme/error/404.tpl";
-		$this->smarty->render($template);
-	}
+	// 	$page_data = array();
+	// 	$page_data['page_name']              = "error-404";
+	// 	$page_data['page_title']             = __("Not Found");
+	// 	$page_data['page_icon']              = null;
+	// 	$page_data['query_params']           = null;
 
-	protected function show_403() {
-		$theme = $this->session->userdata('theme');
-		if (!isset($theme)) {
-			$theme = 'default';
-		}
+	// 	$page_data['page_role']           	 = $this->session->userdata('page_role');
 
-		$template = "themes/$theme/error/403.tpl";
-		$this->smarty->render($template);
-	}
+	// 	$navigation = $this->Mnavigation->get_navigation($this->session->userdata('role_id'));
+	// 	$page_data['navigation']	 = $navigation;
+
+	// 	$template = "error/404.tpl";
+	// 	$this->smarty->render_theme($template, $page_data);
+	// }
+
+	// protected function theme_403() {
+	// 	$theme = $this->session->userdata('theme');
+	// 	if (!isset($theme)) {
+	// 		$theme = 'default';
+	// 	}
+
+	// 	$template = "themes/$theme/error/403.tpl";
+	// 	$this->smarty->render($template);
+	// }
 
 }

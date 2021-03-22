@@ -36,15 +36,14 @@ $(document).ready(function() {
                         {/foreach}
                     ],
                     {/if}
-                    {if isset($col.edit_attr)}
-                    attr: {
-                        {foreach from=$col.edit_attr key=k item=v}
-                        {$k} : "{$v}",
-                        {/foreach}
-                    },
+                    {if !empty($col.edit_attr)}
+                    attr: {$col.edit_attr|@json_encode nofilter},
                     {/if}
-                    {if isset($col.edit_info)}
+                    {if !empty($col.edit_info)}
                     fieldInfo:  "{$col.edit_info}",
+                    {/if}
+                    {if isset($col.edit_def_value) && $col.edit_def_value != null}
+                    def:  "{$col.edit_def_value}",
                     {/if}
                     {if $col.edit_type=='upload' || $col.edit_type=='image'}
                     display: function ( file_id ) {
@@ -86,21 +85,21 @@ $(document).ready(function() {
             i18n: {
                 create: {
                     button: "{__('Add')}",
-                    title: "{__('Add')} {$page_title}",
+                    title: "{__('Add')} {$tbl.name}",
                     submit: "{__('Save')}"
                 },
                 edit: {
                     button: "{__('Edit')}",
-                    title: "{__('Edit')} {$page_title}",
+                    title: "{__('Edit')} {$tbl.name}",
                     submit: "{__('Save')}"
                 },
                 remove: {
                     button: "{__('Delete')}",
-                    title: "{__('Delete')} {$page_title}",
+                    title: "{__('Delete')} {$tbl.name}",
                     submit: "{__('Delete')}",
                     confirm: {
-                        _: "{__('Do you want to delete')} %d {$page_title}?",
-                        1: "{__('Do you want to delete')} 1 {$page_title}?"
+                        _: "{__('Do you want to delete')} %d {$tbl.name}?",
+                        1: "{__('Do you want to delete')} 1 {$tbl.name}?"
                     }
                 },
                 error: {
@@ -303,6 +302,8 @@ $(document).ready(function() {
                 callback(_data);
             });
         },
+        {else if !empty($detail)}
+        "ajax": "{$tbl.ajax}",
         {else}
         "ajax": {
             "url": "{$tbl.ajax}",
@@ -379,7 +380,7 @@ $(document).ready(function() {
                     }
 
                     {if count($tbl.row_actions) == 1 && $tbl.row_actions[0].icon_only == false}
-                        return "<a href='#' onclick='event.stopPropagation(); {$tbl.row_actions[0].onclick_js}(" +meta.row+ ", dt_{$tbl.table_id});' data-tag='" +meta.row+ "' class='btn btn-sm {$tbl.row_actions[0].css}'><i class='{$tbl.row_actions[0].icon}'></i> {$tbl.row_actions[0].label}</a>";
+                        return "<button href='#' onclick='event.stopPropagation(); {$tbl.row_actions[0].onclick_js}(" +meta.row+ ", dt_{$tbl.table_id});' data-tag='" +meta.row+ "' class='btn btn-sm {$tbl.row_actions[0].css}'><i class='{$tbl.row_actions[0].icon}'></i> {$tbl.row_actions[0].label}</button>";
                     {else}
                         let str = '';
 
@@ -391,7 +392,7 @@ $(document).ready(function() {
                                 {if !empty($x.conditional_js)}
                                 if ({$x.conditional_js}(meta.row)) {
                                 {/if}
-                                str += "<a href='#' onclick='event.stopPropagation(); {$x.onclick_js}(" +meta.row+ ", dt_{$tbl.table_id});' data-tag='" +meta.row+ "' class='btn btn-icon-circle {$x.css}'><i class='{$x.icon}'></i></a>"                           
+                                str += "<button href='#' onclick='event.stopPropagation(); {$x.onclick_js}(" +meta.row+ ", dt_{$tbl.table_id});' data-tag='" +meta.row+ "' class='btn btn-icon-circle {$x.css}'><i class='{$x.icon}'></i></button>"                           
                                 {if !empty($x.conditional_js)}
                                 }
                                 {/if}
@@ -399,8 +400,8 @@ $(document).ready(function() {
                         {/foreach}
                         
                         {if $num_of_dropdown > 0}
-                            str += '<div class="dropright dropright btn-dropdown dt-row-actions" data-tag="' +meta.row+ '">'
-                                + '<button type="button" class="btn btn-sm btn-outline-success btn-rounded btn-icon" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">'
+                            str += '<div class="dropright dt-row-actions" data-tag="' +meta.row+ '" style="display: inline-block;">'
+                                + '<button type="button" class="btn btn-icon-circle btn-outline-success" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">'
                                     + '<i class="fa fa-ellipsis-v fas"></i>'
                                 + '</button>'
                                 + '<ul class="dropdown-menu" x-placement="right-start" style="position: absolute; will-change: transform; top: 0px; left: 0px; transform: translate3d(5px, 248px, 0px);" x-out-of-boundaries="">';
@@ -452,11 +453,50 @@ $(document).ready(function() {
         }
     });
 
-    {if count($tbl.custom_actions) > 0}
     let buttons = new $.fn.dataTable.Buttons( dt_{$tbl.table_id}, {
+        buttons: [
+            {if isset($tbl.table_actions) && $tbl.table_actions.export}
+            {
+                extend: 'excelHtml5',
+                text: '{__("Export")}',
+                className: 'btn-sm btn-primary',
+                exportOptions: {
+                    modifier: {
+                        //selected: true
+                    }
+                },
+                customizeData: function ( data ) {
+                },
+            },
+            {/if}
+            {if isset($tbl.table_actions) && $tbl.table_actions.import}
+            //TODO
+            {/if}
+        ]
+    } );
+ 
+    let cnt = buttons.c.buttons.length;
+    if (cnt == 0) {
+        buttons.container().addClass('d-none dt-export-buttons');
+    }
+    else {
+        buttons.container().addClass('ml-md-2 dt-export-buttons');
+    }
+
+    dt_{$tbl.table_id}.buttons( 0, null ).container().after(
+        dt_{$tbl.table_id}.buttons( 1, null ).container()
+    );
+
+    {if count($tbl.custom_actions) > 0}
+    buttons = new $.fn.dataTable.Buttons( dt_{$tbl.table_id}, {
         buttons: [
             {foreach $tbl.custom_actions as $x}
             {
+                {if $x.selected==1}
+                extend: 'selectedSingle',
+                {else if $x.selected>1}
+                extend: 'selected',
+                {/if}
                 text: '{__($x.label)}',
                 action: function ( e, dt, node, conf ) {
                     {$x.onclick_js}(e, dt, node, conf);;
@@ -467,10 +507,10 @@ $(document).ready(function() {
         ]
     } );
  
-    buttons.container().addClass('mx-md-2 dt-action-buttons');
+    buttons.container().addClass('ml-md-2 dt-custom-buttons');
 
-    dt_{$tbl.table_id}.buttons( 0, null ).container().after(
-        dt_{$tbl.table_id}.buttons( 1, null ).container()
+    dt_{$tbl.table_id}.buttons( 1, null ).container().after(
+        dt_{$tbl.table_id}.buttons( 2, null ).container()
     );
     {/if}
 
@@ -497,6 +537,11 @@ $(document).ready(function() {
             return false; // cancel the select event for the row
         }
     });
+
+    // dt_{$tbl.table_id}.on( 'column-sizing.dt', function ( e, settings ) {
+    //     //dt_{$tbl.table_id}.columns.adjust().responsive.recalc();
+    //     console.log( 'Column width recalculated in table' );
+    // });
 
 });
 
@@ -563,13 +608,13 @@ function dt_{$tbl.table_id}_edit_row(row_id, dt) {
 
     // editor_{$tbl.table_id}.title("{__('Edit')} {$page_title}")
     //         .buttons("{__('Save')}")
-    //         .edit(row.index(), true);
+    //         .edit(row.index());
 
     row.edit( {
         buttons: [
             { label: "{__('Save')}", className: "btn-primary", fn: function () { this.submit(); } },
         ]
-    } );
+    }, false );
 
     return;
 }

@@ -23,6 +23,7 @@ class Auth extends CI_Controller
         {
             $data['use_captcha'] = ($this->setting->get('use_captcha') == 1);
             $data['is_localhost'] = (strpos(base_url(), 'localhost') >= 0);
+
 			$this->smarty->render('auth/login.tpl',$data);
             return;
         }
@@ -123,13 +124,7 @@ class Auth extends CI_Controller
             return;
         }
 
-        $theme = $this->session->userdata('theme');
-		if (!isset($theme)) {
-			$theme = 'default';
-		}
-
-		$template = "themes/$theme/error/404.tpl";
-		$this->smarty->render($template);
+        theme_404();
 	}
 
     function notauthorized() {
@@ -139,14 +134,43 @@ class Auth extends CI_Controller
             return;
         }
 
-        $theme = $this->session->userdata('theme');
-		if (!isset($theme)) {
-			$theme = 'default';
-		}
-
-		$template = "themes/$theme/error/403.tpl";
-		$this->smarty->render($template);
+        theme_403();
 	}
+
+    function resetpassword() {
+        $this->load->model(array('Mauth', 'crud/Mpermission'));
+        
+        if (!$this->Mpermission->is_admin()) {
+            $data['error'] = 'not-authorized';
+            echo json_encode($data, JSON_INVALID_UTF8_IGNORE);
+        }
+
+        $values = $this->input->post("data");
+
+        $error_msg = "";
+        $data['data'] = array();
+        foreach ($values as $key => $valuepair) {
+            $user_id = $key;
+            $pwd1 = $valuepair["pwd1"];
+            $pwd2 = $valuepair["pwd2"];
+
+            if ($pwd1 != $pwd2) {
+                $data['error'] = __("Password baru tidak sama. Silahkan ulangi kembali.");
+                continue;
+            }
+
+            if($this->Mauth->reset_password($user_id, $pwd1) == 0) {
+                $data['error'] = __("Terjadi permasalahan sehingga data gagal tersimpan. Silahkan ulangi kembali.");
+                continue;
+            } else {
+                $user = $this->Mauth->profile($user_id);
+                if ($user != null)  $data['data'][] = $user; 
+            }
+
+        }
+
+        echo json_encode($data, JSON_INVALID_UTF8_IGNORE);
+    }
 
 	function check_recaptcha_v2($captcha) {
 		if (empty($captcha))

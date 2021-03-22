@@ -6,48 +6,51 @@
 {/foreach}
 
 {if $num_visible_filter}
-<div class="row">
-    <div class="col-12">
-        <div class="card widget-inline">
-            <div class="card-body">
-                <div class="row"  style="display: flex;">
-                {foreach $crud.filter_columns as $f} 
-                    {if $f.filter_type != 'js'}
-                    <div class="form-group col-md-4 mb-0 {$f.filter_css}">
-                        <label>{__($f.filter_label)}</label>
-                        {if $f.filter_type == 'select' || $f.filter_type == 'select2' || $f.filter_type == 'distinct'}
-                            <select id="f_{$f.name}" name="{$f.name}" class="form-control" placeholder="{__($f.filter_label)}">
-                                <option value=''>-- {__($f.filter_label)} --</option>
-                                {if isset($f.filter_options)}
-                                    {foreach from=$f.filter_options key=k item=v}
-                                    {if is_array($v)}
-                                    <option value="{$v.value}">{$v.label}</option>
-                                    {else}
-                                    <option value="{$k}">{$v}</option>
-                                    {/if}
-                                    {/foreach}
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card widget-inline">
+                    <div class="card-body">
+                        <div class="row"  style="display: flex;">
+                        {foreach $crud.filter_columns as $f} 
+                            {if $f.filter_type != 'js'}
+                            <div class="form-group col-md-4 mb-0 {$f.filter_css}">
+                                <label>{__($f.filter_label)}</label>
+                                {if $f.filter_type == 'select' || $f.filter_type == 'tcg_select2' || $f.filter_type == 'distinct'}
+                                    <select id="f_{$f.name}" name="{$f.name}" class="form-control" placeholder="{__($f.filter_label)}">
+                                        <option value=''>-- {__($f.filter_label)} --</option>
+                                        {if isset($f.filter_options)}
+                                            {foreach from=$f.filter_options key=k item=v}
+                                            {if is_array($v)}
+                                            <option value="{$v.value}">{$v.label}</option>
+                                            {else}
+                                            <option value="{$k}">{$v}</option>
+                                            {/if}
+                                            {/foreach}
+                                        {/if}
+                                    </select>
+                                {else}
+                                    <input class="form-control" type="text" id="f_{$f.name}" name="{$f.name}" placeholder="{__($f.filter_label)}"/>
                                 {/if}
-                            </select>
-                        {else}
-                            <input class="form-control" type="text" id="f_{$f.name}" name="{$f.name}" placeholder="{__($f.filter_label)}"/>
-                        {/if}
+                            </div>
+                            {/if}
+                        {/foreach}
+                        </div>
                     </div>
-                    {/if}
-                {/foreach}
-                </div>
-            </div>
-            <div class="card-footer">
-                <div class="row">
-                <div class="col-sm-3">
-                       <button type="submit" class="btn btn-primary btn-block" id='btn_crud_filter'
-                            name="button">{__('View')}</button>
-                </div>
-                </div>
-            </div>
-        </div> <!-- end card-box-->
-    </div> <!-- end col-->
-</div>
-
+                    <div class="card-footer">
+                        <div class="row">
+                        <div class="col-sm-3">
+                            <button type="submit" class="btn btn-primary btn-block" id='btn_crud_filter'
+                                    name="button">{__('View')}</button>
+                        </div>
+                        </div>
+                    </div>
+                </div> <!-- end card-box-->
+            </div> <!-- end col-->
+        </div>
+    </div>
+</section>
 
 <script type="text/javascript">
 

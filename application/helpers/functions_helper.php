@@ -282,4 +282,69 @@
 			}
 		}
 	}
+
+	if ( ! function_exists('theme_404'))
+	{
+		function theme_404() {
+			$ci	=&	get_instance();
+
+			$page_data = array();
+			$page_data['page_name']              = "error-404";
+			$page_data['page_title']             = __("Not Found");
+			$page_data['page_icon']              = null;
+			$page_data['query_params']           = null;
+
+			$page_data['page_role']           	 = $ci->session->userdata('page_role');
+
+			$ci->load->model('crud/Mnavigation');
+			$navigation = $ci->Mnavigation->get_navigation($ci->session->userdata('role_id'));
+			$page_data['navigation']	 = $navigation;
+
+			$template = "error/404.tpl";
+			$ci->smarty->render_theme($template, $page_data);
+		}
+	}
+
+	if ( ! function_exists('theme_403'))
+	{
+		function theme_403() {
+			$ci	=&	get_instance();
+
+			$page_data = array();
+			$page_data['page_name']              = "error-403";
+			$page_data['page_title']             = __("Not Authorized");
+			$page_data['page_icon']              = null;
+			$page_data['query_params']           = null;
+
+			$page_data['page_role']           	 = $ci->session->userdata('page_role');
+
+			$ci->load->model('crud/Mnavigation');
+			$navigation = $ci->Mnavigation->get_navigation($ci->session->userdata('role_id'));
+			$page_data['navigation']	 = $navigation;
+
+			$template = "error/403.tpl";
+			$ci->smarty->render_theme($template, $page_data);
+		}
+	}
+
+	if ( ! function_exists('replace_userdata'))
+	{
+		function replace_userdata($str, $REGEX_USERDATA='/{{(\w+)}}/') {
+			$ci	=&	get_instance();
+
+			$matches = null;
+			while (preg_match($REGEX_USERDATA, $str, $matches)) {
+				//use userdata
+				$val = $ci->session->userdata($matches[1]);
+				if (isset($val) && $val != null) {
+					$str = str_replace($matches[0], $val, $str);
+				}
+				else {
+					$str = str_replace($matches[0], "--" .$matches[1]. "--", $str);
+				}
+			}
+
+			return $str;
+		}
+	}
 ?>
