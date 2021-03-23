@@ -60,14 +60,61 @@
     }
 
     // confirm
-    function confirm(title, message, callback) {
-        modal('#modal-confirm', { 'title': title, 'message': message });
-        $("#modal-confirm-ok").click( function() {
-            button_status($(this), "loading");
-            if(callback) callback();
-            $('#modal').modal('hide');
-        });
-    }
+    // function confirm(message, callback) {
+    //     $.confirm({
+    //         title: '{__("Konfirmasi")}',
+    //         content: message,
+    //         buttons: {
+    //             confirm: {
+    //                 text: 'Yes', // With spaces and symbols
+    //                 action: function () {
+    //                     console.log('clicked yes');
+    //                     if(callback) callback();
+    //                 }
+    //             },
+    //             cancel: {
+    //                 text: 'No', // With spaces and symbols
+    //                 action: function () {
+    //                     //nothing
+    //                 }
+    //             },
+    //         }
+    //     });
+    // }
+
+    // function confirm(message, callback) {
+    //     toastr.info("<br /><br /><button type='button' id='confirmationRevertYes' class='btn clear'>Yes</button>",'delete item?',
+    //     {
+    //         closeButton: false,
+    //         allowHtml: true,
+    //         onShown: function (toast) {
+    //             $("#confirmationRevertYes").click(function(){
+    //                 if(callback) callback();
+    //             });
+    //             }
+    //     });
+    // }
+
+    // function confirm(title, message, callback) {
+    //     toastr.success("<br /><br /><button type='button' id='confirmationRevertYes' class='btn clear'>Yes</button>",'delete item?',
+    //     {
+    //         closeButton: false,
+    //         allowHtml: true,
+    //         onShown: function (toast) {
+    //             $("#confirmationRevertYes").click(function(){
+    //                 console.log('clicked yes');
+    //             });
+    //             }
+    //     });
+  
+    //     modal('#modal-confirm', { 'title': title, 'message': message });
+    //     $("#modal-confirm-ok").click( function() {
+    //         button_status($(this), "loading");
+    //         if(callback) callback();
+    //         $('#modal').modal('hide');
+    //     });
+    // }
+
 
     // guid
     function guid() {

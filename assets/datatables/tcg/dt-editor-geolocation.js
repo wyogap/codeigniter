@@ -148,8 +148,11 @@
 
             if (lat == '' && lng == '')     return null;
 
-            let val = [lat, lng];
-            return JSON.stringify(val);
+			//add space after comma so that it wraps nicely on mobile
+			return '["'+lat+'", "'+lng+'"]';
+            
+			//let val = [lat, lng];
+            //return JSON.stringify(val);
         },
       
         set: function ( conf, val ) {

@@ -13,7 +13,7 @@ div.DTE_Field_Type_tcg_table div[data-dte-e='input'] {
     flex-basis: 100%;
 }
 
-.DTE div.DTE_Field_Type_tcg_cascade .col-form-control {
+.DTE div.DTE_Field_Type_tcg_table .col-form-control {
 	margin-bottom: .5rem!important;
 }
 

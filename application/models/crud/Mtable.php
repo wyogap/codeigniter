@@ -336,6 +336,15 @@ class Mtable extends CI_Model
                     $col['edit_field'] = $col['name'];
                 }
 
+                if ($col['type'] == "tcg_upload") {
+                    //link as foreign key
+                    $col['foreign_key'] = true;
+                    $row['reference_table_name'] = "dbo_uploads";
+                    $row['reference_key_column'] = "id";
+                    $row['reference_lookup_column'] = "filename";
+                    $row['reference_soft_delete'] = 1;
+                }
+
                 if ($col['foreign_key']) {
                     $ref = static::$TABLE_JOIN;
                     $ref['name'] = $col['name'];
@@ -358,8 +367,8 @@ class Mtable extends CI_Model
                         //add into select
                         $this->select_columns[] = $ref['reference_alias'].".".$ref['reference_lookup_column']." as ".$ref['name']."_label";
                     }
-                    else if ($col['type'] == 'tcg_multi_select') {
-                        $subquery = "select group_concat(" .$ref['reference_lookup_column']. ") from " .$ref['reference_table_name']. " where find_in_set(" .$ref['reference_key_column']. ", " .$ref['column_name']. ") > 0";
+                    else if ($col['type'] == 'tcg_multi_select' || $col['type'] == 'tcg_upload') {
+                        $subquery = "select group_concat(" .$ref['reference_lookup_column']. " separator ', ') from " .$ref['reference_table_name']. " where find_in_set(" .$ref['reference_key_column']. ", " .$ref['column_name']. ") > 0";
 
                         if ($ref['reference_soft_delete']) {
                             $subquery .= " AND is_deleted=0";

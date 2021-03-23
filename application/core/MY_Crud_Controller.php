@@ -141,6 +141,21 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		$tablemeta['ajax'] = $base_ajax_url .'/json';
 		$tablemeta['crud_url'] = $base_ajax_url;
 
+		//upload columns
+		foreach($tablemeta["editor_columns"] as $key => $col) {
+			if ($col["edit_type"] == "tcg_upload") {
+				//make sure ajax is correct
+				if (empty($col['edit_attr'])) {
+					$tablemeta["editor_columns"][$key]['edit_attr'] = array (
+						"ajax"	=> $base_ajax_url .'/json'
+					);
+				}
+				else {
+					$tablemeta["editor_columns"][$key]['edit_attr']['ajax'] = $base_ajax_url .'/json';
+				}
+			}
+		}
+
 		//override paging size if necessary
 		if (!empty($page['page_size'])) {
 			$tablemeta['page_size'] = $page['page_size'];
@@ -241,6 +256,21 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		$tablemeta['ajax'] = $base_ajax_url .'/json';
 		$tablemeta['crud_url'] = $base_ajax_url;
 
+		//upload columns
+		foreach($tablemeta["editor_columns"] as $key => $col) {
+			if ($col["edit_type"] == "tcg_upload") {
+				//make sure ajax is correct
+				if (empty($col['edit_attr'])) {
+					$tablemeta["editor_columns"][$key]['edit_attr'] = array (
+						"ajax"	=> $base_ajax_url .'/json'
+					);
+				}
+				else {
+					$tablemeta["editor_columns"][$key]['edit_attr']['ajax'] = $base_ajax_url .'/json';
+				}
+			}
+		}
+
 		//show link back to table
 		$page_data['show_table_link'] = true;
 
@@ -312,6 +342,21 @@ abstract class MY_Crud_Controller extends CI_Controller {
 
 		$tablemeta['ajax'] = $base_ajax_url .'/json';
 		$tablemeta['crud_url'] = $base_ajax_url;
+
+		//upload columns
+		foreach($tablemeta["editor_columns"] as $key => $col) {
+			if ($col["edit_type"] == "tcg_upload") {
+				//make sure ajax is correct
+				if (empty($col['edit_attr'])) {
+					$tablemeta["editor_columns"][$key]['edit_attr'] = array (
+						"ajax"	=> $base_ajax_url .'/json'
+					);
+				}
+				else {
+					$tablemeta["editor_columns"][$key]['edit_attr']['ajax'] = $base_ajax_url .'/json';
+				}
+			}
+		}
 
 		//show link back to table
 		$page_data['show_table_link'] = true;
@@ -488,6 +533,83 @@ abstract class MY_Crud_Controller extends CI_Controller {
             echo json_encode($data, JSON_INVALID_UTF8_IGNORE);
             return;
         }   
+		else if ($action=='uploadFile') {
+            
+            $key = $this->input->post("field");
+            if (!isset($key)) {
+                echo json_encode($data, JSON_INVALID_UTF8_IGNORE);
+                return;
+            }
+       
+			$this->load->helper("uploader");
+			$uploader = new Uploader();
+
+			//TODO: get parameter from columnmeta
+            $uploader->file_types = array();
+            $uploader->max_dimension = 200;
+            $uploader->max_size_mb = 100;
+
+            //prevent generation of pdf thumbnail
+            Uploader::$GENERATE_PDF_THUMBNAIL = 0;
+
+            $fileObj = $uploader->upload($_FILES['file'], $table_name);
+
+            $data['files'] = array();
+            if(!empty($fileObj['error'])) {
+                $data['error'] = $fileObj['error'];
+            } else {
+                $data['status'] = 1;
+                $data['files'][] = $fileObj;
+            }
+
+            echo json_encode($data, JSON_INVALID_UTF8_IGNORE);
+            return;
+		}
+		else if ($action=='removeFile'){
+			$files = $this->input->post("files");
+            if (!isset($files)) {
+                echo json_encode($data, JSON_INVALID_UTF8_IGNORE);
+                return;
+            }
+            $files = explode(',', $files);
+
+            $this->load->helper("uploader");
+			$uploader = new Uploader();
+
+            $error_msg = "";
+			foreach ($files as $key) {
+                $uploader->remove($key, $table_name);
+            }
+
+            $data['status'] = 1;
+			echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
+        }
+        else if ($action=='listFile') {
+			$files = $this->input->post("files");
+            if (!isset($files)) {
+                echo json_encode($data, JSON_INVALID_UTF8_IGNORE);
+                return;
+            }
+            $files = explode(',', $files);
+
+            //var_dump($files);
+
+            $this->load->helper("uploader");
+			$uploader = new Uploader();
+
+            $error_msg = "";
+            $data['files'] = array();
+			foreach ($files as $key=>$value) {
+                $fileObj = $uploader->detail($value, $table_name);
+                if ($fileObj != null) {
+                    $data['files'][] = $fileObj;
+                }
+            }
+
+            $data['status'] = 1;
+			echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
+
+        }
         else {
             $data['error'] = __('not-implemented');
             echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	

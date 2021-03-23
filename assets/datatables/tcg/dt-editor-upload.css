@@ -1,0 +1,39 @@
+/* .tcg-mask-placeholder {
+
+} */
+
+div.DTE_Field_Type_tcg_upload .DTE_Label {
+    width: 100% !important;
+}
+
+div.DTE_Field_Type_tcg_upload div.DTE_Field_Input {
+    float: none !important;
+    clear: both !important;
+    width: 100% !important;
+}
+
+.dropzone.tcg-upload-dropzone {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    /* overflow: scroll; */
+}
+
+.dropzone.tcg-upload-dropzone .dz-preview .dz-container.dz-focus {
+    z-index: 1000;
+}
+
+.dropzone.tcg-upload-dropzone .dz-preview.dz-error .dz-container.dz-focus .dz-error-message {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.dropzone.tcg-upload-dropzone .dz-preview .dz-filename.dz-focus {
+    z-index: 1000;
+    overflow: visible;
+    text-overflow: unset;
+}
+
+.dropzone.tcg-upload-dropzone .dz-preview .dz-filename.dz-focus span {
+    border: 1px solid rgba(200,200,200,0.8);
+    background-color: rgba(255,255,255,0.8)
+}

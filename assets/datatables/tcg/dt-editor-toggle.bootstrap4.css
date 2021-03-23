@@ -65,17 +65,28 @@ div.DTE_Field_Type_tcg_toggle div.DTE_Field_InputControl .switch.readonly input:
 }
 
 @media screen and (max-width: 767px) {
-	.crud-form div.DTE_Field_Type_tcg_toggle {
+	div.DTE_Field_Type_tcg_toggle {
 		padding-top: 0.5rem;
 	}
 	
+	/*
 	.crud-form div.DTE_Field_Type_tcg_toggle .form-label {
+	    float: left;
+		position: absolute;
+	}
+	
+	.crud-form div.DTE_Field_Type_tcg_toggle .form-input {
+		text-align: right;
+	}
+	*/
+	
+	div.DTE_Field_Type_tcg_toggle label[data-dte-e='label'] {
 	    float: left;
 		/* display: inline-grid; */
 		position: absolute;
 	}
 	
-	.crud-form div.DTE_Field_Type_tcg_toggle .form-input {
+	div.DTE_Field_Type_tcg_toggle div[data-dte-e='input'] {
 		text-align: right;
 	}
 }

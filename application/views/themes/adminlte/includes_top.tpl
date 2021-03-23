@@ -40,6 +40,9 @@
 <link href="{$base_url}assets/datatables/tcg/dt-editor-textarea.css" rel="stylesheet" />
 <link href="{$base_url}assets/datatables/tcg/dt-editor-editor.css" rel="stylesheet" />
 
+<link href="{$base_url}assets/dropzone/dropzone.min.css" rel="stylesheet" />
+<link href="{$base_url}assets/datatables/tcg/dt-editor-upload.bootstrap4.css" rel="stylesheet" />
+
 <!-- WYSIWYG editor -->
 <!-- <link href="{$base_url}assets/backend/css/vendor/summernote-bs4.css" rel="stylesheet" type="text/css" /> -->
 
@@ -53,6 +56,7 @@
 <link href="{$base_url}assets/dragula/dragula.min.css" rel="stylesheet" type="text/css" />
 
 <!-- toastr toast popup -->
+<link href="{$base_url}assets/jquery-confirm/jquery-confirm.min.css" rel="stylesheet" type="text/css" />
 <link href="{$base_url}assets/toastr/toastr.min.css" rel="stylesheet" type="text/css" />
 
 <!-- icons -->

@@ -18,6 +18,10 @@ div.DTE_Field_Type_tcg_cascade.form-group {
 	margin-bottom: 0.5rem!important;
 }
 
+div.DTE_Field_Type_tcg_cascade .col-form-control {
+	margin-bottom: .5rem!important;
+}
+
 /* Dirty hack for long option text */
 .tcg-cascade-select,
 .DTE_Field_Type_tcg_cascade .select2 {

@@ -53,6 +53,9 @@
 <script src="{$base_url}assets/datatables/tcg/dt-editor-textarea.js" defer></script>
 <script src="{$base_url}assets/datatables/tcg/dt-editor-editor.js" defer></script>
 
+<script src="{$base_url}assets/dropzone/dropzone.min.js"></script>
+<script src="{$base_url}assets/datatables/tcg/dt-editor-upload.js" defer></script>
+
 <!-- WYSIWYG editor -->
 <script src="{$base_url}assets/ckeditor/ckeditor.js" defer></script>
 <script src="{$base_url}assets/ckeditor/adapters/jquery.js" defer></script>
@@ -72,6 +75,7 @@
 <script src="{$base_url}assets/mustache/mustache.min.js" defer></script>
 
 <!-- toastr toast popup -->
+<script src="{$base_url}assets/jquery-confirm/jquery-confirm.min.js"></script>
 <script src="{$base_url}assets/toastr/toastr.min.js"></script>
 
 <!-- fontawesome -->
