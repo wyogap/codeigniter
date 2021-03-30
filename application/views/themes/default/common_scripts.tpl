@@ -59,15 +59,15 @@
         //   console.log($('#modal'));
     }
 
-    // confirm
-    function confirm(title, message, callback) {
-        modal('#modal-confirm', { 'title': title, 'message': message });
-        $("#modal-confirm-ok").click( function() {
-            button_status($(this), "loading");
-            if(callback) callback();
-            $('#modal').modal('hide');
-        });
-    }
+    // // confirm
+    // function confirm(title, message, callback) {
+    //     modal('#modal-confirm', { 'title': title, 'message': message });
+    //     $("#modal-confirm-ok").click( function() {
+    //         button_status($(this), "loading");
+    //         if(callback) callback();
+    //         $('#modal').modal('hide');
+    //     });
+    // }
 
     // guid
     function guid() {

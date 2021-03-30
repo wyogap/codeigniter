@@ -17,7 +17,7 @@ body[data-layout=detached] .content-page {
 }
 
 .crud-form .form-group {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 .crud-form .form-group:last-child {
@@ -25,11 +25,19 @@ body[data-layout=detached] .content-page {
 }
 
 .DTE .form-group {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 .DTE .form-group:last-child {
     margin-bottom: 0.5rem;
+}
+
+.dropzone {
+	padding: 12px
+}
+
+.dropzone .dz-preview {
+	margin: 12px;
 }
 
 @media (max-width: 768px) {

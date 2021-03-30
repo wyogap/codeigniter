@@ -18,6 +18,10 @@
     margin-bottom: 0.5rem;
 }
 
+[class^="dripicons-"]:before, [class*=" dripicons-"]:before {
+	vertical-align: -15%;
+}
+
 @media (max-width: 768px) {
 
     .crud-form .form-group {

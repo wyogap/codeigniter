@@ -373,12 +373,18 @@ class Mtable extends CI_Model
                         //add into select
                         $this->select_columns[] = $ref['reference_alias'].".".$ref['reference_lookup_column']." as ".$ref['name']."_label";
                     }
-                    else if ($col['type'] == 'tcg_multi_select' || $col['type'] == 'tcg_upload') {
+                    else if ($col['type'] == 'tcg_multi_select') {
                         $subquery = "select group_concat(" .$ref['reference_lookup_column']. " separator ', ') from " .$ref['reference_table_name']. " where find_in_set(" .$ref['reference_key_column']. ", " .$ref['column_name']. ") > 0";
 
                         if ($ref['reference_soft_delete']) {
                             $subquery .= " AND is_deleted=0";
                         }
+
+                        //add into select
+                        $this->select_columns[] = "(" .$subquery. ") as ".$ref['name']."_label";
+                    }
+                    else if ($col['type'] == 'tcg_upload') {
+                        $subquery = "select group_concat(x.filename, ':', x.path separator ', ') from dbo_uploads x where find_in_set(x.id, " .$ref['column_name']. ") > 0 and x.is_deleted=0";
 
                         //add into select
                         $this->select_columns[] = "(" .$subquery. ") as ".$ref['name']."_label";

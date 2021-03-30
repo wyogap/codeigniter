@@ -17,13 +17,16 @@
 <script src="{$base_url}assets/datatables/DataTables-1.10.20/js/dataTables.bootstrap4.min.js" defer></script>
 <script src="{$base_url}assets/datatables/Responsive-2.2.3/js/dataTables.responsive.min.js" defer></script>
 <script src="{$base_url}assets/datatables/Responsive-2.2.3/js/responsive.bootstrap4.min.js" defer></script>
-<script src="{$base_url}assets/datatables/Buttons-1.6.1/js/dataTables.buttons.min.js" defer></script>
-<script src="{$base_url}assets/datatables/Buttons-1.6.1/js/buttons.bootstrap4.min.js" defer></script>
-<!-- <script src="{$base_url}assets/datatables/Buttons-1.6.1/js/buttons.html5.min.js" defer></script>
-<script src="{$base_url}assets/datatables/Buttons-1.6.1/js/buttons.flash.min.js" defer></script>
-<script src="{$base_url}assets/datatables/Buttons-1.6.1/js/buttons.print.min.js" defer></script> -->
 <script src="{$base_url}assets/datatables/Select-1.3.1/js/dataTables.select.min.js" defer></script>
 <script src="{$base_url}assets/datatables/Select-1.3.1/js/select.bootstrap4.min.js" defer></script>
+
+<script src="{$base_url}assets/datatables/Buttons-1.6.1/js/dataTables.buttons.min.js" defer></script>
+<script src="{$base_url}assets/datatables/Buttons-1.6.1/js/buttons.bootstrap4.min.js" defer></script>
+<script src="{$base_url}assets/datatables/Buttons-1.6.1/js/buttons.html5.min.js" defer></script>
+<script src="{$base_url}assets/datatables/JSZip-2.5.0/jszip.min.js" defer></script>
+<!--
+<script src="{$base_url}assets/datatables/Buttons-1.6.1/js/buttons.flash.min.js" defer></script>
+<script src="{$base_url}assets/datatables/Buttons-1.6.1/js/buttons.print.min.js" defer></script> -->
 
 <!-- datatables : spreadsheet like key -->
 <script src="{$base_url}assets/datatables/KeyTable-2.5.1/js/dataTables.keyTable.min.js" defer></script>
@@ -104,7 +107,7 @@
 <script type="text/javascript">
 
     //select2 default theme
-    $.fn.select2.defaults.set( "theme", "bootstrap" );
+    //$.fn.select2.defaults.set( "theme", "bootstrap" );
 
     $(function () {
         $('a[data-toggle="tab"]').on('shown.bs.tab', function(e) {

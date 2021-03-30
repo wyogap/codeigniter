@@ -347,18 +347,25 @@ $(document).ready(function() {
                         {/if}
                     {/if}
                     className: "col_{$x.type} {$x.css} {if !empty($x.edit_bubble)}editable{/if}",
-                    {if !empty($x.type) && $x.type=="upload"}
+                    {if isset($x.type) && $x.type=="tcg_upload"}
                     render: function ( data, type, row ) {
                         if (type == "display") {
                             if (data !== null && data != "") {
-                                return "<a href='" +row.{$x.edit_field}+ "'><img src='" +data+ "' style='max-height:100px;'></img></a>";
+                                let arr = data.split(", ");
+                                for(let i=0; i<arr.length; i++) {
+                                    let arr2 = arr[i].split(':', 2);
+                                    if (arr2.length == 2) {
+                                        arr[i] = "<a href='{$base_url}" +arr2[1]+ "' target='_blank'>" +arr2[0]+ "</a>";
+                                    }
+                                }
+                                return arr.join(", ");
                             }
                             return "";
                         }
                         return data;
                     },
                     {/if}
-                    {if !empty($x.type) && $x.type=="tcg_date"}
+                    {if isset($x.type) && $x.type=="tcg_date"}
                     render: function ( data, type, row ) {
                         if (type == "display") {
                             return moment(data).format('YYYY-MM-DD');
@@ -453,6 +460,8 @@ $(document).ready(function() {
         }
     });
 
+    dt_{$tbl.table_id}.buttons( 0, null ).container().addClass("mr-md-2 mb-1");
+
     let buttons = new $.fn.dataTable.Buttons( dt_{$tbl.table_id}, {
         buttons: [
             {if isset($tbl.table_actions) && $tbl.table_actions.export}
@@ -486,7 +495,7 @@ $(document).ready(function() {
         buttons.container().addClass('d-none dt-export-buttons');
     }
     else {
-        buttons.container().addClass('ml-md-2 dt-export-buttons');
+        buttons.container().addClass('mr-md-2 mb-1 dt-export-buttons');
     }
 
     dt_{$tbl.table_id}.buttons( 0, null ).container().after(
@@ -513,7 +522,7 @@ $(document).ready(function() {
         ]
     } );
  
-    buttons.container().addClass('ml-md-2 dt-custom-buttons');
+    buttons.container().addClass('mr-md-2 mb-1 dt-custom-buttons');
 
     dt_{$tbl.table_id}.buttons( 1, null ).container().after(
         dt_{$tbl.table_id}.buttons( 2, null ).container()
