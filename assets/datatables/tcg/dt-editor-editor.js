@@ -44,41 +44,25 @@
 				conf._input_control.attr('rows', conf.attr.rows);
 			}
 
-			if (conf.attr.ckeditor) {
-				//$(document).ready(function () {
-				//	conf._input_control.ckeditor({
-				//		toolbarGroups: conf.attr.toolbar
-				//	});
-				//});
-				//setTimeout(function(){
-				//	conf._input_control.ckeditor({
-				//		toolbarGroups: conf.attr.toolbar
-				//	});
-				//},5000);
-				//conf._input_control.ckeditor({
-				//	toolbarGroups: conf.attr.toolbar
-				//});
-			}
-
-			conf._cke = false;
-			
-            //capture resize when the modal is opened
+            //capture resize when the field is attached
             const resizeObserver = new ResizeObserver(() => {
-				if (conf.attr.ckeditor && !conf._cke) {
+				if (conf.attr.ckeditor) {
 					conf._input_control.ckeditor({
 						toolbarGroups: conf.attr.toolbar
 					});
-					conf._cke = true;
+					conf._editor = conf._input_control.ckeditor().editor;
 				}
-				if (conf._new_val != null) {
-					conf._input_control.val(conf._new_val);
-					//trigger change event
-					conf._input.trigger("change");
-				}
-				conf._new_val = null;
             });
             resizeObserver.observe(conf._input_control[0]);
 
+			////convert to ckeditor
+			//if (conf.attr.ckeditor) {
+			//	conf._input_control.ckeditor({
+			//		toolbarGroups: conf.attr.toolbar
+			//	});
+			//	conf._editor = conf._input_control.ckeditor().editor;
+			//}
+			
 			return conf._input;
 		},
 
@@ -89,19 +73,34 @@
 		set: function (conf, val) {
 			if (typeof val === 'undefined' || val == null) val = "";
 			
-			conf._input_control.val(val);
-			//trigger change event
-			conf._input.trigger("change");
-					
-			//conf._new_val = val;
+			if (!conf.attr.ckeditor) {
+				//not ckeditor. just set the input val
+				conf._input_control.val(val);
+				//trigger change event
+				conf._input.trigger("change");
+				return;
+			}
 			
-			//var editor = conf._input_control.ckeditor().editor;
-			//editor.setData( val );
+			if (typeof conf._editor !== 'undefined') {
+				//hack: destroy any existing editor before setting the value. this way we can use the editor event 'instanceReady'
+				conf._editor.destroy();
+			}
 			
-			//conf._input_control.val(val);
-			//
-			////trigger change event
-			//conf._input.trigger("change");
+			//create the editor
+			conf._input_control.ckeditor({
+				toolbarGroups: conf.attr.toolbar
+			});
+
+			//set the value only when editor is loaded and visible
+			conf._editor = conf._input_control.ckeditor().editor;
+			if (conf._editor.status !== "ready") {
+				conf._editor.on("instanceReady",
+					event => {
+						event.editor.setData(val);
+					});
+			} else {
+				conf._editor.setData(val);
+			}
 		},
 
 		enable: function (conf) {

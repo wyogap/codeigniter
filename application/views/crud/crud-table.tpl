@@ -11,7 +11,7 @@
                 {/if}
                 {foreach from=$tbl.columns key=i item=col}
                     {if $col.visible == 1}
-                    <th class="{if $col.data_priority < 0} none {else} {$col.css} {/if} text-center" data-priority="{$col.data_priority}">
+                    <th class="{if $col.data_priority < 0} none {else} {$col.css} {/if} text-center" data-priority="{$col.data_priority}" style="word-break: normal!important;">
                     {if isset($col.edit_bubble) && $col.edit_bubble}<i class="dripicons-document-edit"></i> {/if}
                     {$col.label}
                     {/if}

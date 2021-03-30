@@ -16,7 +16,7 @@
             conf._safeId = Editor.safeId( conf.id );
   
 			//default attributes
-			conf.attr = $.extend(true, {}, tcg_cascade.defaults, conf.attr);
+			conf.attr = $.extend(true, {}, tcg_checkbox.defaults, conf.attr);
 
 			//some time, just the field name is not safe enough!
 			if (conf.attr.editorId != "") {
@@ -42,11 +42,15 @@
             //     return false;
             // } );
   
+            //readonly checkbox
             let _chkbox = conf._input.find('input');
             if (conf.attr.readonly == true) {
-              $(_chkbox).attr('readonly', true);
+                $(_chkbox).attr('readonly', true);
+                _chkbox.on("click", function(e) {
+                    return false;
+                })
             }
-
+			
             //default value
             let checked = (conf.def == conf.attr.value) ? true : false;
             if (_chkbox.prop("checked") != checked) {

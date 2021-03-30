@@ -610,6 +610,18 @@ abstract class MY_Crud_Controller extends CI_Controller {
 			echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
 
         }
+        else if ($action == "import") {
+            $status = $model->import($_FILES['upload']);
+
+            if($status == 0) {
+                $data['error'] = $model->get_error_message();
+            } else {
+                $data['status'] = $status;
+            }
+
+            echo json_encode($data, JSON_INVALID_UTF8_IGNORE);
+            return;
+        }   
         else {
             $data['error'] = __('not-implemented');
             echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	

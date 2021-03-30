@@ -470,7 +470,13 @@ $(document).ready(function() {
             },
             {/if}
             {if isset($tbl.table_actions) && $tbl.table_actions.import}
-            //TODO
+            {
+                text: '{__("Impor")}',
+                className: 'btn-sm btn-danger',
+                action: function ( e, dt, node, conf ) {
+                    dt_{$tbl.table_id}_import(e, dt, node, conf);
+                },
+            },
             {/if}
         ]
     } );
@@ -499,7 +505,7 @@ $(document).ready(function() {
                 {/if}
                 text: '{__($x.label)}',
                 action: function ( e, dt, node, conf ) {
-                    {$x.onclick_js}(e, dt, node, conf);;
+                    {$x.onclick_js}(e, dt, node, conf);
                 },
                 className: 'btn-sm {$x.css}'
             },
@@ -641,4 +647,103 @@ function dt_{$tbl.table_id}_delete_row(row_id, dt) {
     // } );
 }
 
+function dt_{$tbl.table_id}_import(e, dt, node, conf){
+    $.confirm({
+        columnClass: 'medium',
+        title: '{__("Impor")} {$tbl.name}',
+        content: '' +
+        '<form action="" class="formName">' +
+        '<div class="form-group">' +
+        '<input id="upload" type="file" name="import" accept=".xlsx, .xls, .csv" style="width: 100%;" />' +
+        '<div id="error" class="d-none text-danger mt-2"></div>' +
+        '<div class="d-none text-center justify-content-center" id="loading" style="position: absolute; width: 100%; top: 0px;">' +
+        '  <div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div>' +
+        '</div>' +
+        '</div>' +
+        '</form>',
+        buttons: {
+            cancel: function () {
+                //close
+            },
+            formSubmit: {
+                text: '{__("Impor")}',
+                btnClass: 'btn-primary',
+                action: function () {
+                    let that = this;
+
+                    //upload the file
+                    let upload = that.$content.find('#upload');
+                    if (upload[0].files.length == 0) {
+                        let message = that.$content.find('#error');
+                        message.html("Belum memilih file");
+                        message.removeClass("d-none");
+                        return false;
+                    }
+                    let file = upload[0].files[0];
+
+                    let spinner = that.$content.find('#spinner');
+
+                    // add assoc key values, this will be posts values
+                    var formData = new FormData();
+                    formData.append("upload", file, file.name);
+                    formData.append("action", "import");
+
+                    spinner.removeClass('d-none');
+                    $.ajax({
+                        type: "POST",
+                        url: "{$tbl.ajax}",
+                        async: true,
+                        data: formData,
+                        cache: false,
+                        contentType: false,
+                        processData: false,
+                        timeout: 60000,
+                        dataType: 'json',
+                        success: function(json) {
+                            if (typeof json.error !== 'undefined' && json.error != "" && json.error != null) {
+                                let message = that.$content.find('#error');
+                                message.html(json.error);
+                                message.removeClass("d-none");
+                                //hide spinner
+                                spinner.addClass('d-none');
+                                return;
+                            }
+
+                            //hide spinner
+                            spinner.addClass('d-none');
+
+                            dt.ajax.reload();
+                            that.close();
+                        },
+                        error: function(jqXHR, textStatus, errorThrown) {
+                            let message = that.$content.find('#error');
+                            message.html("Gagal mengimpor file: " + textStatus);
+                            message.removeClass("d-none");
+                            //hide spinner
+                            spinner.addClass('d-none');
+                            return;
+                        }
+                    });
+
+                    //wait for completion of ajax
+                    return false;
+                }
+            },
+        },
+        onContentReady: function () {
+            // bind to events
+            var that = this;
+            this.$content.find('form').on('submit', function (e) {
+                // if the user submits the form by pressing enter in the field.
+                e.preventDefault();
+                that.$$formSubmit.trigger('click'); // reference the button and click it
+            });
+            this.$content.find('#upload').on('change', function (e) {
+                let message = that.$content.find('#error');
+                message.html("");
+                message.addClass("d-none");
+            });
+        }
+    });
+}
 </script>

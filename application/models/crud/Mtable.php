@@ -25,6 +25,8 @@ class Mtable extends CI_Model
     protected $select_columns = null;
     protected $filter_columns = null;
 
+    public $error = array();
+
     public static $TABLE = array (
         'table_id' => 'tdata',
         'ajax' => "",
@@ -134,6 +136,9 @@ class Mtable extends CI_Model
         'reference_where_clause' => "",
     );
 
+    public static $XLSX_FILE_TYPE = "Xlsx";
+    public static $XLS_FILE_TYPE = "Xls";
+
     function __construct() {
         //TODO
     }
@@ -177,6 +182,7 @@ class Mtable extends CI_Model
         //table info
         $this->table_metas = static::$TABLE;
         $this->table_metas['name'] = $this->name;
+        $this->table_metas['id'] = $arr['id'];
 
         $this->table_metas['ajax'] = base_url('crud/'.$this->table_name);
         $this->table_metas['table_id'] = 'tdata_'.$arr['id'];
@@ -978,6 +984,295 @@ class Mtable extends CI_Model
         $this->db->select($lookup_column .' as label, '. $key_column .' as value');
         return $this->db->get($table_name)->result_array();
 	}
+
+    function get_error_message() {
+        return $this->error['message'];
+    }
+
+    function import($file) {
+        if (!$this->initialized)   return null;
+
+        //use data model
+        if ($this->data_model != null) {
+            return $this->data_model->import($file, $this->table_name);
+        }
+
+        $this->error['message'] = "";
+        
+        $table_id = $this->table_id;
+        $table_name = $this->table_name;
+        $columns = $this->table_metas['columns'];
+        $key_col_name = $this->table_metas['key_column'];
+        $join_tables = $this->table_metas['join_tables'];
+
+        //upload file
+        $data = $this->__upload_xls($file, $table_id, $table_name);
+        if ($data == null) {
+            return 0;
+        }
+        $import_id = $data['import_id'];
+        $filepath = $data['filepath'];
+
+        //create temporary table
+        $temp_table_name = "temp_" .$table_name;
+        $data = $this->__create_temp_table($temp_table_name, $columns);
+        if ($data == null) {
+            $sql = "update dbo_imports set status='" .$this->error['message']. "' where id=?";
+            $this->db->query($sql, array($import_id));
+            return 0;
+        }
+        $export_columns = $data['export'];
+        $import_columns = $data['import'];
+
+        //import xls
+        $status = $this->__import_xls($filepath, $temp_table_name, $export_columns);
+        if($status == 0) {
+            $sql = "update dbo_imports set status='" .$this->error['message']. "' where id=?";
+            $this->db->query($sql, array($import_id));
+            return 0;
+        }
+
+        //process import
+        $this->__process_import($table_name, $key_col_name, $temp_table_name, $import_columns, $join_tables);
+
+        //drop temporary table
+        $this->db->query("DROP TEMPORARY TABLE $temp_table_name;");
+
+        //audit trail
+        audittrail_trail($table_name, $import_id, "IMPORT", "Import from file " .$filepath);
+
+        return 1;
+    }
+
+    private function __upload_xls($file, $table_id, $table_name) {
+        $this->error['message'] = "";
+
+        $ci	=& get_instance();
+        $ci->load->helper("uploader");
+        $uploader = new Uploader();
+
+        $uploader->file_types = array("xls", "xlsx");
+        $upload = $uploader->upload($file, "dbo_imports");
+        if ($upload == null || !empty($upload["error"])) {
+            //error uploading
+            $this->error['message'] = "Gagal mengunggah fail.";
+            return null;
+        }
+
+        //get upload detail
+        $upload_id = $upload['id'];
+        $sql = "select * from dbo_uploads where id=? and is_deleted=0";
+        $upload = $this->db->query($sql, array($upload_id))->row_array();
+        if ($upload == null) {
+            $this->error['message'] = "Gagal mengunggah fail.";
+            return null;
+        }
+
+        //copy to dbo_imports
+        $import_id = 0;
+        $sql = "insert into dbo_imports(table_id, filename, file_path, web_path, thumbnail_path, status) " .
+                "select ?, filename, path, web_path, thumbnail_path, ? from dbo_uploads where is_deleted=0 and id=?";
+        $query = $this->db->query($sql, array($table_id, "not-started", $upload_id));
+        if ($query) {
+            $import_id = $this->db->insert_id();
+        } 
+
+        if ($import_id == 0) {
+            //error copying
+            $this->error['message'] = "Gagal mengunggah fail.";
+            return null;
+        }
+
+        //update upload ref_id
+        $sql = "update dbo_uploads set ref_id=" .$import_id. " where id=" .$upload_id;
+        $query = $this->db->query($sql);
+
+        $retval = array(
+            'import_id'     => $import_id,
+            'filepath'      => $upload['path']
+        );
+        return $retval;
+    }
+
+    private function __create_temp_table($temp_table_name, $columns) {
+        $this->error['message'] = "";
+
+        $column_def = array();
+        $import_columns = array();
+        $export_columns = array();
+        foreach($columns as $key => $col) {
+            if ($col['visible'] < 0)    continue;
+            //column definition
+            if($col['type'] == 'tcg_text') {
+                $column_def[] = $col['name'] ." varchar(250)";
+            }
+            else if($col['type'] == 'tcg_textarea') {
+                $column_def[] = $col['name'] ." longtext";
+            }
+            else if($col['type'] == 'tcg_number') {
+                $column_def[] = $col['name'] ." int";
+            }
+            else if($col['type'] == 'tcg_date') {
+                $column_def[] = $col['name'] ." date";
+            }
+            else if($col['type'] == 'tcg_datetime') {
+                $column_def[] = $col['name'] ." datetime";
+            }
+            else if($col['type'] == 'tcg_select') {
+                $column_def[] = $col['name'] ." varchar(100)";
+            }
+            else if($col['type'] == 'tcg_toggle') {
+                $column_def[] = $col['name'] ." smallint";
+            }
+            else if($col['type'] == 'tcg_upload') {
+                $column_def[] = $col['name'] ." int";
+            }
+            else {
+                $column_def[] = $col['name'] ." varchar(1000)";
+            }
+            //exported columns
+            $export_columns[] = $col['name'];
+            //imported columns
+            if ($col['allow_insert']) {
+                $import_columns[] = $col['name'];
+            }
+        }
+
+        if (count($import_columns) == 0) {
+            $this->error['message'] = "Tidak ada kolom untuk diimpor";
+            return null;
+        }
+
+        //always drop first
+        $this->db->query("DROP TEMPORARY TABLE IF EXISTS $temp_table_name;");
+
+        //add status columns
+        $column_def[] = "_update_ varchar(100) default 0";
+        $column_def[] = "_tag2_ varchar(100) default null";
+        $column_def[] = "_tag3_ varchar(100) default null";
+
+        //create the table
+        $sql = "create temporary table " .$temp_table_name. "(" .implode(',', $column_def). ")";
+        $query = $this->db->query($sql);
+        if (!$query) {
+            $this->error['message'] = "Gagal membuat temporary table";
+            return null;
+        }
+
+        $retval = array(
+            'export'    => $export_columns,
+            'import'    => $import_columns
+        );
+        return $retval;
+    }
+
+    private function __import_xls($file, $temp_table_name, $export_columns) {
+
+        $this->error['message'] = "";
+		$reader = null;
+
+        $path_parts = pathinfo($file);
+        if (!isset($path_parts['extension'])) {
+            $this->error['message'] = "Tipe file tidak diketahui.";
+            return 0;
+        }
+
+        if (strtolower($path_parts['extension']) == strtolower(static::$XLSX_FILE_TYPE)) {
+            $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader(static::$XLSX_FILE_TYPE);
+            $reader->setLoadSheetsOnly(["Sheet1"]);
+            $reader->setReadDataOnly(true);
+        }
+        else if (strtolower($path_parts['extension']) == strtolower(static::$XLS_FILE_TYPE)) {
+            $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReader(static::$XLS_FILE_TYPE);
+            $reader->setLoadSheetsOnly(["Sheet1"]);
+            $reader->setReadDataOnly(true);
+        }
+        else {
+            $this->error['message'] = "Tipe file ." .$path_parts['extension']. " tidak bisa diimpor." ;
+            return 0;
+        }
+
+        $spreadsheet = $reader->load($file);
+        if ($spreadsheet == null) {
+            $this->error['message'] = 'File tidak ditemukan.';
+            return 0;
+        }
+
+        $sheet = $spreadsheet->getSheetByName('Sheet1');
+        if ($sheet == null) {
+            $this->error['message'] = 'Lembar Sheet1 tidak ditemukan.';
+            return 0;
+        }
+
+        $import_values = array();
+
+        $rows = $sheet->toArray();
+        
+        //sanity check: number of columns is as expected
+        $col_labels = array_filter($rows[1]);     //row 2 is column label
+
+        if (count($col_labels) != count($export_columns)) {
+            $this->error['message'] = 'Jumlah kolom tidak sesuai.';
+            return 0;
+        }
+
+        //insert row by row
+        
+        foreach ($rows as $rowid => $row) {
+            //only read from 3 onward
+            if ($rowid < 2) continue;
+
+            //skip empty rows
+            if ( empty( trim($row[1]) ) )   continue;
+
+            $value = array();
+            foreach($export_columns as $idx => $col) {
+                $value[ $col ] = trim($row[$idx]);
+            }
+
+            $import_values[] = $value;
+        }
+
+        //batch insert
+        if(!$this->db->insert_batch($temp_table_name, $import_values)) {
+            //error message
+            $this->error['message'] = $this->db->error()['message'];
+            return 0;
+        }
+
+        return 1;
+
+    }
+
+    private function __process_import($table_name, $key_column_name, $temp_table_name, $import_columns, $join_tables) {
+        // $arr = $this->db->query("select * from " .$temp_table_name)->result_array();
+        // var_dump($arr);
+
+        //check for duplicate key
+        $sql = "update " .$temp_table_name. " a join " .$table_name. " b on b." .$key_column_name. "=a." .$key_column_name. " set a._update_=1";
+        $this->db->query($sql);
+
+        //match foreign key
+        foreach($join_tables as $idx => $tbl) {
+            $sql = "update " .$temp_table_name. " a join " .$tbl['reference_table_name']. " b on lower(b." .$tbl['reference_lookup_column']. ")=lower(a." .$tbl['name']. ") set a." .$tbl['name']. "=b." .$tbl['reference_key_column'];
+            $this->db->query($sql);
+        }
+
+        // $arr = $this->db->query("select * from " .$temp_table_name)->result_array();
+        // var_dump($arr);
+
+        //insert new entry
+        $column_list = implode(',', $import_columns);
+        $sql = "insert into " .$table_name. "(" .$column_list. ") select " .$column_list. " from " .$temp_table_name. " where _update_ != 1";
+        $this->db->query($sql);
+
+        $update_list = implode(',', array_map(function($val) {return 'a.'.$val.'=b.'.$val;}, $import_columns));
+        $user_id = $this->session->userdata('user_id');
+        $timestamp = date('Y/m/d H:i:s');
+        $sql = "update " .$table_name. " a join " .$temp_table_name. " b on b." .$key_column_name. "=a." .$key_column_name. " set " .$update_list. ", a.is_deleted=0, a.updated_by=" .$user_id. ", a.updated_on='" .$timestamp. "'";
+        $this->db->query($sql);
+
+    }
 }
 
   
