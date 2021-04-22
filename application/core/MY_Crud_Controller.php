@@ -452,6 +452,7 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		}
 
 		//var_dump($filters);
+		$key_column = $model->key_column();
 
 		$action = $this->input->post("action");
 		if (empty($action) || $action=='view') {
@@ -469,6 +470,10 @@ abstract class MY_Crud_Controller extends CI_Controller {
 				$key = $model->update($key, $valuepair, $filters);
 				if (!$key)	continue;		//TODO: catch error message
 
+				if (isset( $valuepair[$model->key_column()] )) {
+					$key = $valuepair[$model->key_column()];
+				}
+				
 				$detail = $model->detail($key, $filters); 
 			
 				if ($detail != null && count($detail) > 0)		$data['data'][] = $detail;
@@ -484,7 +489,9 @@ abstract class MY_Crud_Controller extends CI_Controller {
 
             $error_msg = "";
 			foreach ($values as $key => $valuepair) {
+				$key = $valuepair[$key_column];
 				$filters = array_merge($filters, $valuepair);
+				unset($filters[$key_column]);
                 $model->delete($key, $filters);
 			}
 
@@ -608,7 +615,6 @@ abstract class MY_Crud_Controller extends CI_Controller {
 
             $data['status'] = 1;
 			echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
-
         }
         else if ($action == "import") {
             $status = $model->import($_FILES['upload']);

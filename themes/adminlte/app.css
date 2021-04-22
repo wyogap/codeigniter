@@ -31,4 +31,10 @@
     .DTE .form-group {
         margin-bottom: 0.5rem;
     }
+
+    div.dataTables_wrapper div.dataTables_paginate ul.pagination {
+        margin: 12px 0;
+        white-space: nowrap;
+        justify-content: center;
+    }
 }

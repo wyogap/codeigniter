@@ -6,6 +6,7 @@ class Mcrud extends CI_Model
     protected static $PRIMARY_KEY = "id";
     protected static $COLUMNS = array();
     protected static $FILTERS = array();
+    protected static $SEARCHES = array();
     protected static $COL_LABEL = 'label';
     protected static $COL_VALUE = 'value';
 
@@ -80,6 +81,63 @@ class Mcrud extends CI_Model
 
         $this->db->select(static::$COL_LABEL .' as label, '. static::$COL_VALUE .' as value');
         return $this->db->get_where($table_name, $filter)->result_array();
+    }
+
+    function search($query, $filter = null, $limit = null, $offset = null, $orderby = null) {
+        if ($filter == null) $filter = array();
+
+        //clean up non existing filter columns
+        if ($query != "" && $query != null) {
+            $this->db->group_start();
+            foreach($this->SEARCHES as $key => $val) {
+                $this->db->or_like($val, $query);
+            }
+            //if no column list specified for search, at least search in label an value column
+            if (count($this->SEARCHES) == 0) {
+                if (!empty(static::$COL_LABEL)) {
+                    $this->db->or_like(static::$COL_LABEL, $query);
+                }
+                if (!empty(static::$COL_VALUE)) {
+                    $this->db->or_like(static::$COL_VALUE, $query);
+                }
+            }
+            $this->db->group_end();
+        }
+
+        if ($filter != null && count($filter) > 0) {
+            foreach($filter as $key => $val) {
+                if (count(static::$FILTERS) == 0 || false !== array_search($key, static::$FILTERS)) {
+                    $this->db->where($key, $val);
+                }
+            }
+        }
+
+        if (static::$SOFT_DELETE)   $this->db->where('is_deleted', 0);
+
+        //use view if specified
+        $table_name = static::$VIEW_TABLE_NAME != null ? static::$VIEW_TABLE_NAME : static::$TABLE_NAME;
+
+        $str = $table_name. '.*';
+        if (count(static::$COLUMNS) > 0) {
+            $str =  $table_name. "." .implode(', ' .$table_name. '.', static::$COLUMNS);
+        }
+
+        $this->db->select($str);
+        $this->db->from($table_name);
+
+        //order by
+        if (!empty($orderby)) {
+            if (is_array($orderby)) {
+                foreach($orderby as $value) {
+                    $this->db->order_by($value);
+                }
+            }
+            else {
+                $this->db->order_by($orderby);
+            }
+        }
+
+        return $this->db->get($limit, $offset)->result_array();
     }
 
     function list($filter = null, $limit = null, $offset = null, $orderby = null) {

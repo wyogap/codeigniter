@@ -33,7 +33,7 @@ class Home extends CI_Controller {
 	 */
 	public function index()
 	{
-		redirect(base_url('crud/laporan_pengguna/add'));
+		//redirect(base_url('crud/laporan_pengguna/add'));
 
 		// $page_data['page_name']              = 'home';
 		// $page_data['page_title']             = 'Home';

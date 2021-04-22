@@ -119,6 +119,13 @@
         padding: 1rem;
     }
 
+    /* li.paginate_button {
+        width: fit-content;
+        display: inline-flex !important;
+        justify-content: center;
+        align-items: center;
+        align-content: center;
+    } */
 }
 
 </style>

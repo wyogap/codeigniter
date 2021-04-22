@@ -22,17 +22,27 @@ class Mpermission extends CI_Model
             'allow_delete'  => 0
         );
 
-        $role_id = $this->session->userdata('role_id');
-
-        $sql = "select a.* from dbo_crud_permissions a join dbo_crud_pages b on b.id=a.page_id and b.is_deleted=0 where a.is_deleted=0 and a.role_id=? and b.name=?";
-
-        //table metas
-        $arr = $this->db->query($sql, array($role_id, $page))->row_array();
-        if ($arr == null) {
-            return false;
+        //check for public page
+        $sql = "select a.is_public from dbo_crud_pages a where a.is_deleted=0 and a.name=?";
+        $arr = $this->db->query($sql, array($page))->row_array();
+        if ($arr != null) {
+            $this->permissions['allow_view'] = $arr['is_public'];
         }
 
-        $this->permissions = $arr;
+		$isLoggedIn = $this->session->userdata('is_logged_in');
+		if(isset($isLoggedIn) && $isLoggedIn == TRUE) {
+            //check for permission for given role
+            $role_id = $this->session->userdata('role_id');
+            $sql = "select a.* from dbo_crud_permissions a join dbo_crud_pages b on b.id=a.page_id and b.is_deleted=0 where a.is_deleted=0 and a.role_id=? and b.name=?";
+
+            //table metas
+            $arr = $this->db->query($sql, array($role_id, $page))->row_array();
+            if ($arr == null) {
+                return false;
+            }
+
+            $this->permissions = array_merge($this->permissions, $arr);
+        }
 
         $this->initialized = true;
 
@@ -125,6 +135,12 @@ class Mpermission extends CI_Model
     }
 
     public function is_admin() {
+		$isLoggedIn = $this->session->userdata('is_logged_in');
+		if(!isset($isLoggedIn) || $isLoggedIn != TRUE)      return false;   //not logged-in
+
+        $admin = $this->session->userdata('admin');
+        if ($admin)     return true;
+        
         $role_id = $this->session->userdata('role_id');
         return ($role_id == static::$ADMIN_ROLE_ID);
     }

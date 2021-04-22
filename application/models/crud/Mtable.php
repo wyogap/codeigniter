@@ -5,6 +5,8 @@ class Mtable extends CI_Model
     protected static $DEF_PAGE_SIZE = 25;
     protected static $REGEX_USERDATA = '/{{(\w+)}}/';
 
+    public const INVALID_VALUE = "null";
+
     protected $table_id = 0;
     protected $table_name = '';
     protected $data_model = null;
@@ -24,6 +26,9 @@ class Mtable extends CI_Model
     protected $edit_columns = null;
     protected $select_columns = null;
     protected $filter_columns = null;
+    protected $search_columns = null;
+
+    protected $lookup_columns = null;
 
     public $error = array();
 
@@ -90,7 +95,8 @@ class Mtable extends CI_Model
         'filter_css' => '',
         'filter_options' => array(),
         'filter_onchange_js' => '',
-        'filter_attr' => array()
+        'filter_attr' => array(),
+        'filter_invalid_value'  => false
     );
     
     public static $TABLE_ACTION = array (
@@ -262,6 +268,7 @@ class Mtable extends CI_Model
         $this->edit_columns = array();
         $this->select_columns = array();
         $this->filter_columns = array();
+        $this->search_columns = array();
 
         //inline edit row
         if ($this->table_actions['edit_row_action']) {
@@ -351,6 +358,12 @@ class Mtable extends CI_Model
                     $row['reference_soft_delete'] = 1;
                 }
 
+                //search column
+                $col['allow_search'] = (isset($row['allow_search']) && $row['allow_search'] == 1);
+                if ($col['allow_search']) {
+                    $this->search_columns[] = $this->table_name. "." .$col['name'];
+                }
+
                 if ($col['foreign_key']) {
                     $ref = static::$TABLE_JOIN;
                     $ref['name'] = $col['name'];
@@ -368,7 +381,7 @@ class Mtable extends CI_Model
                     $ref['reference_alias'] = 'lookup_' .$lookup_idx++;
 
                     if ($col['type'] == 'tcg_select2') {
-                        $this->join_tables[] = $ref;
+                        $this->join_tables[ $col['name'] ] = $ref;
 
                         //add into select
                         $this->select_columns[] = $ref['reference_alias'].".".$ref['reference_lookup_column']." as ".$ref['name']."_label";
@@ -395,6 +408,11 @@ class Mtable extends CI_Model
                         $col['options'] = $this->get_lookup_options($ref['reference_table_name'], $ref['reference_key_column'], $ref['reference_lookup_column'], $ref['reference_soft_delete'], $ref['reference_where_clause']);
                     }
 
+                    //search column -> search lookup
+                    if (!empty($col['allow_search']) && $row['edit_type'] == 'tcg_select2') {
+                        $this->search_columns[] = $ref['reference_alias'].".".$ref['reference_lookup_column'];
+                    }
+    
                     // //force select2
                     // if (!empty($col['options'])) {
                     //     $col['type'] = 'tcg_select2';
@@ -486,10 +504,12 @@ class Mtable extends CI_Model
                         $filter['filter_type'] = $col['type'];
                     }
 
+                    $filter['filter_invalid_value'] = ($row['filter_invalid_value'] == 1);
+
                     $this->filter_metas[] = $filter;
                     $this->filter_columns[] = $col['name'];
                 }
-
+    
                 $this->column_metas[] = $col;
                 $this->select_columns[] = $col['column_name']." as ".$col['name'];
             }
@@ -596,19 +616,22 @@ class Mtable extends CI_Model
         $this->table_metas['row_actions'] = $this->row_actions;
         $this->table_metas['join_tables'] = $this->join_tables;
 
-        // //include key-column and lookup-column in list of column
-        // if (false === array_search($this->table_metas['key_column'], $this->select_columns)) {
-        //     $this->select_columns[] = $this->table_metas['key_column'];
-        // }
+        //always include key-column in column search
+        if (false === array_search($this->table_metas['key_column'], $this->search_columns)) {
+            $this->search_columns[] = $this->table_metas['key_column'];
+        }
 
-        // if (false === array_search($this->table_metas['lookup_column'], $this->select_columns)) {
-        //     $this->select_columns[] = $this->table_metas['lookup_column'];
-        // }
+        //always include lookup-column in column search
+        if (false === array_search($this->table_metas['lookup_column'], $this->search_columns)) {
+            $this->search_columns[] = $this->table_metas['lookup_column'];
+        }
 
+        //disable editor if no edit columns
         if (count($this->table_metas['editor_columns']) == 0) {
             $this->table_metas['editor'] = false;
         }
 
+        //disable filter if no filter columns
         if (count($this->table_metas['filter_columns']) == 0) {
             $this->table_metas['filter'] = false;
         }
@@ -633,6 +656,18 @@ class Mtable extends CI_Model
     function tablename() {
         if (!$this->initialized)   return null;
         return $this->table_name;   
+    }
+
+    function key_column() {
+        return $this->table_metas['key_column'];
+    }
+
+    function filter_columns() {
+        return $this->filter_columns;
+    }
+
+    function is_initialized() {
+        return $this->initialized;
     }
 
     function distinct_lookup($column, $filter = null) {
@@ -704,6 +739,99 @@ class Mtable extends CI_Model
         return $this->db->get($table_name)->result_array();
     }
 
+    function search($query, $filter = null, $limit = null, $offset = null, $orderby = null) {
+        if (!$this->initialized)   return null;
+
+        //use data model
+        if ($this->data_model != null) {
+            return $this->data_model->search($query, $filter, $limit, $offset, $orderby);
+        }
+
+        //use dynamic crud
+        //use view if specified
+        $table_name = $this->table_metas['table_name'];
+
+        //group search filter
+        if ($query != "" && $query != null) {
+            $this->db->group_start();
+            foreach($this->search_columns as $key => $val) {
+                $this->db->or_like($val, $query);
+            }
+            $this->db->group_end();
+        }
+
+        //add filter
+        if ($filter != null && count($filter) > 0) {
+            foreach($filter as $key => $val) {
+                if (false !== array_search($key, $this->filter_columns)) {
+                    if ($val == Mtable::INVALID_VALUE) {
+                        $fkey = $this->join_tables[$key];
+                        if ($fkey != null) {
+                            $this->db->where($fkey['reference_alias'].".".$fkey['reference_lookup_column'], NULL);
+                        }
+                        else {
+                            $this->db->where("$table_name.$key", NULL);
+                        }
+                    } else {
+                        $this->db->where("$table_name.$key", $val);
+                    }
+                }
+            }
+        }
+
+        if ($this->table_metas['soft_delete'])   $this->db->where($table_name. '.is_deleted', 0);
+        if (!empty($this->table_metas['where_clause']))   
+            $this->db->where($this->table_metas['where_clause']);
+
+        $select_str = implode(', ', $this->select_columns);
+
+        $this->db->select($select_str);
+        $this->db->from($table_name);
+
+        //join table
+        foreach($this->join_tables as $row) {
+            $where_clause = $row['column_name']."=".$row['reference_alias'].".".$row['reference_key_column'];
+            if ($row['reference_soft_delete']) {
+                $where_clause .= " AND " .$row['reference_alias']. ".is_deleted=0";
+            }
+            if (!empty($row['reference_where_clause'])) {
+                $str = str_replace($row['reference_table_name'] .'.', $row['reference_alias'] .'.', $row['reference_where_clause']);
+
+                $where_clause .= " AND " .$str;
+            }
+
+            $this->db->join($row['reference_table_name'] .' as '. $row['reference_alias'], $where_clause, 'LEFT OUTER');
+        }
+
+        //order by
+        if (!empty($orderby)) {
+            if (is_array($orderby)) {
+                foreach($orderby as $value) {
+                    $this->db->order_by($value);
+                }
+            }
+            else {
+                $this->db->order_by($orderby);
+            }
+        }
+
+        $arr = $this->db->get($limit, $offset)->result_array();
+        if ($arr == null)       return $arr;
+
+        //special transformation
+        foreach($this->table_metas['columns'] as $key => $col) {
+            if ($col['type'] == "tcg_multi_select") {
+                foreach($arr as $idx => $row) {
+                    if (isset( $row[$col['name']] )) {
+                        $arr[$idx][$col['name']] = explode(',', $row[$col['name']]);
+                    }
+                }
+            }
+        }
+        
+        return $arr;
+    }
+
     function list($filter = null, $limit = null, $offset = null, $orderby = null) {
         if (!$this->initialized)   return null;
 
@@ -721,8 +849,18 @@ class Mtable extends CI_Model
         //clean up non existing filter columns
         foreach($filter as $key => $val) {
             if (false !== array_search($key, $this->filter_columns)) {
-                $this->db->where("$table_name.$key", $val);
-            }
+                if ($val == Mtable::INVALID_VALUE) {
+                    $fkey = $this->join_tables[$key];
+                    if ($fkey != null) {
+                        $this->db->where($fkey['reference_alias'].".".$fkey['reference_lookup_column'], NULL);
+                    }
+                    else {
+                        $this->db->where("$table_name.$key", NULL);
+                    }
+                } else {
+                    $this->db->where("$table_name.$key", $val);
+                }
+           }
         }
 
         if ($this->table_metas['soft_delete'])   $this->db->where($table_name. '.is_deleted', 0);
@@ -1029,9 +1167,10 @@ class Mtable extends CI_Model
         }
         $export_columns = $data['export'];
         $import_columns = $data['import'];
+        $column_types = $data['type'];
 
         //import xls
-        $status = $this->__import_xls($filepath, $temp_table_name, $export_columns);
+        $status = $this->__import_xls($filepath, $temp_table_name, $export_columns, $column_types);
         if($status == 0) {
             $sql = "update dbo_imports set status='" .$this->error['message']. "' where id=?";
             $this->db->query($sql, array($import_id));
@@ -1106,8 +1245,9 @@ class Mtable extends CI_Model
         $column_def = array();
         $import_columns = array();
         $export_columns = array();
+        $column_type = array();
         foreach($columns as $key => $col) {
-            if ($col['visible'] < 0)    continue;
+            if ($col['visible'] == 0)    continue;
             //column definition
             if($col['type'] == 'tcg_text') {
                 $column_def[] = $col['name'] ." varchar(250)";
@@ -1138,6 +1278,7 @@ class Mtable extends CI_Model
             }
             //exported columns
             $export_columns[] = $col['name'];
+            $column_type[] = $col['type'];
             //imported columns
             if ($col['allow_insert']) {
                 $import_columns[] = $col['name'];
@@ -1167,12 +1308,13 @@ class Mtable extends CI_Model
 
         $retval = array(
             'export'    => $export_columns,
-            'import'    => $import_columns
+            'import'    => $import_columns,
+            'type'      => $column_type
         );
         return $retval;
     }
 
-    private function __import_xls($file, $temp_table_name, $export_columns) {
+    private function __import_xls($file, $temp_table_name, $export_columns, $column_types) {
 
         $this->error['message'] = "";
 		$reader = null;
@@ -1223,17 +1365,52 @@ class Mtable extends CI_Model
         }
 
         //insert row by row
+        $dateFormat = 'Y-m-d';        
+        $dateTimeFormat = 'Y-m-d h:i:s';        
         
         foreach ($rows as $rowid => $row) {
             //only read from 3 onward
             if ($rowid < 2) continue;
 
             //skip empty rows
-            if ( empty( trim($row[1]) ) )   continue;
+            if ( empty( trim($row[0]) ) && empty( trim($row[1]) ) && empty( trim($row[2]) ) && empty( trim($row[3]) ) && empty( trim($row[4])))   continue;
 
             $value = array();
             foreach($export_columns as $idx => $col) {
-                $value[ $col ] = trim($row[$idx]);
+                //for date, convert to string
+                if ($column_types[$idx] == 'tcg_date') {
+                    $val = trim($row[$idx]);
+                    $ts = strtotime($val);
+                    if (empty($ts)) {
+                        $ts = intval($val);
+                        if ($ts > 0) {
+                            $ts = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToTimestamp($ts);
+                            $val = date( $dateFormat, $ts);
+                        }
+                        else {
+                            $val = null;
+                        }
+                    }
+                    $value[ $col ] = $val;
+                }
+                else if ($column_types[$idx] == 'tcg_datetime') {
+                    $val = trim($row[$idx]);
+                    $ts = strtotime($val);
+                    if (empty($ts)) {
+                        $ts = intval($val);
+                        if ($ts > 0) {
+                            $ts = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToTimestamp($ts);
+                            $val = date( $dateTimeFormat, $ts);
+                        }
+                        else {
+                            $val = null;
+                        }
+                    }
+                    $value[ $col ] = $val;
+                }
+                else {
+                    $value[ $col ] = trim($row[$idx]);
+                }
             }
 
             $import_values[] = $value;
@@ -1251,9 +1428,6 @@ class Mtable extends CI_Model
     }
 
     private function __process_import($table_name, $key_column_name, $temp_table_name, $import_columns, $join_tables) {
-        // $arr = $this->db->query("select * from " .$temp_table_name)->result_array();
-        // var_dump($arr);
-
         //check for duplicate key
         $sql = "update " .$temp_table_name. " a join " .$table_name. " b on b." .$key_column_name. "=a." .$key_column_name. " set a._update_=1";
         $this->db->query($sql);
@@ -1278,6 +1452,30 @@ class Mtable extends CI_Model
         $sql = "update " .$table_name. " a join " .$temp_table_name. " b on b." .$key_column_name. "=a." .$key_column_name. " set " .$update_list. ", a.is_deleted=0, a.updated_by=" .$user_id. ", a.updated_on='" .$timestamp. "'";
         $this->db->query($sql);
 
+    }
+
+    public function generate_columns($table_id_or_name) {
+        $sql = "
+        insert into dbo_crud_columns (name, table_id, order_no, label, is_deleted, data_priority, column_type, edit_type, filter_type)
+        select 
+            b.column_name as `name`, 
+            a.id as table_id, 
+            b.ordinal_position as order_no, 
+            fn_camel_case(replace(b.column_name, '_', ' ')) as label,
+            case when b.column_name in ('created_on', 'created_by', 'updated_on', 'updated_by', 'is_deleted') then 1 else 0 end as is_deleted,
+            case when b.column_name = a.key_column then 1 else 100 end as data_priority,
+            'tcg_text' as column_type, 
+            'tcg_text' as edit_type, 
+            'tcg_text' as filter_type
+        from dbo_crud_tables a
+        join INFORMATION_SCHEMA.COLUMNS b on b.table_name=a.table_name and b.table_schema=DATABASE() 
+        left join dbo_crud_columns x on x.table_id=a.id and x.name=b.column_name
+        where (a.id=? or a.table_name=?)
+            and a.is_deleted=0
+            and x.id is null
+            ";
+
+        $this->db->query($sql, array($table_id_or_name, $table_id_or_name));
     }
 }
 

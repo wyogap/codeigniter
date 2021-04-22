@@ -56,4 +56,22 @@ body[data-layout=detached] .content-page {
     .DTE .form-group {
         margin-bottom: 0.5rem;
     }
+
+    li.paginate_button {
+        width: fit-content;
+        display: inline-flex !important;
+        justify-content: center;
+        align-items: center;
+        align-content: center;
+    }	
+
+	.dataTables_paginate ul {
+		text-align: center;
+		display: block;
+		margin: 12px 0 0!important;
+	}
+	
+	.form-group .label {
+		margin-top: .5rem;
+	}
 }

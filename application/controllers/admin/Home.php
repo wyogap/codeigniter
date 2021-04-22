@@ -13,6 +13,13 @@ class Home extends CI_Controller {
 		$isLoggedIn = $this->session->userdata('is_logged_in');
 		if(!isset($isLoggedIn) || $isLoggedIn != TRUE) {
 			redirect(base_url() .'auth');
+			return;
+		}
+		
+		$this->load->model(array('crud/Mpermission'));
+		if (!$this->Mpermission->is_admin()) {
+			redirect(base_url() .'auth/notauthorized');
+			return;
 		}
     }
 
@@ -49,5 +56,24 @@ class Home extends CI_Controller {
 		$this->smarty->render_theme('admin/home.tpl', $page_data);
 	}
 
+	public function json() {
+		$action = $this->input->post("action");
+		if ($action=='generate_columns') {
+			
+            $values = $this->input->post("data");
+
+			$this->load->model(array('crud/Mtable'));
+
+			$error_msg = "";
+			$data['data'] = array();
+			foreach ($values as $key => $valuepair) {
+				$this->Mtable->generate_columns($key);
+            }
+
+			$json['status'] = 1;
+			echo json_encode($json, JSON_INVALID_UTF8_IGNORE);	
+		}
+
+	}
 
 }

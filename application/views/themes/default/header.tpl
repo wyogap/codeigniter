@@ -53,10 +53,14 @@
             <div class="topnav-logo-lg" style="margin-top: 19px; ">
                 <img src="{$base_url}{$app_logo}" alt="" height="32">
             </div>
-            <div class="d-md-flex"
+            
+            <div class="d-none d-md-flex"
                 style="font-size: 14px; font-weight: 600; line-height: 32px; color: #fff; opacity: 1; text-transform: uppercase; margin-top: 19px; margin-left: 8px">
                 {$app_name}</div>
 
+            <div class="d-flex d-md-none"
+                style="font-size: 14px; font-weight: 600; line-height: 32px; color: #fff; opacity: 1; text-transform: uppercase; margin-top: 19px; margin-left: 8px">
+                {$app_short_name}</div>
         </a>
 
     </div>

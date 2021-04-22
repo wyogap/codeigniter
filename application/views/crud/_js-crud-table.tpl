@@ -1,6 +1,9 @@
 
 <script type="text/javascript" defer> 
 
+var base_url = "{$base_url}";
+var ajax_url = "{$tbl.ajax}";
+
 var editor_{$tbl.table_id} = null;
 var dt_{$tbl.table_id} = null;
 
@@ -22,6 +25,9 @@ $(document).ready(function() {
                     name: "{$col.edit_field}",
                     {if $col.edit_type == 'js'}
                     type: 'hidden',
+                    {else if $col.edit_type == 'tcg_currency'}
+                    type: 'tcg_mask',
+                    mask: "#,##0",
                     {else}
                     type: '{$col.edit_type}',
                     {/if}
@@ -337,7 +343,7 @@ $(document).ready(function() {
             {foreach $tbl.columns as $x}
                 {if $x.visible == 1}
                 { 
-                    {if $x.foreign_key}
+                    {if $x.foreign_key && $x.type=="tcg_select2"}
                         data: "{$x.name}_label", 
                         editField: "{$x.name}", 
                     {else}
@@ -372,6 +378,9 @@ $(document).ready(function() {
                         }
                         return data;
                     },
+                    {/if}
+                    {if isset($x.type) && $x.type=="tcg_currency"}
+                    render: $.fn.dataTable.render.number(',', '.', 0, 'Rp'),
                     {/if}
                 },
                 {/if}

@@ -49,13 +49,25 @@ class Auth extends CI_Controller
 		$username = $this->input->post('username');
         $password = $this->input->post('password');
 		$captcha = $this->input->post("g-recaptcha-response", TRUE);
+
+        $json = $this->input->post('json');
+        if (empty($json)) {
+            $json = 0;
+        }
         
         $use_captcha = ($this->setting->get('use_captcha') == 1);
 
         $data['use_captcha'] = $use_captcha;
         if (!isset($username) && !isset($password)) {
-			$this->smarty->render('auth/login.tpl',$data);
-			return;
+            $error = __('Silahkan periksa Username/password anda');
+            if ($json == 1) {
+                $data = array('status'=>'0', 'error'=>$error);
+                echo json_encode($data, JSON_INVALID_UTF8_IGNORE);
+            }
+            else {
+                $this->smarty->render('auth/login.tpl',$data);
+            }
+            return;
         }
 		
         $data['is_localhost'] = (strpos(base_url(), 'localhost') >= 0);
@@ -65,28 +77,56 @@ class Auth extends CI_Controller
         
         if(isset($username) && $this->form_validation->run() == FALSE)
         {
-			$this->session->set_flashdata('error', __('Silahkan periksa Username/password anda'));	
-			$this->smarty->render('auth/login.tpl',$data);
+            $error = __('Silahkan periksa Username/password anda');
+            if ($json == 1) {
+                $data = array('status'=>'0', 'error'=>$error);
+                echo json_encode($data, JSON_INVALID_UTF8_IGNORE);
+            }
+            else {
+                $this->session->set_flashdata('error', $error);	
+                $this->smarty->render('auth/login.tpl',$data);
+            }
 			return;
         }
 
 		if($use_captcha == 1 && $this->check_recaptcha_v2($captcha) == 0){
-			$this->session->set_flashdata('error', __('Kode Captcha yang anda masukkan salah'));	
-			$this->smarty->render('auth/login.tpl',$data);
+            $error = __('Kode Captcha yang anda masukkan salah');
+            if ($json == 1) {
+                $data = array('status'=>'0', 'error'=>$error);
+                echo json_encode($data, JSON_INVALID_UTF8_IGNORE);
+            }
+            else {
+                $this->session->set_flashdata('error', $error);	
+                $this->smarty->render('auth/login.tpl',$data);
+            }
 			return;
 		}
 
 		$result = $this->Mauth->login($username, $password);		
 		if($result == null)
 		{
-			$this->session->set_flashdata('error', __('Username/password tidak ditemukan'));		
-			$this->smarty->render('auth/login.tpl',$data);
+            $error = __('Username/password tidak ditemukan');
+            if ($json == 1) {
+                $data = array('status'=>'0', 'error'=>$error);
+                echo json_encode($data, JSON_INVALID_UTF8_IGNORE);
+            }
+            else {
+                $this->session->set_flashdata('error', $error);		
+                $this->smarty->render('auth/login.tpl',$data);
+            }
 			return;
 		}
 
         if ($result['allow_login'] != '1') {
-			$this->session->set_flashdata('error', __('Akses login anda untuk sementara ditolak'));	
-			$this->smarty->render('auth/login.tpl',$data);
+            $error = __('Akses login anda untuk sementara ditolak');
+            if ($json == 1) {
+                $data = array('status'=>'0', 'error'=>$error);
+                echo json_encode($data, JSON_INVALID_UTF8_IGNORE);
+            }
+            else {
+                $this->session->set_flashdata('error', $error);	
+                $this->smarty->render('auth/login.tpl',$data);
+            }
 			return;
         }
         
@@ -109,18 +149,25 @@ class Auth extends CI_Controller
         // }      
 
         $page_role = $this->session->userdata('page_role');
-        redirect(base_url() ."$page_role/home");
+
+        if ($json == 1) {
+            $data = array("status"=>1, "redirect"=>base_url() ."$page_role/home");
+            echo json_encode($data, JSON_INVALID_UTF8_IGNORE);
+        } 
+        else {
+            redirect(base_url() ."$page_role/home");
+        }
     }
 
 	function logout() {
 		$this->session->sess_destroy();
-		redirect(base_url() .'auth');
+		redirect(base_url());
 	}
 
     function notfound() {
         $isLoggedIn = $this->session->userdata('is_logged_in');
         if(!isset($isLoggedIn) || $isLoggedIn != TRUE) {
-            redirect(base_url() .'auth');
+            redirect(base_url());
             return;
         }
 
@@ -130,7 +177,7 @@ class Auth extends CI_Controller
     function notauthorized() {
         $isLoggedIn = $this->session->userdata('is_logged_in');
         if(!isset($isLoggedIn) || $isLoggedIn != TRUE) {
-            redirect(base_url() .'auth');
+            redirect(base_url());
             return;
         }
 

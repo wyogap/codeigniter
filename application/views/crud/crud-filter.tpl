@@ -17,7 +17,23 @@
                             {if $f.filter_type != 'js'}
                             <div class="form-group col-md-4 mb-0 {$f.filter_css}">
                                 <label>{__($f.filter_label)}</label>
-                                {if $f.filter_type == 'select' || $f.filter_type == 'tcg_select2' || $f.filter_type == 'distinct'}
+                                {if $f.filter_type == 'select' || $f.filter_type == 'tcg_select2'}
+                                    <select id="f_{$f.name}" name="{$f.name}" class="form-control" placeholder="{__($f.filter_label)}">
+                                        <option value=''>-- {__($f.filter_label)} --</option>
+                                        {if $f.filter_invalid_value}
+                                        <option value='null'>-- {__("Tidak Valid")} --</option>
+                                        {/if}
+                                        {if isset($f.filter_options)}
+                                            {foreach from=$f.filter_options key=k item=v}
+                                            {if is_array($v)}
+                                            <option value="{$v.value}">{$v.label}</option>
+                                            {else}
+                                            <option value="{$k}">{$v}</option>
+                                            {/if}
+                                            {/foreach}
+                                        {/if}
+                                    </select>
+                                {else if $f.filter_type == 'distinct'}
                                     <select id="f_{$f.name}" name="{$f.name}" class="form-control" placeholder="{__($f.filter_label)}">
                                         <option value=''>-- {__($f.filter_label)} --</option>
                                         {if isset($f.filter_options)}
@@ -125,8 +141,17 @@
             e.stopPropagation();
             dt_{$crud.table_id}.ajax.reload();
         });
-    });
 
+        {foreach $crud.filter_columns as $f} 
+        {if $f.filter_type == 'select' || $f.filter_type == 'tcg_select2' || $f.filter_type == 'distinct'}
+            $("#f_{$f.name}").select2({
+                minimumResultsForSearch: 10,
+                minimumInputLength: 0,
+                //theme: "bootstrap",
+            });    
+        {/if}
+        {/foreach}
+    });
 </script>
 
 {/if}

@@ -10,7 +10,7 @@ class Mauth extends CI_Model
      */
     function login($username, $password)
     {
-        $this->db->select('Users.*, Roles.role, Roles.page_role');
+        $this->db->select('Users.*, Roles.role, Roles.page_role, Roles.admin');
         $this->db->from('dbo_users as Users');
         $this->db->join('dbo_roles as Roles','Roles.role_id = Users.role_id');
         //$this->db->join('dbo_uploads as Upload','Upload.id = Users.profile_img', "LEFT OUTER");
@@ -144,7 +144,7 @@ class Mauth extends CI_Model
 
     function profile($user_id)
     {
-        $this->db->select('Users.*, Roles.role, Roles.page_role');
+        $this->db->select('Users.*, Roles.role, Roles.page_role, Roles.admin');
         $this->db->from('dbo_users as Users');
         $this->db->join('dbo_roles as Roles','Roles.role_id = Users.role_id');
         $this->db->where('Users.user_id', $user_id);
