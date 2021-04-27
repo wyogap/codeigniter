@@ -9,7 +9,7 @@ class Mpages extends Mcrud
     protected static $COLUMNS = array();
     protected static $FILTERS = array();
 
-    protected static $COL_LABEL = 'nama';
+    protected static $COL_LABEL = 'name';
     protected static $COL_VALUE = 'id';
 
     protected static $SOFT_DELETE = true;
@@ -29,6 +29,30 @@ class Mpages extends Mcrud
 
     function get_page($name, $filter = null) {
         if ($filter == null)    $filter = array();
+
+        //name based
+        $filter['name'] = $name;
+
+        $arr = parent::list($filter);
+        if ($arr == null)   return $arr;
+
+        //just get the first entry
+        $arr = $arr[0];
+
+        if (empty($arr['page_title'])) {
+            $arr['page_title'] = ucwords( str_replace('.', ' ', $arr['page_name']) );
+        }    
+        
+        return $arr;
+    }
+
+    function get_api_page($name, $enable_crud_api = true) {
+        $filter = array();
+
+        //only show api page
+        if (!$enable_crud_api) {
+            $filter['page_type'] = 'api';
+        }
 
         //name based
         $filter['name'] = $name;

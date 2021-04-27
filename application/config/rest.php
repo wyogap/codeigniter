@@ -324,7 +324,7 @@ $config['rest_keys_table'] = 'dbo_api_keys';
 |   ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 |
 */
-$config['rest_enable_keys'] = FALSE;
+$config['rest_enable_keys'] = TRUE;
 
 /*
 |--------------------------------------------------------------------------
@@ -604,3 +604,8 @@ $config['allow_any_cors_domain'] = TRUE;
 |
 */
 $config['allowed_cors_origins'] = [];
+
+$config['rest_enable_jwt_token'] = TRUE;
+$config['rest_jwt_key'] = "2wsxZAQ!";
+$config['rest_jwt_expiry_sec'] = 60*60*5;
+$config['rest_enable_crud_api'] = true;

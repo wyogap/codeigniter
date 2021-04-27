@@ -6,6 +6,9 @@
 defined('BASEPATH') or exit('No direct script access allowed');
 
 require_once APPPATH ."/libraries/Format.php";
+require_once APPPATH .'/third_party/php-jwt/src/JWT.php';
+
+use \Firebase\JWT\JWT;
 
 /**
  * CodeIgniter Rest Controller
@@ -70,6 +73,13 @@ class MY_Rest_Controller extends CI_Controller
      * @var object
      */
     protected $rest = null;
+
+    /**
+     * The arguments for the url variable.
+     *
+     * @var array
+     */
+    protected $_url_args = [];
 
     /**
      * The arguments for the GET request method.
@@ -147,6 +157,13 @@ class MY_Rest_Controller extends CI_Controller
      * @var bool
      */
     protected $_allow = true;
+
+    /**
+     * If the request is allowed based on the JWT Token provided.
+     *
+     * @var bool
+     */
+    protected $_allow_token = true;
 
     /**
      * The LDAP Distinguished Name of the User post authentication.
@@ -332,6 +349,9 @@ class MY_Rest_Controller extends CI_Controller
         // Set up the query parameters
         $this->_parse_query();
 
+        // Set up url arg
+        $this->_url_args = array_slice($this->uri->rsegments, 2);
+
         // Set up the GET variables
         $this->_get_args = array_merge($this->_get_args, $this->uri->ruri_to_assoc());
 
@@ -407,6 +427,12 @@ class MY_Rest_Controller extends CI_Controller
                 $this->config->item('rest_status_field_name')  => false,
                 $this->config->item('rest_message_field_name') => $this->lang->line('text_rest_ajax_only'),
             ], self::HTTP_NOT_ACCEPTABLE);
+        }
+
+        // Checking for jwt token
+        // Skip keys test for $config['auth_override_class_method']['class'['method'] = 'none'
+        if ($this->config->item('rest_enable_jwt_token') && $this->auth_override !== true) {
+            $this->_allow_token = $this->_detect_jwt_token();
         }
 
         // When there is no specific override for the current class/method, use the default auth value set in the config
@@ -860,8 +886,12 @@ class MY_Rest_Controller extends CI_Controller
         $this->rest->level = null;
         $this->rest->user_id = null;
         $this->rest->ignore_limits = false;
+        $this->rest->is_admin = false;
+        $this->rest->limit = 0;
+        $this->rest->time_limit_sec = 3600;
 
         // Find the key from server or arguments
+
         if (($key = isset($this->_args[$api_key_variable]) ? $this->_args[$api_key_variable] : $this->input->server($key_name))) {
             if (!($row = $this->rest->db->where($this->config->item('rest_key_column'), $key)->get($this->config->item('rest_keys_table'))->row())) {
                 return false;
@@ -872,6 +902,9 @@ class MY_Rest_Controller extends CI_Controller
             isset($row->user_id) && $this->rest->user_id = $row->user_id;
             isset($row->level) && $this->rest->level = $row->level;
             isset($row->ignore_limits) && $this->rest->ignore_limits = $row->ignore_limits;
+            isset($row->is_admin) && $this->rest->is_admin = $row->is_admin;
+            isset($row->limit) && $this->rest->limit = $row->limit;
+            isset($row->time_limit_sec) && $this->rest->time_limit_sec = $row->time_limit_sec;
 
             $this->_apiuser = $row;
 
@@ -907,6 +940,40 @@ class MY_Rest_Controller extends CI_Controller
 
         // No key has been sent
         return false;
+    }
+
+    /**
+     * See if the user has provided an JWT token.
+     *
+     * @return bool
+     */
+    protected function _detect_jwt_token() {
+        $this->rest->token = null;
+
+        //JWT Auth middleware
+        $headers = $this->input->get_request_header('Authorization');
+        $key = $this->config->item('rest_jwt_key'); //secret key for encode and decode
+        $token= "token";
+       	if (!empty($headers)) {
+        	if (preg_match('/Bearer\s(\S+)/', $headers , $matches)) {
+                $token = $matches[1];
+        	}
+    	}
+
+        try {
+            $decoded = JWT::decode($token, $key, array('HS256'));
+            $this->rest->token = $decoded;
+
+            $this->rest->user_id = $this->rest->token->userid;
+            $this->rest->role_id = $this->rest->token->roleid ?? false;
+            $this->rest->is_admin = $this->rest->token->admin ?? false;
+        } catch (Exception $e) {
+            // $invalid = ['status' => $e->getMessage()]; //Respon if credential invalid
+            // $this->response($invalid, 401);//401
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -1010,7 +1077,7 @@ class MY_Rest_Controller extends CI_Controller
                 break;
         }
 
-        if (isset($this->methods[$controller_method]['limit']) === false) {
+        if (empty($this->methods[$controller_method]['limit'])) {
             // Everything is fine
             return true;
         }
@@ -1018,7 +1085,7 @@ class MY_Rest_Controller extends CI_Controller
         // How many times can you get to this method in a defined time_limit (default: 1 hour)?
         $limit = $this->methods[$controller_method]['limit'];
 
-        $time_limit = (isset($this->methods[$controller_method]['time']) ? $this->methods[$controller_method]['time'] : 3600); // 3600 = 60 * 60
+        $time_limit = (!empty($this->methods[$controller_method]['time'])? $this->methods[$controller_method]['time'] : 3600); // 3600 = 60 * 60
 
         // Get data about a keys' usage and limit to one row
         $result = $this->rest->db
@@ -1957,7 +2024,7 @@ class MY_Rest_Controller extends CI_Controller
     {
         // If we don't want to check access, just return TRUE
         if ($this->config->item('rest_enable_access') === false) {
-            return true;
+            return false;
         }
 
         // Fetch controller based on path and controller name
@@ -1981,6 +2048,23 @@ class MY_Rest_Controller extends CI_Controller
         if (!empty($accessRow) && !empty($accessRow['all_access'])) {
             return true;
         }
+
+        return false;
+    }
+
+    /**
+     * Check to see if the API key has access to the controller and methods.
+     *
+     * @return bool TRUE the API key has access; otherwise, FALSE
+     */
+    protected function _check_token_access()
+    {
+        // If we don't want to check access, just return TRUE
+        if ($this->config->item('rest_enable_jwt_token') === false) {
+            return false;
+        }
+
+        //TODO
 
         return false;
     }

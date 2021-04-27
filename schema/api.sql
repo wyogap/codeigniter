@@ -97,3 +97,43 @@ ALTER TABLE `dbo_crud_columns`
 ADD COLUMN `filter_invalid_value` SMALLINT(6) NOT NULL DEFAULT '0' AFTER `filter_options_array`;
 
 INSERT INTO `dbo_crud_columns` (`id`, `table_id`, `name`, `column_name`, `order_no`, `visible`, `label`, `css`, `column_type`, `data_priority`, `options_array`, `options_data_model`, `foreign_key`, `reference_table_name`, `reference_key_column`, `reference_lookup_column`, `reference_soft_delete`, `reference_where_clause`, `allow_insert`, `allow_edit`, `edit_field`, `edit_label`, `edit_type`, `edit_css`, `edit_compulsory`, `edit_info`, `edit_attr_array`, `edit_bubble`, `edit_onchange_js`, `edit_options_array`, `allow_filter`, `filter_label`, `filter_type`, `filter_css`, `filter_attr_array`, `filter_onchange_js`, `filter_options_array`, `allow_search`, `created_on`, `updated_on`, `updated_by`, `is_deleted`) VALUES (NULL, '9', 'filter_invalid_value`', '', '37', '1', 'Filter Invalid Value', '', 'tcg_toggle', '-1', '', '', '0', '', '', '', '1', '', '1', '1', '', '', 'tcg_toggle', '', '0', '', '', '0', '', '', '0', '', '', '', '', '', '', '0', '2021-03-17 20:17:56', '2021-03-17 16:53:41', '990', '0');
+
+
+ALTER TABLE `dbo_api_access` 
+DROP COLUMN `all_access`,
+ADD COLUMN `allow_view` SMALLINT(6) NOT NULL DEFAULT '1' AFTER `entity_id`,
+ADD COLUMN `allow_add` SMALLINT(6) NOT NULL DEFAULT '1' AFTER `allow_view`,
+ADD COLUMN `allow_edit` SMALLINT(6) NOT NULL DEFAULT '1' AFTER `allow_add`,
+ADD COLUMN `allow_delete` SMALLINT(6) NOT NULL DEFAULT '1' AFTER `allow_edit`,
+ADD COLUMN `no_access` SMALLINT(6) NOT NULL DEFAULT '1' AFTER `allow_delete`,
+CHANGE COLUMN `controller` `entity_id` VARCHAR(50) NOT NULL DEFAULT '' ;
+
+ALTER TABLE `dbo_api_keys` 
+DROP COLUMN `user_id`,
+ADD COLUMN `is_admin` TINYINT(4) NOT NULL DEFAULT '0' AFTER `ip_addresses`;
+
+INSERT INTO `dbo_api_keys` (`key`, `is_admin`) VALUES ('1234567890', '1');
+
+ALTER TABLE `dbo_api_keys` 
+ADD COLUMN `time_limit_sec` INT NULL AFTER `limit`,
+CHANGE COLUMN `ignore_limits` `limit` INT NOT NULL DEFAULT '0' ;
+
+INSERT INTO `dbo_crud_pages` (`name`, `crud_table_id`, `page_title`, `page_type`) VALUES ('api_keys', '59', 'API Keys', 'table');
+
+INSERT INTO `dbo_crud_navigations` (`id`, `role_id`, `label`, `icon`, `nav_type`, `action_type`, `page_id`, `url`, `order_no`, `created_on`, `updated_on`, `updated_by`, `is_deleted`) VALUES (NULL, '1', 'REST API', 'dripicons-web', 'item', 'dropdown', '0', '', '120', '2021-03-18 01:47:43', '2021-03-19 12:18:57', '990', '0');
+INSERT INTO `dbo_crud_navigations` (`id`, `role_id`, `label`, `icon`, `nav_type`, `action_type`, `page_id`, `url`, `order_no`, `created_on`, `updated_on`, `updated_by`, `is_deleted`) VALUES (NULL, '1', 'API Keys', '', 'subitem', 'page', '55', '', '121', '2021-03-18 01:47:43', '2021-03-19 12:19:03', '990', '0');
+
+INSERT INTO `dbo_crud_pages_subtables` (`id`, `page_id`, `subtable_id`, `label`, `table_key_column`, `subtable_fkey_column`, `page_size`, `order_no`, `created_on`, `updated_on`, `is_deleted`) VALUES (NULL, '55', '60', 'Hak Akses', 'key', 'key', '10', '2', '2021-04-18 10:36:57', '2021-04-18 10:36:57', '0');
+
+INSERT INTO `dbo_lookups` (`id`, `group`, `label`, `value`, `level`, `optgroup`, `created_by`, `created_on`, `is_deleted`) VALUES (NULL, 'page_type', 'API', 'api', '1', '0', '1', '2021-03-19 14:39:33', '0');
+
+INSERT INTO `dbo_crud_permissions` (`id`, `role_id`, `page_id`, `allow_view`, `allow_add`, `allow_edit`, `allow_delete`, `no_access`, `created_on`, `updated_on`, `is_deleted`) VALUES (NULL, '3', '59', '1', '1', '1', '1', '0', '2021-04-18 10:52:34', '2021-04-18 10:52:34', '0');
+INSERT INTO `dbo_crud_permissions` (`id`, `role_id`, `page_id`, `allow_view`, `allow_add`, `allow_edit`, `allow_delete`, `no_access`, `created_on`, `updated_on`, `is_deleted`) VALUES (NULL, '3', '60', '1', '1', '1', '1', '0', '2021-04-18 10:51:51', '2021-04-18 10:51:51', '0');
+
+UPDATE `dbo_crud_tables` SET `data_model` = 'rest/Mkeys' WHERE (`id` = '59');
+
+UPDATE `dbo_crud_tables` SET `key_column` = 'key' WHERE (`id` = '59');
+
+INSERT INTO `dbo_crud_navigations` (`id`, `role_id`, `label`, `icon`, `nav_type`, `action_type`, `page_id`, `url`, `order_no`, `created_on`, `updated_on`, `updated_by`, `is_deleted`) VALUES (NULL, '2', 'REST API', 'dripicons-web', 'item', 'dropdown', '0', '', '130', '2021-03-18 01:47:43', '2021-03-19 12:18:57', '990', '0');
+INSERT INTO `dbo_crud_navigations` (`id`, `role_id`, `label`, `icon`, `nav_type`, `action_type`, `page_id`, `url`, `order_no`, `created_on`, `updated_on`, `updated_by`, `is_deleted`) VALUES (NULL, '2', 'API Keys', '', 'subitem', 'page', '55', '', '131', '2021-03-18 01:47:43', '2021-04-26 20:40:34', '990', '0');
+

@@ -475,7 +475,7 @@ abstract class MY_Crud_Controller extends CI_Controller {
 				}
 				
 				$detail = $model->detail($key, $filters); 
-			
+
 				if ($detail != null && count($detail) > 0)		$data['data'][] = $detail;
             }
 
@@ -669,8 +669,6 @@ abstract class MY_Crud_Controller extends CI_Controller {
 			return;
 		}
 
-		//var_dump($subtables);
-
 		$model = $this->get_model($subtable_id);
 		if ($model == null) {
 			$data['error'] = 'Invalid table-id';
@@ -731,7 +729,13 @@ abstract class MY_Crud_Controller extends CI_Controller {
         else if ($action=='create') {
 			$values = $this->input->post("data");
 
-            $key = $model->add($values[0], $filters);
+			$filter_value = '';
+			if (isset($params) && count($params) > 0) {
+				$filter_value = $params[0];
+			}
+			$values[0][ $subtable['subtable_fkey_column'] ] = $filter_value;
+			
+			$key = $model->add($values[0], $filters);
             if ($key == 0) {
                 $data['error'] = $this->db->error()['message'];
             } else {

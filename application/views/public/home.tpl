@@ -457,7 +457,7 @@
                     <div class="home-banner-wrap">
                         <h2>Informasi kendaraan dinas</h2>
                         <p>Masukkan nomer polisi atau kata kunci lain untuk mencari.</p>
-                        <div class="" action="http://localhost/academy/home/search" method="get">
+                        <div class="" action="{$base_url}rest/api_kendaraan_dinas" method="get">
                             <div class="input-group">
                                 <input type="text" class="form-control" name="query" placeholder="Pencarian"
                                     id="input-search">
@@ -574,7 +574,7 @@ function signin() {
 
 function search() {
     $.ajax({
-        "url": "{$base_url}api/kendaraandinas/search?q=" + $("#input-search").val(),
+        "url": "{$base_url}rest/api_kendaraan_dinas?search=" + $("#input-search").val(),
         "dataType": "json",
         "type": "GET",
         "data": {
@@ -586,15 +586,15 @@ function search() {
         },
         success: function(response) {
             //display result
-            if (typeof response.status !== 'undefined' && !response.result) {
+            if (response.result === "undefined" || response.result == null || response.result.length == 0) {
                 $('#result-text').html("Data tidak ditemukan.");
                 $('#result-list').html("");
             }
-            else if (response.length > {$max_search_result}) {
+            else if (response.result.length > {$max_search_result}) {
                 $('#result-text').html("Hasil pencarian terlalu banyak. Hanya menampilkan {$max_search_result} entri pertama.");
                 $('#result-list').html("");
-                for (let i=0; i<response.length && i<{$max_search_result}; i++) {
-                    let item = response[i];
+                for (let i=0; i<response.result.length && i<{$max_search_result}; i++) {
+                    let item = response.result[i];
                     let content = render_template($("#result-info"), item);
                     $('#result-list').append(content);
                 }
@@ -602,7 +602,7 @@ function search() {
             else {
                 $('#result-text').html("Hasil pencarian:");
                 $('#result-list').html("");
-                response.forEach(function(item, index) {
+                response.result.forEach(function(item, index) {
                     let content = render_template($("#result-info"), item);
                     $('#result-list').append(content);
                 })

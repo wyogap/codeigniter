@@ -123,7 +123,7 @@ class Mcrud extends CI_Model
         }
 
         $this->db->select($str);
-        $this->db->from($table_name);
+        // $this->db->from($table_name);
 
         //order by
         if (!empty($orderby)) {
@@ -137,7 +137,7 @@ class Mcrud extends CI_Model
             }
         }
 
-        return $this->db->get($limit, $offset)->result_array();
+        return $this->db->get($table_name, $limit, $offset)->result_array();
     }
 
     function list($filter = null, $limit = null, $offset = null, $orderby = null) {
@@ -161,7 +161,7 @@ class Mcrud extends CI_Model
         }
 
         $this->db->select($str);
-        $this->db->from($table_name);
+        // $this->db->from($table_name);
 
         //order by
         if (!empty($orderby)) {
@@ -175,7 +175,7 @@ class Mcrud extends CI_Model
             }
         }
 
-        return $this->db->get($limit, $offset)->result_array();
+        return $this->db->get($table_name, $limit, $offset)->result_array();
     }
 
     function detail($id, $filter = null) {

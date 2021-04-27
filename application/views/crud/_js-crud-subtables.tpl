@@ -21,6 +21,7 @@ $(document).ready(function() {
                 {foreach $subtables as $subtbl}
                 selected_key = data[0]['{$subtbl.table_key_column}'];
                 dt_{$subtbl.crud.table_id}.ajax.url("{$subtbl.crud.ajax}/" +selected_key);
+                editor_{$subtbl.crud.table_id}.s.ajax = "{$subtbl.crud.ajax}/" +selected_key;
                 dt_{$subtbl.crud.table_id}.ajax.reload();
                 {/foreach}
             }

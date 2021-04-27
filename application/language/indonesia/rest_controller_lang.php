@@ -16,3 +16,5 @@ $lang['text_rest_api_key_time_limit'] = 'Kunci API ini telah mencapai batas wakt
 $lang['text_rest_ip_address_time_limit'] = 'Alamat API ini telah mencapai batas waktu untuk mengakses metode ini';
 $lang['text_rest_unknown_method'] = 'Metode yang tidak ketahui';
 $lang['text_rest_unsupported'] = 'Protokol tidak mendukung';
+$lang['text_rest_not_found'] = 'Data tidak ditemukan';
+$lang['text_operation_fail'] = 'Tindakan gagal';

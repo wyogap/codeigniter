@@ -23,6 +23,7 @@ class Mtable extends CI_Model
     protected $row_actions = null;
     protected $custom_actions = null;
 
+    protected $columns = null;
     protected $edit_columns = null;
     protected $select_columns = null;
     protected $filter_columns = null;
@@ -172,16 +173,18 @@ class Mtable extends CI_Model
         $this->name = $arr['name'];
         $this->table_name = $arr['table_name'];
 
+        $this->data_model = null;
+
         //data model
         if (!empty($arr['data_model']))     $this->data_model = $arr['data_model'];
         else                                $this->data_model = null;
 
         if ($this->data_model != null) {
-            try {
+             try {
                 $this->data_model = $this->get_model($this->data_model);
             }
             catch (exception $e) {
-                $this->data_model = null;
+                 $this->data_model = null;
             }
         }
 
@@ -265,11 +268,12 @@ class Mtable extends CI_Model
         $this->custom_actions = array();
         $this->join_tables = array();
 
+        $this->columns = array();
         $this->edit_columns = array();
         $this->select_columns = array();
         $this->filter_columns = array();
         $this->search_columns = array();
-
+        
         //inline edit row
         if ($this->table_actions['edit_row_action']) {
             $row_action = static::$ROW_ACTION;
@@ -384,6 +388,9 @@ class Mtable extends CI_Model
                         $this->join_tables[ $col['name'] ] = $ref;
 
                         //add into select
+                        $col['label_column'] = $ref['reference_alias'].".".$ref['reference_lookup_column'];
+                        $col['label_type'] = "join";
+
                         $this->select_columns[] = $ref['reference_alias'].".".$ref['reference_lookup_column']." as ".$ref['name']."_label";
                     }
                     else if ($col['type'] == 'tcg_multi_select') {
@@ -394,12 +401,18 @@ class Mtable extends CI_Model
                         }
 
                         //add into select
+                        $col['label_column'] = "(" .$subquery. ")";
+                        $col['label_type'] = "subquery";
+
                         $this->select_columns[] = "(" .$subquery. ") as ".$ref['name']."_label";
                     }
                     else if ($col['type'] == 'tcg_upload') {
                         $subquery = "select group_concat(x.filename, ':', x.path separator ', ') from dbo_uploads x where find_in_set(x.id, " .$ref['column_name']. ") > 0 and x.is_deleted=0";
 
                         //add into select
+                        $col['label_column'] = "(" .$subquery. ")";
+                        $col['label_type'] = "subquery";
+
                         $this->select_columns[] = "(" .$subquery. ") as ".$ref['name']."_label";
                     }
 
@@ -419,7 +432,7 @@ class Mtable extends CI_Model
                     // }
                 }
 
-                if ($col['allow_insert'] || $col['allow_edit']) {
+                if ($col['allow_edit']) {
                     $editor = static::$EDITOR;
                     $editor['name'] = $row['name'];
                     $editor['allow_insert'] = $col['allow_insert'];
@@ -512,6 +525,7 @@ class Mtable extends CI_Model
     
                 $this->column_metas[] = $col;
                 $this->select_columns[] = $col['column_name']." as ".$col['name'];
+                $this->columns[] = $col['name'];
             }
 
         } while (false);
@@ -686,7 +700,8 @@ class Mtable extends CI_Model
 
         //clean up non existing filter columns
         foreach($filter as $key => $val) {
-            if (false !== array_search($key, $this->filter_columns)) {
+            //TODO: use columnmeta[$key] and use $column_name
+            if (false !== array_search($key, $this->columns)) {
                 $this->db->where("$table_name.$key", $val);
             }
         }
@@ -726,7 +741,8 @@ class Mtable extends CI_Model
 
         //clean up non existing filter columns
         foreach($filter as $key => $val) {
-            if (false !== array_search($key, $this->filter_columns)) {
+            //TODO: use columnmeta[$key] and use $column_name
+            if (false !== array_search($key, $this->columns)) {
                 $this->db->where("$table_name.$key", $val);
             }
         }
@@ -763,7 +779,8 @@ class Mtable extends CI_Model
         //add filter
         if ($filter != null && count($filter) > 0) {
             foreach($filter as $key => $val) {
-                if (false !== array_search($key, $this->filter_columns)) {
+                //TODO: use columnmeta[$key] and use $column_name
+                if (false !== array_search($key, $this->columns)) {
                     if ($val == Mtable::INVALID_VALUE) {
                         $fkey = $this->join_tables[$key];
                         if ($fkey != null) {
@@ -786,7 +803,7 @@ class Mtable extends CI_Model
         $select_str = implode(', ', $this->select_columns);
 
         $this->db->select($select_str);
-        $this->db->from($table_name);
+        // $this->db->from($table_name);
 
         //join table
         foreach($this->join_tables as $row) {
@@ -815,7 +832,7 @@ class Mtable extends CI_Model
             }
         }
 
-        $arr = $this->db->get($limit, $offset)->result_array();
+        $arr = $this->db->get($table_name, $limit, $offset)->result_array();
         if ($arr == null)       return $arr;
 
         //special transformation
@@ -848,7 +865,8 @@ class Mtable extends CI_Model
 
         //clean up non existing filter columns
         foreach($filter as $key => $val) {
-            if (false !== array_search($key, $this->filter_columns)) {
+            //TODO: use columnmeta[$key] and use $column_name
+            if (false !== array_search($key, $this->columns)) {
                 if ($val == Mtable::INVALID_VALUE) {
                     $fkey = $this->join_tables[$key];
                     if ($fkey != null) {
@@ -870,7 +888,7 @@ class Mtable extends CI_Model
         $select_str = implode(', ', $this->select_columns);
 
         $this->db->select($select_str);
-        $this->db->from($table_name);
+        //$this->db->from($table_name);
 
         //join table
         foreach($this->join_tables as $row) {
@@ -899,7 +917,7 @@ class Mtable extends CI_Model
             }
         }
 
-        $arr = $this->db->get($limit, $offset)->result_array();
+        $arr = $this->db->get($table_name, $limit, $offset)->result_array();
         if ($arr == null)       return $arr;
 
         //special transformation
@@ -1101,7 +1119,7 @@ class Mtable extends CI_Model
         $table_name = $this->table_metas['editable_table_name'];
 
         $id = 0;
-
+        
         $query = $this->db->insert($table_name, $valuepair);
         if ($query) {
             $id = $this->db->insert_id();
@@ -1118,6 +1136,7 @@ class Mtable extends CI_Model
 		$ci->load->model($path);
 
 		$name = basename($path);
+
 		return $ci->$name;
 	}
 
