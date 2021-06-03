@@ -83,7 +83,7 @@
             .buttons([
                 { label: "Simpan", className: "btn-primary", fn: function () { this.submit(); } },
             ])
-            .edit(dt.row({ selected: true }).index(), true);
+            .edit(dt.rows({ selected: true }).indexes(), true);
     }
 
 </script>
