@@ -107,7 +107,7 @@
                 field.addClass("d-none");
 
                 //check for compulsory field
-                if (conf.compulsory && (typeof val === 'undefined' || val === null || val == "")) {
+                if (conf.compulsory && (typeof val === 'undefined' || val === null || val == "") && edit_type == 'tcg_toggle') {
                     field.html("{__('Harus diisi')}");
                     field.removeClass("d-none");
                     error = true;

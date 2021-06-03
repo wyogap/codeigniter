@@ -156,7 +156,7 @@ $(document).ready(function() {
                 let field = null;
 
                 {foreach $tbl.editor_columns as $col}
-                    {if isset($col.edit_compulsory) && $col.edit_compulsory == true}
+                    {if isset($col.edit_compulsory) && $col.edit_compulsory == true && $col.edit_type != 'tcg_toggle'}
                     field = this.field('{$col.edit_field}');
                     if (!field.isMultiValue()) {
                         if (!field.val() || field.val() == 0) {
