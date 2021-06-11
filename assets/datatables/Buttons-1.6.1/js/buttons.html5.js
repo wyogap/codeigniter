@@ -1070,7 +1070,7 @@ DataTable.ext.buttons.excelHtml5 = {
 					// TODO Need to provide the ability for the specials to say
 					// if they are returning a string, since at the moment it is
 					// assumed to be a number
-					if ( row[i].match && ! row[i].match(/^0\d+/) && row[i].match( special.match ) ) {
+					if ( row[i].match && ! row[i].match(/^0\d+/) && row[i].match( special.match ) && row[i].length<=15 ) {
 						var val = row[i].replace(/[^\d\.\-]/g, '');
 
 						if ( special.fmt ) {
@@ -1095,7 +1095,7 @@ DataTable.ext.buttons.excelHtml5 = {
 					if ( typeof row[i] === 'number' || (
 						row[i].match &&
 						row[i].match(/^-?\d+(\.\d+)?$/) &&
-						! row[i].match(/^0\d+/) )
+						! row[i].match(/^0\d+/) && row[i].length<=15)
 					) {
 						// Detect numbers - don't match numbers with leading zeros
 						// or a negative anywhere but the start
