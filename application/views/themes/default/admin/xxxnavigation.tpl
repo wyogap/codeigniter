@@ -14,7 +14,7 @@
 		<ul class="metismenu side-nav side-nav-light">
 
 			<li class="side-nav-item {if $page_name=='profile'}active{/if}">
-				<a href="{base_url('crud/profile')}" class="side-nav-link">
+				<a href="{site_url('crud/profile')}" class="side-nav-link">
 					<i class="dripicons-user"></i>
 					<span>{__('Profil')}</span>
 				</a>
@@ -23,7 +23,7 @@
 			<li class="side-nav-title side-nav-item">{__('Administrasi')}</li>
 
 			<li class="side-nav-item {if $page_name=='users'}active{/if}">
-				<a href="{base_url('crud/users')}" class="side-nav-link">
+				<a href="{site_url('crud/users')}" class="side-nav-link">
 					<i class="dripicons-user-group"></i>
 					<span>{__('Pengguna')}</span>
 				</a>
@@ -41,19 +41,19 @@
 				</a>
 				<ul class="side-nav-second-level collapse {if $page_group=='crud'}in{/if}" aria-expanded="false">
 					<li class="{if $page_name=='pages'}active{/if}">
-						<a href="{base_url('crud/pages')}">Halaman</a>
+						<a href="{site_url('crud/pages')}">Halaman</a>
 					</li>
 
 					<li class="{if $page_name=='permissions'}active{/if}">
-						<a href="{base_url('crud/permissions')}">Hak Akses</a>
+						<a href="{site_url('crud/permissions')}">Hak Akses</a>
 					</li>
 
 					<li class="{if $page_name=='tables'}active{/if}">
-						<a href="{base_url('crud/tables')}">Tabel</a>
+						<a href="{site_url('crud/tables')}">Tabel</a>
 					</li>
 
 					<li class="{if $page_name=='columns'}active{/if}">
-						<a href="{base_url('crud/columns')}">Kolom</a>
+						<a href="{site_url('crud/columns')}">Kolom</a>
 					</li>
 				</ul>
 			</li>
@@ -70,11 +70,11 @@
 				</a>
 				<ul class="side-nav-second-level collapse {if $page_group=='masterdata'}in{/if}" aria-expanded="false">
 					<li class="{if $page_name=='roles'}active{/if}">
-						<a href="{base_url('crud/roles')}">Peran</a>
+						<a href="{site_url('crud/roles')}">Peran</a>
 					</li>
 
 					<li class="{if $page_name=='lookups'}active{/if}">
-						<a href="{base_url('crud/lookups')}">Lookup</a>
+						<a href="{site_url('crud/lookups')}">Lookup</a>
 					</li>
 				</ul>
 			</li>
@@ -91,11 +91,11 @@
 				</a>
 				<ul class="side-nav-second-level collapse {if $page_group=='system'}in{/if}" aria-expanded="false">
 					<li class="{if $page_name=='settings'}active{/if}">
-						<a href="{base_url('crud/settings')}">Konfigurasi</a>
+						<a href="{site_url('crud/settings')}">Konfigurasi</a>
 					</li>
 
 					<li class="{if $page_name=='audittrails'}active{/if}">
-						<a href="{base_url('crud/audittrails')}">Audit Trail</a>
+						<a href="{site_url('crud/audittrails')}">Audit Trail</a>
 					</li>
 				</ul>
 			</li>

@@ -65,7 +65,7 @@
 		<?php } ?>
 	  </p>
 
-	  <form role="form" enctype="multipart/form-data" id="proses" action="<?php echo base_url();?>Auth/login/" method="post">
+	  <form role="form" enctype="multipart/form-data" id="proses" action="<?php echo site_url();?>/auth/login/" method="post">
         <div class="input-group mb-3">
 		  <input type="text" class="form-control" placeholder="Username" id="username" name="username" data-validation="required" minlength="4" maxlength="100">
 		  <div class="input-group-append">

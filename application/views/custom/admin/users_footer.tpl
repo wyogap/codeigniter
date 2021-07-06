@@ -3,7 +3,7 @@
 
     $(document).ready(function() {
         editor_pwd = new $.fn.dataTable.Editor( {   
-            ajax: "{$base_url}auth/resetpassword",
+            ajax: "{$site_url}auth/resetpassword",
             table: "#{$crud.table_id}",
             idSrc: "user_id",
             fields: [ 

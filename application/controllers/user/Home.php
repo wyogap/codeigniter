@@ -12,7 +12,7 @@ class Home extends CI_Controller {
 
 		$isLoggedIn = $this->session->userdata('is_logged_in');
 		if(!isset($isLoggedIn) || $isLoggedIn != TRUE) {
-			redirect(base_url() .'auth');
+			redirect(site_url() .'/auth');
 		}
     }
 
@@ -33,7 +33,7 @@ class Home extends CI_Controller {
 	 */
 	public function index()
 	{
-		//redirect(base_url('crud/laporan_pengguna/add'));
+		//redirect(site_url('crud/laporan_pengguna/add'));
 
 		// $page_data['page_name']              = 'home';
 		// $page_data['page_title']             = 'Home';

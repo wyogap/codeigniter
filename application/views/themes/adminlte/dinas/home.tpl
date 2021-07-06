@@ -224,7 +224,7 @@ $(document).ready(function() {
                 "sLast": "{__('Terakhir')}"
             }
         },
-        "ajax": "{$site_url}admin/home/per_opd",
+        "ajax": "{$site_url}dinas/home/per_opd",
         "columns": [
             {
                 data: "label",

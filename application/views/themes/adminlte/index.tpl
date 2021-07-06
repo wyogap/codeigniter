@@ -17,7 +17,11 @@
     {$page_header}
     {/if}
 </head>
+{if $navigation|@count > 1}
 <body class="sidebar-mini layout-fixed control-sidebar-open" style="height: auto;">
+{else}
+<body class="layout-top-nav" style="height: auto;">
+{/if}
     <div class="wrapper">
         <!-- HEADER -->
         {include "$theme_prefix/header.tpl"}

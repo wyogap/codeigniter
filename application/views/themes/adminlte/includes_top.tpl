@@ -170,7 +170,7 @@ table.dataTable.nowrap th, table.dataTable.nowrap td {
 
 }
 
-@media only screen and (max-width: 768px) {
+@media only screen and (max-width: 767px) {
 
     .container-fluid {
         padding-right: 0px;
@@ -210,6 +210,10 @@ table.dataTable.nowrap th, table.dataTable.nowrap td {
 
     .btn-dropdown .fa {
         font-size: .75em !important;
+    }
+
+    div.dataTables_wrapper div.dataTables_info {
+        white-space: normal;
     }
 }
 

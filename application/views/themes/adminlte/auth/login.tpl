@@ -75,7 +75,7 @@
                 {/if}
                 </p>
 
-                <form role="form" enctype="multipart/form-data" id="proses" action="{$base_url}auth/login/"
+                <form role="form" enctype="multipart/form-data" id="proses" action="{$site_url}auth/login/"
                     method="post">
                     <div class="input-group mb-3">
                         <input type="text" class="form-control" placeholder="Username" id="username" name="username"

@@ -2,6 +2,7 @@
 <script type="text/javascript" defer> 
 
 var base_url = "{$base_url}";
+var site_url = "{$site_url}";
 var ajax_url = "{$tbl.ajax}";
 
 var editor_{$tbl.table_id} = null;
@@ -88,6 +89,11 @@ $(document).ready(function() {
                 },
                 {/foreach}
             ],
+            formOptions: {
+                main: {
+                    submit: 'changed'
+                }
+            },
             i18n: {
                 create: {
                     button: "{__('Baru')}",
@@ -346,6 +352,9 @@ $(document).ready(function() {
                     {if $x.foreign_key && $x.type=="tcg_select2"}
                         data: "{$x.name}_label", 
                         editField: "{$x.name}", 
+                    {else if $x.type=="tcg_upload"}
+                        data: "{$x.name}_label", 
+                        editField: "{$x.name}", 
                     {else}
                         data: "{$x.name}", 
                         {if !empty($x.edit_field)}
@@ -370,17 +379,37 @@ $(document).ready(function() {
                         }
                         return data;
                     },
-                    {/if}
-                    {if isset($x.type) && $x.type=="tcg_date"}
+                    {else if isset($x.type) && $x.type=="tcg_date"}
                     render: function ( data, type, row ) {
                         if (type == "display") {
-                            return moment(data).format('YYYY-MM-DD');
+                            data = moment(data).format('YYYY-MM-DD');
+                            {if $x.display_format_js}
+                            return {$x.display_format_js}(data, type, row);
+                            {else}
+                            return data;
+                            {/if}
                         }
                         return data;
                     },
-                    {/if}
-                    {if isset($x.type) && $x.type=="tcg_currency"}
-                    render: $.fn.dataTable.render.number(',', '.', 0, 'Rp'),
+                    {else if isset($x.type) && $x.type=="tcg_currency"}
+                    render: function ( data, type, row ) {
+                        if (type == "display") {
+                            data = $.fn.dataTable.render.number(',', '.', 0, 'Rp').display(data);
+                            {if $x.display_format_js}
+                            return {$x.display_format_js}(data, type, row);
+                            {else}
+                            return data;
+                            {/if}
+                        }
+                        return data;
+                    },
+                    {else if $x.display_format_js}
+                    render: function ( data, type, row ) {
+                        if (type == "display") {
+                            return {$x.display_format_js}(data, type, row);
+                        }
+                        return data;
+                    },
                     {/if}
                 },
                 {/if}
@@ -444,16 +473,16 @@ $(document).ready(function() {
             {/if}
         ],
         "columnDefs": [
-            {
-                target: [
-                    {foreach from=$tbl.columns key=k item=v}
-                    {if $v.visible == 0}
-                        {$k+1},
-                    {/if}
-                    {/foreach}
-                ],
-                visible: false
-            },
+            // {
+            //     target: [
+            //         {foreach from=$tbl.columns key=k item=v}
+            //         {if $v.visible == 0}
+            //             {$k+1},
+            //         {/if}
+            //         {/foreach}
+            //     ],
+            //     visible: false
+            // },
             {
                 targets: [0],
                 orderable: false
@@ -483,7 +512,16 @@ $(document).ready(function() {
                         //selected: true
                     }
                 },
-                customizeData: function ( data ) {
+                customize: function ( xlsx ) {
+                    // var sheet = xlsx.xl.worksheets['sheet1.xml'];
+                    // $('row c[r^="B"]', sheet).attr( 's', '0' );
+
+                    {foreach from=$tbl.columns key=k item=v}
+                    {if $v.visible == 1}
+                    {if isset($v.type) && $v.type=="tcg_text"}
+                    {/if}
+                    {/if}
+                    {/foreach}
                 },
             },
             {/if}
@@ -635,7 +673,9 @@ function dt_{$tbl.table_id}_edit_row(row_id, dt) {
             .buttons([
                 { label: "{__('Simpan')}", className: "btn-primary", fn: function () { this.submit(); } },
             ])
-            .edit(row.index(), true);
+            .edit(row.index(), {
+                submit: 'changed'
+            });
 
     // row.edit( {
     //     editor: editor_{$tbl.table_id},
@@ -765,3 +805,9 @@ function dt_{$tbl.table_id}_import(e, dt, node, conf){
     });
 }
 </script>
+
+{if $tbl.custom_js}
+<script type="text/javascript" defer>
+    {$tbl.custom_js}
+</script>
+{/if}

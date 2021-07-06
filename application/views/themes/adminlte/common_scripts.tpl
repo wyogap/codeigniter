@@ -288,7 +288,7 @@
         <p>{__("Please log in to continue")}</p>
     </div>
     <div class="modal-footer">
-        <a class="btn btn-primary" href="{$base_url}login">{__("Login")}</a>
+        <a class="btn btn-primary" href="{$site_url}login">{__("Login")}</a>
     </div>
 </script>
 

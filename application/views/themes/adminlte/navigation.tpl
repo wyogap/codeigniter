@@ -1,3 +1,4 @@
+{if $navigation|@count > 1}
 <aside class="main-sidebar elevation-4 sidebar-light-info">
 
     <a href="#!" class="brand-link">
@@ -28,7 +29,7 @@
                 {else if $nav.nav_type == 'item'}
                 {if $nav.action_type == 'page'}
                 <li class="nav-item">
-                    <a href="{base_url('crud')}/{$nav.page_name}{if !empty($nav.page_param)}{$nav.page_param}{/if}" class="nav-link {if $page_name==$nav.page_name}active{/if}">
+                    <a href="{site_url('crud')}/{$nav.page_name}{if !empty($nav.page_param)}{$nav.page_param}{/if}" class="nav-link {if $page_name==$nav.page_name}active{/if}">
                         <i class="{$nav.icon}"></i>
                         <p>{__($nav.label)}</p>
                     </a>
@@ -58,7 +59,7 @@
                         {foreach $nav.subitems as $subitem}
                         {if $subitem.action_type == 'page'}
                         <li class="nav-item">
-                            <a href="{base_url('crud')}/{$subitem.page_name}{if !empty($nav.page_param)}{$nav.page_param}{/if}"
+                            <a href="{site_url('crud')}/{$subitem.page_name}{if !empty($nav.page_param)}{$nav.page_param}{/if}"
                                 class="nav-link {if $page_name=={$subitem.page_name}}active{/if}"><i
                                     class="far fa-circle nav-icon"></i>
                                 <p>{__($subitem.label)}</p>
@@ -85,3 +86,4 @@
     </div>
 
 </aside>
+{/if}

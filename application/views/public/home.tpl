@@ -147,21 +147,21 @@
         background: #fff;
         border: 0;
         border-radius: 0 3px 3px 0;
-        color: #ec5252;
+        color: #007bff;
     }
 
     .home-banner-wrap .btn:hover {
-        background: #ec5252;
+        background: #007bff;
         color: #fff;
     }
 
     .home-fact-area {
-        background-color: #ec5252;
-        background: -webkit-linear-gradient(-45deg, #ec5252, #6e1a52);
-        background: -moz-linear-gradient(-45deg, #ec5252 0, #6e1a52 100%);
-        background: -ms-linear-gradient(-45deg, #ec5252 0, #6e1a52 100%);
-        background: -o-linear-gradient(-45deg, #ec5252 0, #6e1a52 100%);
-        background: linear-gradient(-45deg, #ec5252, #6e1a52);
+        background-color: #007bff;
+        background: -webkit-linear-gradient(-45deg, #007bff, #17a2b8);
+        background: -moz-linear-gradient(-45deg, #007bff 0, #17a2b8 100%);
+        background: -ms-linear-gradient(-45deg, #007bff 0, #17a2b8 100%);
+        background: -o-linear-gradient(-45deg, #007bff 0, #17a2b8 100%);
+        background: linear-gradient(-45deg, #007bff, #17a2b8);
         color: #fff;
         padding: 15px 0;
         margin-bottom: 30px
@@ -386,8 +386,8 @@
                     </div>
                     <div class="btn-group d-md-none" style="padding: 0.5rem 0.5rem">
 
-                        <a href="{$base_url}auth/login" class="d-flex nav-text"
-                            style="align-content: center; align-items: center;">Masuk<i
+                        <a href="{$site_url}auth/login" class="d-flex nav-text"
+                            style="align-content: center; align-items: center;   color: unset">Masuk<i
                                 class="fa fa-sign-in-alt fa-2x ml-2"></i></a>
 
                         <!-- <a href="http://localhost/academy/home/login" class="btn btn-sm btn-sign-in">Log in
@@ -395,7 +395,7 @@
 
                     </div>
                     {else}
-                    <a href="{$base_url}{$userdata.page_role}/home" class="topnav-logo"
+                    <a href="{$site_url}{$userdata.page_role}/home" class="topnav-logo"
                         style="min-width: unset; float: unset; line-height: unset; display: flex; align-content: center; align-items: center; padding: 0.5rem 0.5rem; flex-grow: 1;">
                         <div class="topnav-logo-lg" style="">
                             <img src="{$base_url}{$app_logo}" alt="" height="32">
@@ -429,13 +429,13 @@
                                 </div>
 
                                 <!-- Logout-->
-                                <a href="{$base_url}crud/profile" class="dropdown-item notify-item">
+                                <a href="{$site_url}crud/profile" class="dropdown-item notify-item">
                                     <i class="mdi mdi-account mr-1"></i>
                                     <span>{__('Profil')}</span>
                                 </a>
 
                                 <!-- Logout-->
-                                <a href="{$base_url}auth/logout" class="dropdown-item notify-item">
+                                <a href="{$site_url}auth/logout" class="dropdown-item notify-item">
                                     <i class="mdi mdi-logout mr-1"></i>
                                     <span>{__('Logout')}</span>
                                 </a>
@@ -456,8 +456,8 @@
                 <div class="col">
                     <div class="home-banner-wrap">
                         <h2>Informasi kendaraan dinas</h2>
-                        <p>Masukkan nomer polisi atau kata kunci lain untuk mencari.</p>
-                        <div class="" action="{$base_url}rest/api_kendaraan_dinas" method="get">
+                        <br/><br/>
+                        <div class="" action="{$site_url}rest/api_kendaraan_dinas" method="get">
                             <div class="input-group">
                                 <input type="text" class="form-control" name="query" placeholder="Pencarian"
                                     id="input-search">
@@ -466,7 +466,8 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                        <p style="margin-top:12px; line-height: 27px; margin-bottom: 0px;">Masukkan kata kunci (nomor polisi, nama skpd, nama pengguna atau kata kunci lainnya)</p> 
+                     </div>
                 </div>
             </div>
         </div>
@@ -486,7 +487,9 @@
         <div class="container-lg">
             <div class="row">
                 <div class="col">
-                    <h2 class="course-carousel-title" id="result-text" style="margin-bottom: 12px;">Tidak ada pencarian</h2>
+                    <h2 class="course-carousel-title" id="result-text" style="margin-bottom: 12px;">
+                        <div style="font-size: 15px;">{$description}</div>
+                    </h2>
                     <div class="course-carousel row" id="result-list">
                     </div>
                 </div>
@@ -537,7 +540,7 @@ $(document).ready(function() {
 
 function signin() {
     $.ajax({
-        "url": "{$base_url}auth/login",
+        "url": "{$site_url}auth/login",
         "dataType": "json",
         "type": "POST",
         "data": {
@@ -574,7 +577,7 @@ function signin() {
 
 function search() {
     $.ajax({
-        "url": "{$base_url}rest/api_kendaraan_dinas?search=" + $("#input-search").val(),
+        "url": "{$site_url}rest/api_kendaraan_dinas?search=" + $("#input-search").val(),
         "dataType": "json",
         "type": "GET",
         "data": {
@@ -591,7 +594,7 @@ function search() {
                 $('#result-list').html("");
             }
             else if (response.result.length > {$max_search_result}) {
-                $('#result-text').html("Hasil pencarian terlalu banyak. Hanya menampilkan {$max_search_result} entri pertama.");
+                $('#result-text').html("Hasil pencarian terlalu banyak. Hanya menampilkan {$max_search_result} entri pertama dari " +response.result.length+ " total.");
                 $('#result-list').html("");
                 for (let i=0; i<response.result.length && i<{$max_search_result}; i++) {
                     let item = response.result[i];
@@ -600,7 +603,7 @@ function search() {
                 }
             }
             else {
-                $('#result-text').html("Hasil pencarian:");
+                $('#result-text').html("Hasil pencarian (" +response.result.length+ " entri):");
                 $('#result-list').html("");
                 response.result.forEach(function(item, index) {
                     let content = render_template($("#result-info"), item);
@@ -643,44 +646,44 @@ function search() {
             <div class="card-body">
                 <ul data-dtr-index="3" class="dtr-details">
                     <li data-dtr-index="1" data-dt-column="1">
-                        <span class="dtr-title">No Aset</span> 
-                        <span class="dtr-data">{literal}{{no_aset}}{/literal}</span>
-                    </li>
-                    <li data-dtr-index="1" data-dt-column="1">
                         <span class="dtr-title">OPD</span> 
                         <span class="dtr-data">{literal}{{opd_label}}{/literal}</span>
-                    </li>
-                    <li data-dtr-index="1" data-dt-column="1">
-                        <span class="dtr-title">Kode Barang</span> 
-                        <span class="dtr-data">{literal}{{tipe}}{/literal}</span>
                     </li>
                     <li data-dtr-index="1" data-dt-column="1">
                         <span class="dtr-title">No. Polisi</span> 
                         <span class="dtr-data">{literal}{{no_polisi}}{/literal}</span>
                     </li>
                     <li data-dtr-index="1" data-dt-column="1">
-                        <span class="dtr-title">No. BPKB</span> 
-                        <span class="dtr-data">{literal}{{no_bpkb}}{/literal}</span>
-                    </li>
-                    <li data-dtr-index="1" data-dt-column="1">
                         <span class="dtr-title">Merek</span> 
                         <span class="dtr-data">{literal}{{merek_label}}{/literal}</span>
+                    </li>
+                    <!-- <li data-dtr-index="1" data-dt-column="1">
+                        <span class="dtr-title">Model</span> 
+                        <span class="dtr-data">{literal}{{model_label}}{/literal}</span>
                     </li>
                     <li data-dtr-index="1" data-dt-column="1">
                         <span class="dtr-title">Warna</span> 
                         <span class="dtr-data">{literal}{{warna}}{/literal}</span>
+                    </li> -->
+                    <li data-dtr-index="1" data-dt-column="1">
+                        <span class="dtr-title">Nama Pengguna</span> 
+                        <span class="dtr-data">{literal}{{nama_pengguna}}{/literal}</span>
                     </li>
                     <li data-dtr-index="1" data-dt-column="1">
-                        <span class="dtr-title">Tahun</span> 
+                        <span class="dtr-title">Peruntukan</span> 
+                        <span class="dtr-data">{literal}{{peruntukan_label}}{/literal}</span>
+                    </li>
+                    <li data-dtr-index="1" data-dt-column="1">
+                        <span class="dtr-title">Tahun Perolehan</span> 
                         <span class="dtr-data">{literal}{{tahun}}{/literal}</span>
                     </li>
                     <li data-dtr-index="1" data-dt-column="1">
-                        <span class="dtr-title">Kondisi</span> 
-                        <span class="dtr-data">{literal}{{kondisi_label}}{/literal}</span>
+                        <span class="dtr-title">Tanggal Bayar Pajak</span> 
+                        <span class="dtr-data">{literal}{{tanggal_bayar_pajak}}{/literal}</span>
                     </li>
                     <li data-dtr-index="1" data-dt-column="1">
-                        <span class="dtr-title">Pengguna</span> 
-                        <span class="dtr-data">{literal}{{pengguna}}{/literal}</span>
+                        <span class="dtr-title">No. Telp.</span> 
+                        <span class="dtr-data">{literal}{{handphone_pengguna}}{/literal}</span>
                     </li>
                 </ul>
             </div>

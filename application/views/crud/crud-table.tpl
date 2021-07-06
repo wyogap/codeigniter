@@ -1,3 +1,8 @@
+{if $tbl.custom_css}
+<style>
+    {$tbl.custom_css}
+</style>
+{/if}
 
 <div class="table-responsive-sm">
     <table id="{$tbl.table_id}" class="table table-striped dt-responsive nowrap" width="100%">
@@ -11,7 +16,7 @@
                 {/if}
                 {foreach from=$tbl.columns key=i item=col}
                     {if $col.visible == 1}
-                    <th class="{if $col.data_priority < 0} none {else} {$col.css} {/if} text-center" data-priority="{$col.data_priority}" style="word-break: normal!important;">
+                    <th class="{if $col.data_priority < 0}none {else if $col.css}{$col.css} {/if}text-center" data-priority="{$col.data_priority}" style="word-break: normal!important;">
                     {if isset($col.edit_bubble) && $col.edit_bubble}<i class="dripicons-document-edit"></i> {/if}
                     {$col.label}
                     {/if}

@@ -607,7 +607,7 @@ abstract class MY_Crud_Controller extends CI_Controller {
             $error_msg = "";
             $data['files'] = array();
 			foreach ($files as $key=>$value) {
-                $fileObj = $uploader->detail($value, $table_name);
+                $fileObj = $uploader->detail($value);
                 if ($fileObj != null) {
                     $data['files'][] = $fileObj;
                 }

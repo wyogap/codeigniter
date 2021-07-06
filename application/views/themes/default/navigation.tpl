@@ -1,5 +1,5 @@
  
-
+{if $navigation|@count > 1}
 <!-- ========== Left Sidebar Start ========== -->
 <div class="left-side-menu left-side-menu-detached">
 	<div class="leftbar-user">
@@ -18,7 +18,7 @@
 			{else if $nav.nav_type == 'item'}
 				{if $nav.action_type == 'page'}
 				<li class="side-nav-item {if $page_name==$nav.page_name}active{/if}">
-					<a href="{base_url('crud')}/{$nav.page_name}{if !empty($nav.page_param)}{$nav.page_param}{/if}" class="side-nav-link">
+					<a href="{site_url('crud')}/{$nav.page_name}{if !empty($nav.page_param)}{$nav.page_param}{/if}" class="side-nav-link">
 						<i class="{$nav.icon}"></i>
 						<span>{__($nav.label)}</span>
 					</a>
@@ -48,7 +48,7 @@
 						{foreach $nav.subitems as $subitem}
 						{if $subitem.action_type == 'page'}
 						<li class="{if $page_name=='{$subitem.page_name}'}active{/if}">
-							<a href="{base_url('crud')}/{$subitem.page_name}{if !empty($nav.page_param)}{$nav.page_param}{/if}">{__($subitem.label)}</a>
+							<a href="{site_url('crud')}/{$subitem.page_name}{if !empty($nav.page_param)}{$nav.page_param}{/if}">{__($subitem.label)}</a>
 						</li>
 						{else if $subitem.action_type == 'url'}
 						<li class="">
@@ -63,4 +63,4 @@
 			{/foreach}
     	</ul>
 </div>
-
+{/if}

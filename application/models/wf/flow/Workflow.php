@@ -63,6 +63,7 @@ class Workflow extends CI_Model
     {
         $this->name   = $name;
         $this->params = $params;
+        $this->instance_id = 0;
 
         // //get db instance
         // $ci &= get_instance();
@@ -82,9 +83,6 @@ class Workflow extends CI_Model
             $this->label = $this->config['label'];
             $this->workflow_id = $this->config['id'];
 
-            $this->entity = isset($this->params['entity']) ? $this->params['entity'] : '';
-            $this->entity_id = isset($this->params['entity_id']) ? $this->params['entity_id'] : 0;
-
             //load current state
             if ($instance_id > 0) {   
                 $this->instance = $this->_getWorkflowInstance($instance_id);
@@ -97,11 +95,14 @@ class Workflow extends CI_Model
                 }
             }
 
-            if (empty($this->entity) || empty($this->entity_id)) {
-                break;
-            }  
-
             if ($this->instance == null) {
+                $this->entity = $this->params['entity'] ?? '';
+                $this->entity_id = $this->params['entity_id'] ?? 0;
+    
+                if (empty($this->entity) || empty($this->entity_id)) {
+                    break;
+                }  
+    
                 $this->instance = $this->_getWorkflowInstanceByEntity($this->workflow_id, $this->entity, $this->entity_id);
             }
 
@@ -110,7 +111,24 @@ class Workflow extends CI_Model
             }
 
             $this->instance_id = $this->instance['id'];
-    
+
+            $this->entity = $this->instance['entity'];
+            $this->entity_id = $this->instance['entity_id'];
+
+            if ($this->instance['states'] != null) {
+                $this->states = json_decode($this->instance['states']);
+            }
+            else {
+                $this->states = array();
+            }
+            
+            if ($this->instance['payload'] != null) {
+                $this->payload = json_decode($this->instance['payload']);
+            }
+            else {
+                $this->payload = array();
+            }
+
         } while(false);
 
         //DO NOT automatically execute wf
@@ -141,7 +159,7 @@ class Workflow extends CI_Model
 
             //no existing, init one
             if ($this->instance == null) {
-                $this->instance = $this->_initializeInstance($this->workflow_id, $this->entity, $this->entity_id);
+                $this->instance = $this->_initializeInstance($this->workflow_id, $this->entity, $this->entity_id, $this->params);
             }
 
             if ($this->instance == null) {
@@ -149,47 +167,85 @@ class Workflow extends CI_Model
             }
 
             $this->instance_id = $this->instance['id'];
+            $this->status = $this->instance['status'];
+
+            if ($this->instance['states'] != null) {
+                $this->states = json_decode($this->instance['states']);
+            }
+            else {
+                $this->states = array();
+            }
+            
+            if ($this->instance['payload'] != null) {
+                $this->payload = json_decode($this->instance['payload']);
+            }
+            else {
+                $this->payload = array();
+            }
+        }
+
+        if ($this->status == Workflow::WF_NOTSTARTED) {
+            //not started. start it up
+            $this->_updateInstance(Workflow::WF_STARTED);
+
+            //audit trail
+            $this->auditStartup();
+
+            //execute start transitions
+            $transitions = $this->_getStartTransitions();
+
+            $started = false;
+            foreach($transitions as $key => $transition) {
+                if ($this->status == Workflow::WF_FINISHED) {
+                    $started = false;
+                    break;
+                }
+                    
+                $transit = $transition->execute();
+
+                if ($transit) {
+                    $started = true;
+                }
+            }
+
+            if ($started == false) {
+                return false;
+            }
         }
 
         $this->steps = $this->_getActiveSteps();
-        if (count($this->steps)) {
-            //already started
-            foreach($this->steps as $key => $step) {
-                if ($this->status == Workflow::WF_FINISHED) {
-                    break;
-                }
-
-                //simulate a transit-in
-                $step->transitIn();
-            }
-
-            return true;
-        }
-
-        //not started. start it up
-        $this->_updateInstance(Workflow::WF_STARTED);
-
-        //audit trail
-        $this->auditStartup();
-
-        //execute start transitions
-        $transitions = $this->_getStartTransitions();
-
-        $started = false;
-        foreach($transitions as $key => $transition) {
+        foreach($this->steps as $key => $step) {
             if ($this->status == Workflow::WF_FINISHED) {
-                $started = false;
                 break;
             }
-                
-            $transit = $transition->execute();
 
-            if ($transit) {
-                $started = true;
-            }
+            //simulate a transit-in
+            $step->transitIn();
         }
 
-        return $started;
+        return true;
+    }
+
+    public function updatePayload(array $payload, $token) {
+        if ($payload == null || count($payload) == 0) {
+            return false;
+        }
+
+        //make sure there is edit-payload action in currently active steps
+        $action = $this->_getEditPayloadAction($token);
+        if ($action == null) {
+            return false;
+        }
+
+        $this->paylod = $payload;
+
+        //TODO: update step level payload
+
+        return true;
+    }
+
+    public function isValidInstance() {
+        return ($this->instance_id > 0);
     }
 
     public function getWorkflowId() {
@@ -214,6 +270,21 @@ class Workflow extends CI_Model
 
     public function getStatus() {
         return $this->status;
+    }
+
+    public function getPayload($token) {
+        //make sure there is edit-payload action in currently active steps
+        $action = $this->_getEditPayloadAction($token);
+        if ($action == null) {
+            return false;
+        }
+
+        //TODO: get payload in step level in case there are branching
+        return $this->payload;
+    }
+
+    public function getStates() {
+        return $this->states;
     }
 
     public function terminate($final_step_name) {
@@ -252,7 +323,12 @@ class Workflow extends CI_Model
         return $this->db->get_where("dbo_wf_instances", $filter)->row_array();
     }
 
-    private function _initializeInstance($workflow_id, $entity, $entity_id) {
+    private function _initializeInstance($workflow_id, $entity, $entity_id, $params) {
+        $payload = null;
+
+        //initial states from params
+        $states = $params;
+
         $valuepair = array (
             'workflow_id'   => $workflow_id,
             'entity'        => $entity,
@@ -262,9 +338,21 @@ class Workflow extends CI_Model
             'created_by'    => $this->user_id
         );
 
+        if ($params != null && count($params)>0) {
+            $valuepair['params'] = json_encode($params, JSON_INVALID_UTF8_IGNORE);
+        }
+
+        if ($states != null && count($states)>0) {
+            $valuepair['states'] = json_encode($states, JSON_INVALID_UTF8_IGNORE);
+        }
+
         $query = $this->db->insert("dbo_wf_instances", $valuepair);
         if ($query) {
             $id = $this->db->insert_id();
+
+            //copy wf steps and wf step actions
+            $this->_initializeInstanceSteps($workflow_id, $id);
+            $this->_initializeInstanceActions($workflow_id, $id);
 
             return $this->_getWorkflowInstance($id);
         }
@@ -284,6 +372,12 @@ class Workflow extends CI_Model
             'updated_by' => $this->user_id
 
         );
+
+        if ($status == Workflow::WF_STARTED) {
+            //get payload
+            $this->payload = $this->_getEntity($this->entity, $this->entity_id);
+            $valuepair['payload'] = json_encode($this->payload, JSON_INVALID_UTF8_IGNORE);
+        }
 
         $this->db->update("dbo_wf_instances", $valuepair, $filter);   
 
@@ -314,12 +408,9 @@ class Workflow extends CI_Model
         $configs = $this->db->get_where("dbo_wf_transitions", array("step_from"=>null, "workflow_id"=>$this->workflow_id, "is_deleted"=>0))->row_array();
         if ($configs == null)     return array();
 
-        //get payload
-        $payload = $this->_getEntity($this->entity, $this->entity_id);
-
         $transitions = array();
         foreach($configs as $key => $val) {
-            $transition = new Transition($this, $val, $payload, $null);
+            $transition = new Transition($this, $val, $this->payload, $null);
             $transitions[] = $transition;
         }
 
@@ -363,11 +454,14 @@ class Workflow extends CI_Model
 
     private function auditStartup() {
         $keys = array(
-            'workflow_id', 'name', 'label', 'entity', 'entity_id'
+            'workflow_id', 'name', 'label', 'entity', 'entity_id', 'states', 'payload'
         );
 
+        $states = json_encode($this->states, JSON_INVALID_UTF8_IGNORE);
+        $payload = json_encode($this->payload, JSON_INVALID_UTF8_IGNORE);
+
         $values = array(
-            $this->workflow_id, $this->name, $this->label, $this->entity, $this->entity_id
+            $this->workflow_id, $this->name, $this->label, $this->entity, $this->entity_id, $states, $payload
         );
 
         audittrail_trail('workflow', $this->instance_id, 'START', 'Workflow start-up', $keys, $values);
@@ -375,16 +469,145 @@ class Workflow extends CI_Model
 
     private function auditCompletion($final_step_name) {
         $keys = array(
-            'workflow_id', 'name', 'label', 'entity', 'entity_id', 'step'
+            'workflow_id', 'name', 'label', 'entity', 'entity_id', 'step', 'states', 'payload'
         );
 
+        $states = json_encode($this->states, JSON_INVALID_UTF8_IGNORE);
+        $payload = json_encode($this->payload, JSON_INVALID_UTF8_IGNORE);
+
         $values = array(
-            $this->workflow_id, $this->name, $this->label, $this->entity, $this->entity_id, $final_step_name
+            $this->workflow_id, $this->name, $this->label, $this->entity, $this->entity_id, $final_step_name, $states, $payload
         );
 
         audittrail_trail('workflow', $this->instance_id, 'FINISH', 'Workflow completion', $keys, $values);
     }
 
+    private function _initializeInstanceSteps($workflow_id, $instance_id) {
+        $sql = "
+            INSERT INTO `dbo_wf_instances_steps`
+            (
+                `workflow_id`,
+                `step_id`,
+                `instance_id`,
+                `step`,
+                `is_final`,
+                `status`,
+                `role_id`,
+                `user_group`,
+                `created_on`,
+                `created_by`
+            )
+            select 
+                workflow_id,
+                id as step_id,
+                ? as instance_id,
+                `name` as step,
+                is_final,
+                0 as status,
+                role_id,
+                user_group,
+                now() as created_on,
+                ? as created_by
+            from dbo_wf_steps
+            where   
+                workflow_id = ? and is_deleted=0
+            order by id
+        ";
+
+        $this->db->query($sql, array($instance_id, $this->user_id, $workflow_id));
+
+        return true;
+    }
+
+    private function _initializeInstanceActions($workflow_id, $instance_id) {
+        $sql = "
+            INSERT INTO dbo_wf_instances_actions
+            (
+                `workflow_id`,
+                `step_id`,
+                `action_id`,
+                `instance_id`,
+                `step`,
+                `name`,
+                `action`,
+                `type`,
+                `interval`,
+                `interval_type`,
+                `repeat`,
+                `state_condition`,
+                `payload_condition`,
+                `transform_payload`,
+                `transform_state`,
+                `recipients`,
+                `user_messages`,
+                `user_action`,
+                `readable_payload`,
+                `editable_payload`,
+                `order_no`,
+                `created_on`,
+                `created_by`
+            )
+            select 
+                a.workflow_id,
+                a.id as step_id,
+                b.id as action_id,
+                ? as instance_id,
+                b.`step`,
+                b.`name`,
+                b.`action`,
+                b.`type`,
+                b.`interval`,
+                b.`interval_type`,
+                b.`repeat`,
+                b.`state_condition`,
+                b.`payload_condition`,
+                b.`transform_payload`,
+                b.`transform_state`,
+                b.`recipients`,
+                b.`user_messages`,
+                b.`user_action`,
+                b.`readable_payload`,
+                b.`editable_payload`,
+                b.`order_no`,
+                now() as created_on,
+                ? as created_by
+            from dbo_wf_steps a
+            join dbo_wf_steps_actions b on b.workflow_id=a.workflow_id and b.step=a.name and b.is_deleted=0
+            where   
+                a.workflow_id = ? and a.is_deleted=0
+            order by a.id, b.id        
+        ";
+
+        $this->db->query($sql, array($instance_id, $this->user_id, $workflow_id));
+
+        return true;
+    }
+
+    private function _finishInstance() {
+        //TODO: write payload value back and update any status
+    }
+
+    private function _getEditPayloadAction($token=null) {
+        //TODO: use token to identify the correct action (in case there are multiple instance of the same actions)
+        $sql = "
+            select 
+                a.workflow_id, 
+                a.id as instance_step_id, 
+                b.id as instance_action_id, 
+                a.step, 
+                b.`name` as `action` 
+            from dbo_wf_instances_steps a
+            join dbo_wf_instances_actions b 
+                on b.instance_id=a.instance_id and b.step=a.step and b.is_deleted=0
+            where a.is_deleted=0 
+                and a.workflow_id=? and a.instance_id=? 
+                and (a.status=1 or a.status=2) and a.is_deleted=0
+                and b.action='edit-payload';
+        ";
+
+        return $this->db->query($sql, array($this->workflow_id, $this->instance_id))->row_array();
+
+    }
 }
 
 ?>

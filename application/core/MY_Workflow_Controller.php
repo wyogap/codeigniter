@@ -1,6 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
+require_once APPPATH ."/models/wf/flow/Workflow.php";
 require_once APPPATH ."/models/wf/flow/Step.php";
 
 use Tcg\Workflow\Flow\Step;
@@ -23,14 +24,95 @@ abstract class MY_Workflow_Controller extends CI_Controller {
 			return;
 		}
 
-		//pass to the correct function
-		if (method_exists($this, $wf_method))
-		{
-			return call_user_func_array(array($this, $wf_method), array($wf_name, $params));
+		if ($wf_method == "start") {
+			$this->start($wf_name, $params);
+			return;
 		}
+
+		$wf_id = $wf_method;
+		if (count($params) > 0) {
+			$wf_method = array_shift($params);
+
+			//pass to the correct function
+			if (method_exists($this, $wf_method))
+			{
+				return call_user_func_array(array($this, $wf_method), array($wf_name, $wf_id, $params));
+			}
+
+			array_unshift($params, $wf_method);
+			$wf_method = $wf_id;
+		}
+
 		$this->workflow($wf_name, $wf_method, $params);
 	}
 
+	/**
+	 * Start the workflow
+	 */
+	protected function start($wf_name, $params = array()) {
+		$json = array();
+
+		if (empty($wf_name)) {
+			json_error('404', 'Invalid workflow name');
+		}
+
+		//check for permission
+		$this->load->model(array('wf/Mworkflow', 'wf/Mpermission'));
+		if (!$this->Mpermission->can_view($wf_name)) {
+			json_error('403', 'Not authorized');
+		}
+
+		//workflow config
+		$wf = $this->Mworkflow->get_workflow($wf_name);
+		if ($wf == null) {
+			json_error('404', 'Not found');
+		}
+
+		//entity id
+		$entity_id = 0;
+		$entity_id = $this->input->get('entity_id');
+		if (empty($entity_id)) {
+			$entity_id = $this->input->post('entity_id');
+		}
+
+		if (empty($entity_id)) {
+			json_error('404', 'Invalid entity id');
+		}
+
+		//wf params
+		$params = array();
+		//from get
+		foreach($this->input->get() as $key => $val)
+		{
+			if ($val == '') continue;
+			if (substr($key, 0, 2) != "p_") continue;
+			$params[substr($key, 2)] = $val;
+		}
+		//from post (override get if exist)
+		foreach($this->input->post() as $key => $val)
+		{
+			if ($val == '') continue;
+			if (substr($key, 0, 2) != "p_") continue;
+			$params[substr($key, 2)] = $val;
+		}
+		//add entity and entity id
+		$params['entity'] = $wf['entity'];
+		$params['entity_id'] = $entity_id;
+
+		//instance
+		$instance = new Tcg\Workflow\Flow\Workflow($wf_name, $params);
+
+		$status = $instance->execute();
+		if (!$status) {
+			json_error('405', 'Fail to execute workflow');
+		}
+
+		json_response($true);
+	}
+
+	/**
+	 * List/update workflow instances
+	 */
 	protected function workflow($wf_name, $wf_method, $params = array())
 	{
 		if (empty($wf_name) || empty($wf_method)) {
@@ -92,20 +174,76 @@ abstract class MY_Workflow_Controller extends CI_Controller {
 		$this->smarty->render_theme($template, $page_data);
 	}
 
-	protected function start($wf_name, $params = array()) {
-		//TODO
-	}
+	/**
+	 * Edit workflow instance's payload
+	 */
+	protected function payload($wf_name, $wf_id, $params = array()) {
+		if (empty($wf_name)) {
+			json_error('404', 'Invalid workflow name');
+		}
 
-	protected function payload($wf_name) {
+		//check for permission
+		$this->load->model(array('wf/Mworkflow', 'wf/Mpermission'));
+		if (!$this->Mpermission->can_view($wf_name)) {
+			json_error('403', 'Not authorized');
+		}
+
+		//workflow config
+		$wf = $this->Mworkflow->get_workflow($wf_name);
+		if ($wf == null) {
+			json_error('404', 'Not found');
+		}
+
+		//wf params
+		$params = array();
+
+		//edit token
+		$token = null;
+		$token = $this->input->get('token');
+		if (empty($token)) {
+			$token = $this->input->post('token');
+		}
+
+		//instance
+		$instance = new Tcg\Workflow\Flow\Workflow($wf_name, $params, $wf_id);
+		if (!$instance->isValidInstance()) {
+			json_error('404', 'Invalid workflow instance');
+		}
+
 		$action = $this->input->post("action");
 		if (empty($action) || $action=='view') {
-			//TODO
+			//get payload
+			$payload = $instance->getPayload($token);
+
+			$json = array();
+			$json['data'] = $payload;
+			json_response($json);
 		}
 		else if ($action=='edit'){
-			//TODO
+			//edit payload
+			$payload = $instance->getPayload($token);
+
+			$valuepair = $this->input->post("data");
+			foreach ($valuepair as $key => $value) {
+				if (isset($payload[$key])) {
+					$payload[$key] = $value;
+				}
+            }
+			
+			//update
+			$status = $instance->updatePayload($payload, $token);
+			if (!$status) {
+				json_error('405', 'Fail to update payload');
+			}
+
+			$json = array();
+			$json['status'] = 1;
+			$json['data'] = $payload;
+
+			json_response($json);
 		}
 		else if ($action=='uploadFile') {
-			//TODO
+			//upload file
             $key = $this->input->post("field");
             if (!isset($key)) {
                 echo json_encode($data, JSON_INVALID_UTF8_IGNORE);
@@ -137,7 +275,7 @@ abstract class MY_Workflow_Controller extends CI_Controller {
             return;
 		}
 		else if ($action=='removeFile'){
-			//TODO
+			//remove uploaded file
 			$files = $this->input->post("files");
             if (!isset($files)) {
                 echo json_encode($data, JSON_INVALID_UTF8_IGNORE);
@@ -158,7 +296,7 @@ abstract class MY_Workflow_Controller extends CI_Controller {
 			return;
 		}
 		else if ($action=='listFile') {
-			//TODO
+			//get metadata of list of files
 			$files = $this->input->post("files");
             if (!isset($files)) {
                 echo json_encode($data, JSON_INVALID_UTF8_IGNORE);
@@ -174,7 +312,7 @@ abstract class MY_Workflow_Controller extends CI_Controller {
             $error_msg = "";
             $data['files'] = array();
 			foreach ($files as $key=>$value) {
-                $fileObj = $uploader->detail($value, $table_name);
+                $fileObj = $uploader->detail($value);
                 if ($fileObj != null) {
                     $data['files'][] = $fileObj;
                 }
@@ -193,7 +331,10 @@ abstract class MY_Workflow_Controller extends CI_Controller {
 		return;
 	}
 
-	protected function confirm($wf_name, $params = array()) {
+	/**
+	 * Move workflow instance along
+	 */
+	protected function action($wf_name, $wf_id, $params = array()) {
 		//TODO 
 		$token = $this->input->get("token");
 		$value = $this->input->get("value");
@@ -215,6 +356,11 @@ abstract class MY_Workflow_Controller extends CI_Controller {
 		if ($step['status'] != Step::STEP_STARTED) {
 			//TODO
 		}
+
+		$action = $this->Mworkflow->get_action_by_token($wf_name, $token);
+		//execute the action
+
+		//try to complete the step
 	}
 
 	protected function get_model($table_id) {
@@ -227,4 +373,33 @@ abstract class MY_Workflow_Controller extends CI_Controller {
 		return $this->Mtable;
 	}
 
+	protected function json_response($data, $message = null) {
+		if (is_array($data)) {
+			echo json_encode($data, JSON_INVALID_UTF8_IGNORE);
+			exit;
+		}
+
+		$json = array();
+		$json['status'] = $data;
+
+		if ($message != null) {
+			$json['message'] = $message;
+		}
+
+		echo json_encode($json, JSON_INVALID_UTF8_IGNORE);
+		exit;
+	}
+
+	protected function json_error($code, $message = null) {
+		$json = array();
+		$json['status'] = $false;
+		$json['error'] = $code;
+
+		if ($message != null) {
+			$json['message'] = $message;
+		}
+
+		echo json_encode($json, JSON_INVALID_UTF8_IGNORE);
+		exit;
+	}
 }

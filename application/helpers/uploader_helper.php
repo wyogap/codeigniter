@@ -313,6 +313,8 @@ if (!class_exists('Uploader')){
                     }
                     $data["file_path"]= base_url().  $filepath;
                 }
+
+                //var_dump($data);
             }
             while(false);
     
@@ -388,6 +390,8 @@ if (!class_exists('Uploader')){
                 'ref_field' => $refcol
             ];
     
+            //var_dump($valuepair);
+
             $ci =& get_instance();
             if ($ci->db->insert('dbo_uploads', $valuepair)) {
                 $key = $ci->db->insert_id();

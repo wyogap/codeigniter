@@ -14,12 +14,12 @@ class Crud extends MY_Crud_Controller {
 
 		$isLoggedIn = $this->session->userdata('is_logged_in');
 		if(!isset($isLoggedIn) || $isLoggedIn != TRUE) {
-			redirect(base_url() .'auth');
+			redirect(site_url() .'/auth');
 		}
     }
 
     function get_ajax_url($page) {
-        return base_url('/crud/' .$page);
+        return site_url('/crud/' .$page);
     }
 
 }

@@ -12,7 +12,7 @@
 		<ul class="metismenu side-nav side-nav-light">
 
 			<li class="side-nav-item {if $page_name=='profile'}active{/if}">
-				<a href="{base_url('user/profile')}" class="side-nav-link">
+				<a href="{site_url('user/profile')}" class="side-nav-link">
 					<i class="dripicons-user"></i>
 					<span>{__('My Profile')}</span>
 				</a>

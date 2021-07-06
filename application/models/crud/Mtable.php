@@ -53,6 +53,8 @@ class Mtable extends CI_Model
         'editable_table_name' => '',
         'soft_delete' => true,
         'join_tables' => [],
+        'custom_css' => '',
+        'custom_js' => ''
     );
     
     public static $COLUMN = array (
@@ -68,7 +70,8 @@ class Mtable extends CI_Model
         'allow_edit' => true,
         'allow_filter' => false,
         'width' => '',
-        'foreign_key' => false
+        'foreign_key' => false,
+        'display_format_js' => ''
     );
     
     public static $EDITOR = array (
@@ -193,7 +196,7 @@ class Mtable extends CI_Model
         $this->table_metas['name'] = $this->name;
         $this->table_metas['id'] = $arr['id'];
 
-        $this->table_metas['ajax'] = base_url('crud/'.$this->table_name);
+        $this->table_metas['ajax'] = site_url('crud/'.$this->table_name);
         $this->table_metas['table_id'] = 'tdata_'.$arr['id'];
         $this->table_metas['key_column'] = $arr['key_column'];
         $this->table_metas['initial_load'] = ($arr['initial_load'] == 1);
@@ -227,6 +230,16 @@ class Mtable extends CI_Model
 
         $this->table_metas['data_model'] = $arr['data_model'];
         
+        $this->table_metas['custom_css'] = $arr['custom_css'];
+        $this->table_metas['custom_js'] = $arr['custom_js'];
+
+        $this->table_metas['search'] = ($arr['search'] == 1);
+        $this->table_metas['filter'] = ($arr['filter'] == 1);
+        $this->table_metas['edit'] = ($arr['allow_add'] == 1 || $arr['allow_edit'] == 1 || $arr['allow_delete'] == 1);
+
+        // if no filter -> always autoload
+        if (!$this->table_metas['filter'])  $this->table_metas['initial_load'] = true;
+
         // $this->table_metas['page_name'] = $arr['page_name'];
         // if (empty($this->table_metas['page_name'])) {
         //     $this->table_metas['page_name'] = $this->table_metas['name'];
@@ -266,7 +279,7 @@ class Mtable extends CI_Model
         $this->join_tables = array();
         $this->row_actions = array();
         $this->custom_actions = array();
-        $this->join_tables = array();
+        //$this->join_tables = array();
 
         $this->columns = array();
         $this->edit_columns = array();
@@ -275,7 +288,7 @@ class Mtable extends CI_Model
         $this->search_columns = array();
         
         //inline edit row
-        if ($this->table_actions['edit_row_action']) {
+        if ($this->table_actions['edit_row_action'] && $this->table_actions['edit']) {
             $row_action = static::$ROW_ACTION;
             $row_action['label'] = "Edit";
             $row_action['icon'] = "fa fa-edit fas";
@@ -286,7 +299,7 @@ class Mtable extends CI_Model
         }
 
         //inline delete row
-        if ($this->table_actions['delete_row_action']) {
+        if ($this->table_actions['delete_row_action'] && $this->table_actions['delete']) {
             $row_action = static::$ROW_ACTION;
             $row_action['label'] = "Delete";
             $row_action['icon'] = "fa fa-trash fas";
@@ -326,11 +339,13 @@ class Mtable extends CI_Model
                    continue;
                 }
 
+                $col['display_format_js'] = $row['display_format_js'];
+
                 $col['foreign_key'] = ($row['foreign_key'] == 1);;
                 $col['allow_insert'] = ($row['allow_insert'] == 1);
                 $col['allow_edit'] = ($row['allow_edit'] == 1);
                 $col['allow_filter'] = ($row['allow_filter'] == 1);
-
+                
                 if (!empty($row['options_array'])) {
                     $col['options'] = json_decode($row['options_array']);
                 }
@@ -353,6 +368,7 @@ class Mtable extends CI_Model
                     $col['edit_field'] = $col['name'];
                 }
 
+                //if type=upload, force foreign key lookup
                 if ($col['type'] == "tcg_upload") {
                     //link as foreign key
                     $col['foreign_key'] = true;
@@ -364,7 +380,7 @@ class Mtable extends CI_Model
 
                 //search column
                 $col['allow_search'] = (isset($row['allow_search']) && $row['allow_search'] == 1);
-                if ($col['allow_search']) {
+                if ($this->table_metas['search'] && $col['allow_search']) {
                     $this->search_columns[] = $this->table_name. "." .$col['name'];
                 }
 
@@ -432,7 +448,7 @@ class Mtable extends CI_Model
                     // }
                 }
 
-                if ($col['allow_edit']) {
+                if ($this->table_metas['edit'] && $col['allow_edit']) {
                     $editor = static::$EDITOR;
                     $editor['name'] = $row['name'];
                     $editor['allow_insert'] = $col['allow_insert'];
@@ -485,7 +501,7 @@ class Mtable extends CI_Model
                     $this->edit_columns[] = $col['name'];
                 }
 
-                if ($col['allow_filter']) {
+                if ($this->table_metas['filter'] && $col['allow_filter']) {
                     $filter = static::$FILTER;
                     $filter['name'] = $row['name'];
                     $filter['allow_filter'] = $col['allow_filter'];
@@ -630,15 +646,15 @@ class Mtable extends CI_Model
         $this->table_metas['row_actions'] = $this->row_actions;
         $this->table_metas['join_tables'] = $this->join_tables;
 
-        //always include key-column in column search
-        if (false === array_search($this->table_metas['key_column'], $this->search_columns)) {
-            $this->search_columns[] = $this->table_metas['key_column'];
-        }
+        // //always include key-column in column search
+        // if (false === array_search($this->table_metas['key_column'], $this->search_columns)) {
+        //     $this->search_columns[] = $this->table_metas['key_column'];
+        // }
 
-        //always include lookup-column in column search
-        if (false === array_search($this->table_metas['lookup_column'], $this->search_columns)) {
-            $this->search_columns[] = $this->table_metas['lookup_column'];
-        }
+        // //always include lookup-column in column search
+        // if (false === array_search($this->table_metas['lookup_column'], $this->search_columns)) {
+        //     $this->search_columns[] = $this->table_metas['lookup_column'];
+        // }
 
         //disable editor if no edit columns
         if (count($this->table_metas['editor_columns']) == 0) {
@@ -782,12 +798,15 @@ class Mtable extends CI_Model
                 //TODO: use columnmeta[$key] and use $column_name
                 if (false !== array_search($key, $this->columns)) {
                     if ($val == Mtable::INVALID_VALUE) {
-                        $fkey = $this->join_tables[$key];
+                        $fkey = isset($this->join_tables[$key]) ? $this->join_tables[$key] : null;
                         if ($fkey != null) {
                             $this->db->where($fkey['reference_alias'].".".$fkey['reference_lookup_column'], NULL);
                         }
                         else {
+                            $this->db->group_start();
                             $this->db->where("$table_name.$key", NULL);
+                            $this->db->or_where("trim($table_name.$key)", '');
+                            $this->db->group_end();
                         }
                     } else {
                         $this->db->where("$table_name.$key", $val);
@@ -868,12 +887,15 @@ class Mtable extends CI_Model
             //TODO: use columnmeta[$key] and use $column_name
             if (false !== array_search($key, $this->columns)) {
                 if ($val == Mtable::INVALID_VALUE) {
-                    $fkey = $this->join_tables[$key];
+                    $fkey = isset($this->join_tables[$key]) ? $this->join_tables[$key] : null;
                     if ($fkey != null) {
                         $this->db->where($fkey['reference_alias'].".".$fkey['reference_lookup_column'], NULL);
                     }
                     else {
+                        $this->db->group_start();
                         $this->db->where("$table_name.$key", NULL);
+                        $this->db->or_where("trim($table_name.$key)", '');
+                        $this->db->group_end();
                     }
                 } else {
                     $this->db->where("$table_name.$key", $val);
@@ -939,6 +961,9 @@ class Mtable extends CI_Model
 
         if ($filter == null) $filter = array();
 
+        //convert as string to make sure no overload of string
+        $id = strval($id);
+
         //use data model
         if ($this->data_model != null) {
             return $this->data_model->detail($id, $filter);
@@ -993,6 +1018,9 @@ class Mtable extends CI_Model
 
         if ($filter == null) $filter = array();
 
+        //convert as string to make sure no overload of string
+        $id = strval($id);
+
         //use data model
         if ($this->data_model != null) {
             return $this->data_model->update($id, $valuepair, $filter);
@@ -1046,6 +1074,9 @@ class Mtable extends CI_Model
         if (!$this->initialized)   return null;
 
         if ($filter == null) $filter = array();
+
+        //convert as string to make sure no overload of string
+        $id = strval($id);
 
         //use data model
         if ($this->data_model != null) {
@@ -1168,6 +1199,8 @@ class Mtable extends CI_Model
         $key_col_name = $this->table_metas['key_column'];
         $join_tables = $this->table_metas['join_tables'];
 
+        //var_dump($join_tables); exit();
+
         //upload file
         $data = $this->__upload_xls($file, $table_id, $table_name);
         if ($data == null) {
@@ -1187,6 +1220,23 @@ class Mtable extends CI_Model
         $export_columns = $data['export'];
         $import_columns = $data['import'];
         $column_types = $data['type'];
+
+        //var_dump($export_columns); exit();
+        //var_dump($import_columns); exit();
+
+        //make sure reference col is in export col
+        //in case when col is set display=0 but edit=1, then it will not be in list of export col but will be in reference col (for editing purpose)
+        $arr = array();
+        foreach($join_tables as $idx => $tbl) {
+            $col_name = $tbl['name'];
+            if (in_array($col_name, $import_columns)) {
+                $arr[] = $tbl;
+            }
+        }
+        $join_tables = $arr;
+
+        // var_dump($import_columns);
+        // var_dump($join_tables); exit();
 
         //import xls
         $status = $this->__import_xls($filepath, $temp_table_name, $export_columns, $column_types);
@@ -1261,6 +1311,9 @@ class Mtable extends CI_Model
     private function __create_temp_table($temp_table_name, $columns) {
         $this->error['message'] = "";
 
+        //Note: Ideally, all editable columns (regardless visible or not) should be exported and can be imported.
+        //      But since, we are using internal datatable export function, we can only export visible columns.
+
         $column_def = array();
         $import_columns = array();
         $export_columns = array();
@@ -1316,6 +1369,8 @@ class Mtable extends CI_Model
         $column_def[] = "_update_ varchar(100) default 0";
         $column_def[] = "_tag2_ varchar(100) default null";
         $column_def[] = "_tag3_ varchar(100) default null";
+
+        //var_dump($column_def); exit();
 
         //create the table
         $sql = "create temporary table " .$temp_table_name. "(" .implode(',', $column_def). ")";
@@ -1439,6 +1494,7 @@ class Mtable extends CI_Model
         if(!$this->db->insert_batch($temp_table_name, $import_values)) {
             //error message
             $this->error['message'] = $this->db->error()['message'];
+            $this->error['error'] = $this->db->error();
             return 0;
         }
 
@@ -1451,24 +1507,44 @@ class Mtable extends CI_Model
         $sql = "update " .$temp_table_name. " a join " .$table_name. " b on b." .$key_column_name. "=a." .$key_column_name. " set a._update_=1";
         $this->db->query($sql);
 
+        //var_dump($sql);
+
         //match foreign key
         foreach($join_tables as $idx => $tbl) {
             $sql = "update " .$temp_table_name. " a join " .$tbl['reference_table_name']. " b on lower(b." .$tbl['reference_lookup_column']. ")=lower(a." .$tbl['name']. ") set a." .$tbl['name']. "=b." .$tbl['reference_key_column'];
             $this->db->query($sql);
         }
 
-        // $arr = $this->db->query("select * from " .$temp_table_name)->result_array();
-        // var_dump($arr);
+        // $arr = $this->db->query("select * from " .$temp_table_name. " where _update_=1")->result_array();
+        // // $arr = $this->db->query("select * from " .$temp_table_name)->result_array();
+        // var_dump($arr); exit;
 
         //insert new entry
         $column_list = implode(',', $import_columns);
         $sql = "insert into " .$table_name. "(" .$column_list. ") select " .$column_list. " from " .$temp_table_name. " where _update_ != 1";
         $this->db->query($sql);
 
-        $update_list = implode(',', array_map(function($val) {return 'a.'.$val.'=b.'.$val;}, $import_columns));
+        //update entry
+        //dont update key column name!
+        if (($key = array_search($key_column_name, $import_columns)) !== false) {
+            unset($import_columns[$key]);
+        }
+        //update list
+        $update_list = implode(','
+                            , array_map(
+                                function($val) { 
+                                    return 'a.'.$val.'=b.'.$val; 
+                                }
+                                , $import_columns
+                            )
+                        );
+
+        //var_dump($update_list); exit;
+
         $user_id = $this->session->userdata('user_id');
         $timestamp = date('Y/m/d H:i:s');
-        $sql = "update " .$table_name. " a join " .$temp_table_name. " b on b." .$key_column_name. "=a." .$key_column_name. " set " .$update_list. ", a.is_deleted=0, a.updated_by=" .$user_id. ", a.updated_on='" .$timestamp. "'";
+        //update entry
+        $sql = "update " .$table_name. " a join " .$temp_table_name. " b on b." .$key_column_name. "=a." .$key_column_name. " set " .$update_list. ", a.is_deleted=0, a.updated_by=" .$user_id. ", a.updated_on='" .$timestamp. "' where b._update_=1";
         $this->db->query($sql);
 
     }

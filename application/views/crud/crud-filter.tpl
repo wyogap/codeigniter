@@ -21,7 +21,7 @@
                                     <select id="f_{$f.name}" name="{$f.name}" class="form-control" placeholder="{__($f.filter_label)}">
                                         <option value=''>-- {__($f.filter_label)} --</option>
                                         {if $f.filter_invalid_value}
-                                        <option value='null'>-- {__("Tidak Valid")} --</option>
+                                        <option value='null'>-- {__("Kosong/Data Tidak Valid")} --</option>
                                         {/if}
                                         {if isset($f.filter_options)}
                                             {foreach from=$f.filter_options key=k item=v}

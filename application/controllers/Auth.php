@@ -34,7 +34,7 @@ class Auth extends CI_Controller
             $this->session->set_userdata('page_role', $page_role);
         }      
 
-        redirect(base_url() ."$page_role/home");
+        redirect(site_url() ."/$page_role/home");
     }
     
     
@@ -151,11 +151,11 @@ class Auth extends CI_Controller
         $page_role = $this->session->userdata('page_role');
 
         if ($json == 1) {
-            $data = array("status"=>1, "redirect"=>base_url() ."$page_role/home");
+            $data = array("status"=>1, "redirect"=>site_url() ."/$page_role/home");
             echo json_encode($data, JSON_INVALID_UTF8_IGNORE);
         } 
         else {
-            redirect(base_url() ."$page_role/home");
+            redirect(site_url() ."/$page_role/home");
         }
     }
 
@@ -302,7 +302,7 @@ class Auth extends CI_Controller
                 
                 if($save)
                 {
-                    $data1['reset_link'] = base_url() . "resetPasswordConfirmUser/" . $data['activation_id'] . "/" . $encoded_email;
+                    $data1['reset_link'] = site_url() . "/resetPasswordConfirmUser/" . $data['activation_id'] . "/" . $encoded_email;
                     $userInfo = $this->login_model->getCustomerInfoByEmail($email);
 
                     if(!empty($userInfo)){
@@ -354,7 +354,7 @@ class Auth extends CI_Controller
         }
         else
         {
-            redirect('<?php echo base_url();?>Auth');
+            redirect('<?php echo site_url();?>/Auth');
         }
     }
     
@@ -398,7 +398,7 @@ class Auth extends CI_Controller
             
             setFlashData($status, $message);
 
-            redirect("<?php echo base_url();?>Auth");
+            redirect("<?php echo site_url();?>/Auth");
         }
     }
 

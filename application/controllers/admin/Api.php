@@ -12,13 +12,13 @@ class Api extends CI_Controller {
 
 		$isLoggedIn = $this->session->userdata('is_logged_in');
 		if(!isset($isLoggedIn) || $isLoggedIn != TRUE) {
-			redirect(base_url() .'auth');
+			redirect(site_url() .'/auth');
 			return;
 		}
 		
 		$this->load->model(array('crud/Mpermission'));
 		if (!$this->Mpermission->is_admin()) {
-			redirect(base_url() .'auth/notauthorized');
+			redirect(site_url() .'/auth/notauthorized');
 			return;
 		}
     }

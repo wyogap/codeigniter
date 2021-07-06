@@ -24,13 +24,13 @@
                     </div>
 
                     <!-- Logout-->
-                    <a href="{$base_url}crud/profile" class="dropdown-item notify-item">
+                    <a href="{$site_url}crud/profile" class="dropdown-item notify-item">
                         <i class="mdi mdi-account mr-1"></i>
                         <span>{__('Profil')}</span>
                     </a>
 
                     <!-- Logout-->
-                    <a href="{$base_url}auth/logout" class="dropdown-item notify-item">
+                    <a href="{$site_url}auth/logout" class="dropdown-item notify-item">
                         <i class="mdi mdi-logout mr-1"></i>
                         <span>{__('Logout')}</span>
                     </a>
@@ -49,7 +49,7 @@
         </a>
 
         <!-- LOGO -->
-        <a href="{$base_url}{$page_role}/home" class="topnav-logo" style="min-width: unset; float: unset; line-height: unset; display: flex;">
+        <a href="{$site_url}{$page_role}/home" class="topnav-logo" style="min-width: unset; float: unset; line-height: unset; display: flex;">
             <div class="topnav-logo-lg" style="margin-top: 19px; ">
                 <img src="{$base_url}{$app_logo}" alt="" height="32">
             </div>
