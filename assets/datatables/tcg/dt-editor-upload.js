@@ -85,6 +85,7 @@
 					if (upload.id > 0) {
 						$(file.previewTemplate).find(".dz-preview").attr("id", upload.id);
 						file['id'] = upload.id;
+						file['url'] = upload.web_path;
 
 						//check for maxfile
 						if (this.options.maxFiles && this.files.length >= this.options.maxFiles) {
@@ -164,8 +165,19 @@
 					}
 
 					return true;				
+				},
+				complete: function(file) {
+					if (typeof file.url !== 'undefined') {
+						// Download link
+						var url = $("<div class='dz-download text-center'><a target='_blank' href='" +file.url+ "'>Download</a></div>");
+						$(file.previewTemplate).append(url);
+					}
+					
+					//this.emit("complete", file);
+					file.previewElement.classList.add("dz-complete")
+					
+					return true;
 				}
-
 			});
 
 			conf._input_control.on("click", ".dz-error-mark", function(e) {
@@ -296,10 +308,12 @@
 						return;
 					}
 
-					let upload = null
+					let upload = null;
+					let url = null;
 					for(i=0; i<json.files.length; i++){
 						upload = json.files[i];
-						let mockFile = { id: upload.id, name: upload.filename, size: upload.filesize };
+						//url = "<a href='" +upload.web_path+ "'>" +upload.filename+ "</a>"
+						let mockFile = { id: upload.id, name: upload.filename, size: upload.filesize, url: upload.web_path };
 						dz.displayExistingFile(mockFile, upload.thumbnail_path);
 
 						dz.files.push(mockFile); 
