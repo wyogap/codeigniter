@@ -460,22 +460,31 @@ if (!class_exists('Uploader')){
         }
 
         function load_setting() {
-            $sql = "select name, value from dbo_settings where `group`  ='upload'";
+            $sql = "select name, value from dbo_settings where `group`='upload' and is_deleted=0";
     
+            // public $max_size_mb = 4;              //in MB
+            // public $max_dimension = 1200;
+            // public $thumb_dimension = 100;
+            // public $upload_dir = "upload/";
+            // public $file_types = array("jpg", "jpeg", "png", "gif", "pdf", "xlsx", "xls", "csv", 'doc', 'docx', 'ppt', 'pptx');
+   
             $ci =& get_instance();
             $query = $ci->db->query($sql);
             foreach($query->result() as $row) {
-                if ($row->name == 'uploadmax_size_mb') {
-                    $max_size_mb = $row->value;
+                if ($row->name == 'uploadmax_size_mb' && !empty($row->value)) {
+                    $this->max_size_mb = $row->value;
                 }
-                else if ($row->name == "upload_img_dim") {
-                    $max_dimension = $row->value;
+                else if ($row->name == "upload_img_dim" && !empty($row->value)) {
+                    $this->max_dimension = $row->value;
                 }
-                else if ($row->name == "upload_thumbnail_dim") {
-                    $thumb_dimension = $row->value;
+                else if ($row->name == "upload_thumbnail_dim" && !empty($row->value)) {
+                    $this->thumb_dimension = $row->value;
                 }
-                else if ($row->name == "upload_dir") {
-                    $upload_dir = $row->value;
+                else if ($row->name == "upload_dir" && !empty($row->value)) {
+                    $this->upload_dir = $row->value;
+                }
+                else if ($row->name == "upload_file_types" && !empty($row->value)) {
+                    $this->file_types = array_map('trim', explode(",", $row->value));
                 }
             }
     

@@ -5,20 +5,12 @@ class Mdashboard extends CI_Model
     function kendaraan_total() {
         $sql = "
             select
-                a.total,
-                (a.total - b.perlu_verifikasi) as terverifikasi, b.perlu_verifikasi
-            from (
-                select 
-                    count(*) as total
-                from tcg_kendaraan_dinas a
-                where a.is_deleted=0
-            ) a
-            join (
-                select
-                    count(*) as perlu_verifikasi
-                from v_tcg_kendaraan_dinas_perlu_verifikasi a
-                where a.is_deleted=0
-            ) b on 1=1
+                count(*) as total,
+                sum(case when a.status_verifikasi = 'valid' then 1 else 0 end) as terverifikasi, 
+                sum(case when a.status_verifikasi = 'valid' then 0 else 1 end) as perlu_verifikasi
+            from tcg_kendaraan_dinas a
+            where
+                a.is_deleted=0 and (a.status_kepemilikan='aktif' or a.status_kepemilikan is null or a.status_kepemilikan='')
         ";
 
         return $this->db->query($sql)->row_array();
@@ -27,23 +19,34 @@ class Mdashboard extends CI_Model
     function kendaraan_total_opd($opd) {
         $sql = "
             select
-                a.total,
-                (a.total - b.perlu_verifikasi) as terverifikasi, b.perlu_verifikasi
-            from (
-                select 
-                    count(*) as total
-                from tcg_kendaraan_dinas a
-                where a.is_deleted=0 and a.opd=?
-            ) a
-            join (
-                select
-                    count(*) as perlu_verifikasi
-                from v_tcg_kendaraan_dinas_perlu_verifikasi a
-                where a.is_deleted=0 and a.opd=?
-            ) b on 1=1
+                count(*) as total,
+                sum(case when a.status_verifikasi = 'valid' then 1 else 0 end) as terverifikasi, 
+                sum(case when a.status_verifikasi = 'valid' then 0 else 1 end) as perlu_verifikasi
+            from tcg_kendaraan_dinas a
+            where
+                a.is_deleted=0 and (a.status_kepemilikan='aktif' or a.status_kepemilikan is null or a.status_kepemilikan='')
+                and a.opd=?
         ";
 
-        return $this->db->query($sql, array($opd, $opd))->row_array();
+        // $sql = "
+        //     select
+        //         a.total,
+        //         (a.total - b.perlu_verifikasi) as terverifikasi, b.perlu_verifikasi
+        //     from (
+        //         select 
+        //             count(*) as total
+        //         from tcg_kendaraan_dinas a
+        //         where a.is_deleted=0 and a.opd=?
+        //     ) a
+        //     join (
+        //         select
+        //             count(*) as perlu_verifikasi
+        //         from v_tcg_kendaraan_dinas_perlu_verifikasi a
+        //         where a.is_deleted=0 and a.opd=?
+        //     ) b on 1=1
+        // ";
+
+        return $this->db->query($sql, array($opd))->row_array();
     }
 
     function kendaraan_per_jenis_kendaraan($opd=null) {
@@ -90,11 +93,11 @@ class Mdashboard extends CI_Model
         $sql = "
             select
                 case when (a.opd is null) then 'lain-lain' else a.opd end as opd,
-                case when (c.label is null) then 'Tidak diketahun' else c.label end as label,
+                case when (c.label is null) then 'Tidak diketahui' else c.label end as label,
                 a.total,
                 a.jenis_roda_dua, a.jenis_roda_tiga, a.jenis_mobil, a.jenis_lainnya,
                 a.peruntukan_perorangan, a.peruntukan_jabatan, a.peruntukan_operasional, a.peruntukan_khusus, a.peruntukan_pinjam_pakai, a.peruntukan_lainnya,
-                (a.total - b.perlu_verifikasi) as terverifikasi, b.perlu_verifikasi
+                a.terverifikasi, a.perlu_verifikasi
             from (
                 select 
                     a.opd, 
@@ -108,19 +111,13 @@ class Mdashboard extends CI_Model
                     sum(case when a.peruntukan='operasional' then 1 else 0 end) as peruntukan_operasional,
                     sum(case when a.peruntukan='khusus' then 1 else 0 end) as peruntukan_khusus,
                     sum(case when a.peruntukan='pinjam pakai' then 1 else 0 end) as peruntukan_pinjam_pakai,
-                    sum(case when a.peruntukan not in ('perorangan', 'jabatan', 'operasional', 'khusus', 'pinjam pakai') then 1 else 0 end) as peruntukan_lainnya
+                    sum(case when a.peruntukan not in ('perorangan', 'jabatan', 'operasional', 'khusus', 'pinjam pakai') then 1 else 0 end) as peruntukan_lainnya,
+                    sum(case when a.status_verifikasi = 'valid' then 1 else 0 end) as terverifikasi, 
+                    sum(case when a.status_verifikasi = 'valid' then 0 else 1 end) as perlu_verifikasi    
                 from tcg_kendaraan_dinas a
                 where a.is_deleted=0
                 group by a.opd
             ) a
-            join (
-                select
-                    a.opd,
-                    count(*) as perlu_verifikasi
-                from v_tcg_kendaraan_dinas_perlu_verifikasi a
-                where a.is_deleted=0
-                group by a.opd
-            ) b on a.opd=b.opd
             left join tcg_opd c on c.nama=a.opd and c.is_deleted=0        
         ";
 

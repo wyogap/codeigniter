@@ -346,6 +346,9 @@ class Mtable extends CI_Model
                 $col['allow_edit'] = ($row['allow_edit'] == 1);
                 $col['allow_filter'] = ($row['allow_filter'] == 1);
                 
+                //default: no bubble edit
+                $col['edit_bubble'] = false;
+
                 if (!empty($row['options_array'])) {
                     $col['options'] = json_decode($row['options_array']);
                 }
@@ -466,6 +469,9 @@ class Mtable extends CI_Model
                     $editor['edit_onchange_js'] = $row['edit_onchange_js'];
                     $editor['edit_bubble'] = ($row['edit_bubble'] == 1);
 
+                    //store in column metas
+                    $col['edit_bubble'] = $editor['edit_bubble'];
+
                     $editor['edit_def_value'] = $row['edit_def_value'];
 
                     if (!empty($editor['edit_def_value'])) {
@@ -539,6 +545,9 @@ class Mtable extends CI_Model
                     $this->filter_columns[] = $col['name'];
                 }
     
+                //bubble editor is still not working. disable it for now
+                $col['edit_bubble'] = false;
+
                 $this->column_metas[] = $col;
                 $this->select_columns[] = $col['column_name']." as ".$col['name'];
                 $this->columns[] = $col['name'];

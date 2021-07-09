@@ -682,8 +682,8 @@ function search() {
                         <span class="dtr-data">{literal}{{tanggal_bayar_pajak}}{/literal}</span>
                     </li>
                     <li data-dtr-index="1" data-dt-column="1">
-                        <span class="dtr-title">No. Telp.</span> 
-                        <span class="dtr-data">{literal}{{handphone_pengguna}}{/literal}</span>
+                        <span class="dtr-title">No. Telp. Kantor</span> 
+                        <span class="dtr-data">{literal}{{no_telp_kantor_pengguna}}{/literal}</span>
                     </li>
                 </ul>
             </div>

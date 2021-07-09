@@ -552,9 +552,10 @@ abstract class MY_Crud_Controller extends CI_Controller {
 			$uploader = new Uploader();
 
 			//TODO: get parameter from columnmeta
-            $uploader->file_types = array();
-            $uploader->max_dimension = 200;
-            $uploader->max_size_mb = 100;
+			$uploader->load_setting();
+            // $uploader->file_types = array();
+            // $uploader->max_dimension = 1200;
+            // $uploader->max_size_mb = 100;
 
             //prevent generation of pdf thumbnail
             Uploader::$GENERATE_PDF_THUMBNAIL = 0;

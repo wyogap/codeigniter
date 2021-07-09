@@ -27,7 +27,7 @@
             <div class="col-xl-12">
                 <div class="card">
                     <div class="card-body">
-                        <h4 class="box-title text-center">Masih Perlu Verifikas: {$perlu_verifikasi} (<a href="{$site_url}/crud/kendaraan_dinas_verifikasi">Detail</a>)</h4>
+                        <h4 class="box-title text-center">Masih Perlu Verifikasi: {$perlu_verifikasi} (<a href="{$site_url}/crud/kendaraan_dinas_verifikasi">Detail</a>)</h4>
                     </div>
                 </div>
             </div>
@@ -75,6 +75,13 @@
 <script type="text/javascript">
 
 var dt_per_opd = null;
+
+// var chart_colors = ["#205493", "#BE5873", "#81CACF", "#E98841", "#E3D830", "#A6C46F",
+//                         "#894C7B", "#BA9765", "#7F7F7F", "#C3C3C3"];
+
+// Highcharts.setOptions({
+//     colors: chart_colors,
+// });
 
 $(document).ready(function() {
     //Pie Chart

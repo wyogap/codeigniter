@@ -12,7 +12,7 @@ class Mkendaraanverifikasi extends Mcrud
     protected static $COL_LABEL = 'no_polisi';
     protected static $COL_VALUE = 'no_aset';
 
-    protected static $VIEW_TABLE_NAME = 'v_tcg_kendaraan_dinas_perlu_verifikasi_v2';
+    protected static $VIEW_TABLE_NAME = 'v_tcg_kendaraan_dinas_perlu_verifikasi_v3';
     protected static $SOFT_DELETE = true;
 
     function update($id, $valuepair, $filter = null) {

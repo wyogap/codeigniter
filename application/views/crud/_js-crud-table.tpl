@@ -365,7 +365,7 @@ $(document).ready(function() {
                     {if isset($x.type) && $x.type=="tcg_upload"}
                     render: function ( data, type, row ) {
                         if (type == "display") {
-                            if (data !== null && data != "") {
+                            if (typeof data !== 'undefined' && data !== null && data != "") {
                                 let arr = data.split(", ");
                                 for(let i=0; i<arr.length; i++) {
                                     let arr2 = arr[i].split(':', 2);
@@ -382,7 +382,9 @@ $(document).ready(function() {
                     {else if isset($x.type) && $x.type=="tcg_date"}
                     render: function ( data, type, row ) {
                         if (type == "display") {
-                            data = moment(data).format('YYYY-MM-DD');
+                            if (typeof data !== 'undefined' && data !== null && data != "") {
+                                data = moment(data).format('YYYY-MM-DD');
+                            }
                             {if $x.display_format_js}
                             return {$x.display_format_js}(data, type, row);
                             {else}
@@ -394,6 +396,9 @@ $(document).ready(function() {
                     {else if isset($x.type) && $x.type=="tcg_currency"}
                     render: function ( data, type, row ) {
                         if (type == "display") {
+                            if (typeof data === 'undefined' || data === null || data == "") {
+                                data = 0;
+                            }
                             data = $.fn.dataTable.render.number(',', '.', 0, 'Rp').display(data);
                             {if $x.display_format_js}
                             return {$x.display_format_js}(data, type, row);
