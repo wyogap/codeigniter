@@ -35,6 +35,25 @@ class SmartyLibrary extends Smarty {
             }
         }
 
+        //default currency setting
+        $currency_prefix = "Rp";
+        $thousand_separator = ",";
+        $decimal_separator = ".";
+        $decimal_precision = 0;
+        
+        $arr = $ci->setting->list_group('currency');
+        foreach($arr as $key => $val) {
+            if ($val['name'] == "currency_prefix")  $currency_prefix = $val['value'];
+            else if ($val['name'] == "currency_thousand_separator")     $thousand_separator = $val['value'];
+            else if ($val['name'] == "currency_decimal_separator")      $decimal_separator = $val['value'];
+            else if ($val['name'] == "currency_decimal_precision")      $decimal_precision = $val['value'];
+        }
+
+        $this->assign("currency_prefix", $currency_prefix);
+        $this->assign("currency_thousand_separator", $thousand_separator);
+        $this->assign("currency_decimal_separator", $decimal_separator);
+        $this->assign("currency_decimal_precision", $decimal_precision);
+
         if (ENVIRONMENT === 'development') {
 			$this->assign('version', 'CodeIgniter Version <strong>' . CI_VERSION . '</strong>');
 		}

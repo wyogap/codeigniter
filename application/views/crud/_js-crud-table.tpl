@@ -28,7 +28,7 @@ $(document).ready(function() {
                     type: 'hidden',
                     {else if $col.edit_type == 'tcg_currency'}
                     type: 'tcg_mask',
-                    mask: "#,##0",
+                    mask: "#{$currency_thousand_separator}##0",
                     {else}
                     type: '{$col.edit_type}',
                     {/if}
@@ -352,9 +352,6 @@ $(document).ready(function() {
                     {if $x.foreign_key && $x.type=="tcg_select2"}
                         data: "{$x.name}_label", 
                         editField: "{$x.name}", 
-                    {else if $x.type=="tcg_upload"}
-                        data: "{$x.name}_label", 
-                        editField: "{$x.name}", 
                     {else}
                         data: "{$x.name}", 
                         {if !empty($x.edit_field)}
@@ -362,25 +359,61 @@ $(document).ready(function() {
                         {/if}
                     {/if}
                     className: "col_{$x.type} {$x.css} {if !empty($x.edit_bubble)}editable{/if}",
-                    {if isset($x.type) && $x.type=="tcg_upload"}
+                    {if isset($x.type) && $x.type=="tcg_select2"}
                     render: function ( data, type, row ) {
+                        // if (type == "export") {
+                        //     //export raw data?
+                        // }
+                        return data;
+                    }
+                    {else if isset($x.type) && $x.type=="tcg_upload"}
+                    render: function ( data, type, row ) {
+                        if (type == "export") {
+                            //put extra space after comma so that it is not treated as thousand separator
+                            return data.replace(/,/g, ', ');
+                        }
+
                         if (type == "display") {
-                            if (typeof data !== 'undefined' && data !== null && data != "") {
-                                let arr = data.split(", ");
-                                for(let i=0; i<arr.length; i++) {
-                                    let arr2 = arr[i].split(':', 2);
-                                    if (arr2.length == 2) {
-                                        arr[i] = "<a href='{$base_url}" +arr2[1]+ "' target='_blank'>" +arr2[0]+ "</a>";
-                                    }
+                            let filename = row['{$x.name}_filename'];
+                            let path = row['{$x.name}_path'];
+                            if (typeof data !== 'undefined' && data !== null && data != "" && data != 0
+                                    && typeof filename !== 'undefined' && filename !== null && filename != ""
+                                    && typeof path !== 'undefined' && path !== null && path != ""
+                                    ) {
+                                let filenames = filename.split(";");
+                                let paths = path.split(";");
+                                let arr = data.split(",");
+                                for(let i=0; i<arr.length, i<filenames.length, i<paths.length; i++) {
+                                    arr[i] = "<a href='{$base_url}" +paths[i]+ "' target='_blank'>" +filenames[i]+ "</a>";
                                 }
-                                return arr.join(", ");
+
+                                if (arr.length <= 1) {
+                                    data = arr.join(",");
+                                }
+                                else {
+                                    data = "<ul><li>";
+                                    data += arr.join("</li><li>");
+                                    data += "</li></ul>";
+                                }
                             }
-                            return "";
+                            else {
+                                data = "";
+                            }
+                            {if $x.display_format_js}
+                            return {$x.display_format_js}(data, type, row);
+                            {else}
+                            return data;
+                            {/if}
                         }
                         return data;
                     },
                     {else if isset($x.type) && $x.type=="tcg_date"}
                     render: function ( data, type, row ) {
+                        // if (type == "export") {
+                        //     //export raw data?
+                        //     return data;
+                        // }
+
                         if (type == "display") {
                             if (typeof data !== 'undefined' && data !== null && data != "") {
                                 data = moment(data).format('YYYY-MM-DD');
@@ -395,11 +428,16 @@ $(document).ready(function() {
                     },
                     {else if isset($x.type) && $x.type=="tcg_currency"}
                     render: function ( data, type, row ) {
+                        // if (type == "export") {
+                        //     //export raw data?
+                        //     return data;
+                        // }
+
                         if (type == "display") {
                             if (typeof data === 'undefined' || data === null || data == "") {
                                 data = 0;
                             }
-                            data = $.fn.dataTable.render.number(',', '.', 0, 'Rp').display(data);
+                            data = $.fn.dataTable.render.number('{$currency_thousand_separator}', '{$currency_decimal_separator}', {$currency_decimal_precision}, '{$currency_prefix}').display(data);
                             {if $x.display_format_js}
                             return {$x.display_format_js}(data, type, row);
                             {else}
@@ -410,7 +448,15 @@ $(document).ready(function() {
                     },
                     {else if $x.display_format_js}
                     render: function ( data, type, row ) {
+                        // if (type == "export") {
+                        //     //export raw data?
+                        //     return data;
+                        // }
+
                         if (type == "display") {
+                            if (typeof data === 'undefined' || data === null) {
+                                data = "";
+                            }
                             return {$x.display_format_js}(data, type, row);
                         }
                         return data;
@@ -513,21 +559,41 @@ $(document).ready(function() {
                 text: '{__("Ekspor")}',
                 className: 'btn-sm btn-primary',
                 exportOptions: {
+                    orthogonal: "export",
                     modifier: {
                         //selected: true
-                    }
+                    },
+                    // format: {
+                    //     body: function (data, row, column, node) { 
+                    //         return data;
+                    //     }
+                    // }
                 },
+                {if 1==0}
+                //formatting to text does not seem to have much value!
+                //the cell format is still set to GENERAL
                 customize: function ( xlsx ) {
-                    // var sheet = xlsx.xl.worksheets['sheet1.xml'];
-                    // $('row c[r^="B"]', sheet).attr( 's', '0' );
+                    let sheet = xlsx.xl.worksheets['sheet1.xml'];
+                    let col = '';
 
+                    //lazy way of formatting. set all cell to text
+                    $('row c', sheet).attr( 's', '50' );
+
+                    {assign var=x value=0}
                     {foreach from=$tbl.columns key=k item=v}
                     {if $v.visible == 1}
-                    {if isset($v.type) && $v.type=="tcg_text"}
-                    {/if}
+                        {assign var=x value=$x+1}
+                        {if isset($v.type) && $v.type=="tcg_text"}
+                            col = toColumnName({$x});
+                            $('row c[r^="' +col+ '"]', sheet).attr( 's', '50' );
+                        {else if isset($v.type) && $v.type=="tcg_upload"}
+                            col = toColumnName({$x});
+                            $('row c[r^="' +col+ '"]', sheet).attr( 's', '50' ); 
+                        {/if}
                     {/if}
                     {/foreach}
                 },
+                {/if}
             },
             {/if}
             {if isset($tbl.table_actions) && $tbl.table_actions.import}
@@ -809,6 +875,14 @@ function dt_{$tbl.table_id}_import(e, dt, node, conf){
         }
     });
 }
+
+function toColumnName(num) {
+    for (var ret = '', a = 1, b = 26; (num -= a) >= 0; a = b, b *= 26) {
+        ret = String.fromCharCode(parseInt((num % b) / a) + 65) + ret;
+    }
+    return ret;
+}
+
 </script>
 
 {if $tbl.custom_js}

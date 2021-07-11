@@ -15,6 +15,11 @@ class Mcrud extends CI_Model
 
     protected static $JOIN_TABLES = array();
     
+    protected $table_id = 0;
+    protected $table_name = '';
+    protected $initialized = false;
+    protected $table_metas = null;
+    
     function __construct() {
         if (isset(static::$COLUMNS) && is_array(static::$COLUMNS) && count(static::$COLUMNS) > 0) {
             if (!isset(static::$FILTERS) || !is_array(static::$FILTERS) || count(static::$FILTERS) == 0) {
@@ -289,6 +294,96 @@ class Mcrud extends CI_Model
         } 
     }
 
+    function import($file) {
+        //not-implemented yet
+        return 0;
+    }
+
+    function init_with_tablemeta($arr) {
+        //table name
+        $this->table_id = $arr['id'];
+        $this->name = $arr['name'];
+        $this->table_name = $arr['table_name'];
+
+        //table info
+        $this->table_metas = static::$TABLE;
+        $this->table_metas['name'] = $this->name;
+        $this->table_metas['id'] = $arr['id'];
+
+        $this->table_metas['ajax'] = site_url('crud/'.$this->table_name);
+        $this->table_metas['table_id'] = 'tdata_'.$arr['id'];
+        $this->table_metas['key_column'] = $arr['key_column'];
+        $this->table_metas['initial_load'] = ($arr['initial_load'] == 1);
+        $this->table_metas['row_id_column'] = ($arr['row_id_column'] == 1);
+        $this->table_metas['row_select_column'] = ($arr['row_select_column'] == 1);
+
+        $this->table_metas['lookup_column'] = $arr['lookup_column'];
+        if (empty($this->table_metas['lookup_column'])) {
+            $this->table_metas['lookup_column'] = $this->table_metas['key_column'];
+        }
+
+        $this->table_metas['table_name'] = $arr['table_name'];
+        $this->table_metas['editable_table_name'] = $arr['editable_table_name'];
+        if (empty($this->table_metas['editable_table_name'])) {
+            $this->table_metas['editable_table_name'] = $this->table_metas['table_name'];
+        }
+
+        $this->table_metas['where_clause'] = "";
+        if (!empty($arr['where_clause'])) {
+            $this->table_metas['where_clause'] = replace_userdata($arr['where_clause']);
+        }
+
+        $this->table_metas['orderby_clause'] = $arr['orderby_clause'];
+        $this->table_metas['limit_selection'] = $arr['limit_selection'];
+        $this->table_metas['soft_delete'] = ($arr['soft_delete'] == 1);
+
+        $this->table_metas['page_size'] = $arr['page_size'];
+        if (empty($this->table_metas['page_size'])) {
+            $this->table_metas['page_size'] = static::$DEF_PAGE_SIZE;
+        }
+        
+        $this->table_metas['custom_css'] = $arr['custom_css'];
+        $this->table_metas['custom_js'] = $arr['custom_js'];
+
+        $this->table_metas['search'] = ($arr['search'] == 1);
+        $this->table_metas['filter'] = ($arr['filter'] == 1);
+        $this->table_metas['edit'] = ($arr['allow_add'] == 1 || $arr['allow_edit'] == 1 || $arr['allow_delete'] == 1);
+
+        // if no filter -> always autoload
+        if (!$this->table_metas['filter'])  $this->table_metas['initial_load'] = true;
+
+        $this->table_metas['columns'] = array();
+        $this->table_metas['editor_columns'] = array();
+        $this->table_metas['filter_columns'] = array();
+        $this->table_metas['table_actions'] = array();
+        $this->table_metas['custom_actions'] = array();
+        $this->table_metas['row_actions'] = array();
+        $this->table_metas['join_tables'] = array();
+
+        return true;
+    }
+
+    function tablemeta() {
+        return $this->table_metas;
+    }
+
+    function tablename() {
+        return $this->table_name;   
+    }
+
+    function key_column() {
+        return $this->table_metas['key_column'];
+    }
+
+    function filter_columns() {
+        //not-implemented yet        
+        return null;
+    }
+
+    function get_error_message() {
+        //not-implemented yet
+        return null;
+    }    
 }
 
   

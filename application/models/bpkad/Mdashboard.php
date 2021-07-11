@@ -49,6 +49,24 @@ class Mdashboard extends CI_Model
         return $this->db->query($sql, array($opd))->row_array();
     }
 
+    function kendaraan_per_umur_kendaraan($opd=null) {
+        $this->db->select("
+            a.tahun, a.label, a.jumlah
+        ");
+        $this->db->from('rpt_umur_kendaraan_dinas a');
+        //$this->db->where('a.is_deleted', 0);
+
+        if ($opd != null) {
+            $this->db->where('a.opd', $opd);
+        } else {
+            $this->db->where('a.opd is null');
+        }
+
+        $this->db->order_by('a.tahun asc');
+
+        return $this->db->get()->result_array();
+    }
+
     function kendaraan_per_jenis_kendaraan($opd=null) {
         $this->db->select("
             case when b.nama is null then 'lain-lain' else b.nama end as nama, 

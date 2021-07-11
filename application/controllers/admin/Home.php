@@ -60,6 +60,7 @@ class Home extends CI_Controller {
 
 		$page_data['per_jenis_kendaraan'] = $this->Mdashboard->kendaraan_per_jenis_kendaraan();
 		$page_data['per_peruntukan'] = $this->Mdashboard->kendaraan_per_peruntukan();
+		$page_data['per_umur_kendaraan'] = $this->Mdashboard->kendaraan_per_umur_kendaraan();
 
 		//$page_data['per_opd'] = $this->Mdashboard->kendaraan_per_opd();
 

@@ -67,6 +67,21 @@
                 <div class="card">
                     <div class="card-header">
                         <i class="glyphicon glyphicon-dashboard"></i>
+                        <h4 class="box-title"><b>Kendaraan Dinas Per Umur Kendaraan</b></h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                <div id="umur" style="min-width: 300px; height: 300px; margin: 0 auto"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="glyphicon glyphicon-dashboard"></i>
                         <h4 class="box-title"><b>Kendaraan Dinas Per OPD/UPB</b></h4>
                     </div>
                     <div class="card-body" style="padding-top: 0px;">
@@ -193,6 +208,79 @@ $(document).ready(function() {
                 {/foreach}
 			]
 		}]
+	});
+
+	Highcharts.chart('umur', {
+		chart: {
+			type: 'column'
+		},
+		title: {
+			text: null
+		},
+		xAxis: {
+			categories: [
+            {foreach $per_umur_kendaraan as $umur}
+                '{$umur.label}',
+            {/foreach}
+            ],
+			title: {
+				text: null
+			}
+		},
+		yAxis: {
+			min: 0,
+			title: false,
+			labels: {
+                enabled: true,
+				overflow: 'justify'
+			},
+            // stackLabels: {
+            //     style: {
+            //         color: '#000000',
+            //         fontWeight: 'normal'
+            //     },
+            //     enabled: true,
+            //     verticalAlign: 'top'
+            // }
+		},
+		tooltip: {
+			valueSuffix: ' Unit'
+		},
+		plotOptions: {
+	        bar: {
+	            dataLabels: {
+	                enabled: true,
+	            },
+	            enableMouseTracking: false
+	        },
+            series: {
+                dataLabels: {
+                    enabled: true,
+                    formatter:function() {
+                        return this.point.y;
+                    },
+                    style: {
+                        color: '#000000',
+                        fontWeight: 'bold'
+                    },
+                }
+            }
+	    },
+		credits: {
+			enabled: true
+		},
+        legend: {
+			enabled: false,
+            layout: 'horizontal', // default
+        },
+    	series: [{
+            name: 'Jumlah',
+            data: [
+            {foreach $per_umur_kendaraan as $umur}
+                {$umur.jumlah},
+            {/foreach}
+            ],
+        }]
 	});
 
     dt_per_opd = $('#per_opd').DataTable({

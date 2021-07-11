@@ -64,6 +64,7 @@ class Home extends CI_Controller {
 
 		$page_data['per_jenis_kendaraan'] = $this->Mdashboard->kendaraan_per_jenis_kendaraan($opd);
 		$page_data['per_peruntukan'] = $this->Mdashboard->kendaraan_per_peruntukan($opd);
+		$page_data['per_umur_kendaraan'] = $this->Mdashboard->kendaraan_per_umur_kendaraan($opd);
 		
 		$this->smarty->render_theme('opd/home.tpl', $page_data);
 	}
