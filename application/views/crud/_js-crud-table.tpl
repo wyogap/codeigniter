@@ -8,6 +8,14 @@ var ajax_url = "{$tbl.ajax}";
 var editor_{$tbl.table_id} = null;
 var dt_{$tbl.table_id} = null;
 
+{if empty($fsubtable)}
+{assign var=fsubtable value=0}
+{/if}
+
+{if empty($fkey)}
+{assign var=fkey value=0}
+{/if}
+
 $(document).ready(function() {
     $.fn.dataTable.ext.errMode = 'throw';
     $.extend($.fn.dataTable.defaults, {
@@ -24,6 +32,7 @@ $(document).ready(function() {
                 {
                     label: "{$col.edit_label} {if $col.edit_label && $col.edit_compulsory}<span class='text-danger font-weight-bold'>*</span>{/if}",
                     name: "{$col.edit_field}",
+
                     {if $col.edit_type == 'js'}
                     type: 'hidden',
                     {else if $col.edit_type == 'tcg_currency'}
@@ -32,6 +41,7 @@ $(document).ready(function() {
                     {else}
                     type: '{$col.edit_type}',
                     {/if}
+
                     {if isset($col.edit_options)}
                     options: [
                         {foreach from=$col.edit_options key=k item=v}
@@ -43,15 +53,23 @@ $(document).ready(function() {
                         {/foreach}
                     ],
                     {/if}
+
                     {if !empty($col.edit_attr)}
                     attr: {$col.edit_attr|@json_encode nofilter},
                     {/if}
+
                     {if !empty($col.edit_info)}
                     fieldInfo:  "{$col.edit_info}",
                     {/if}
+
+                    {if $fsubtable == 1 && $col.edit_field == $fkey}
+                    readonly: 1,
+                    {/if}
+
                     {if isset($col.edit_def_value) && $col.edit_def_value != null}
                     def:  "{$col.edit_def_value}",
                     {/if}
+
                     {if $col.edit_type=='upload' || $col.edit_type=='image'}
                     display: function ( file_id ) {
                         if (!Number.isInteger(file_id)) {
@@ -151,7 +169,9 @@ $(document).ready(function() {
 
         editor_{$tbl.table_id}.on( 'open' , function ( e, type ) {
             {foreach $tbl.editor_columns as $col}
-                {if $col.edit_type == 'js' }
+                {if $fsubtable == 1 && $col.edit_field == $fkey}
+                editor_{$tbl.table_id}.field("{$col.edit_field}").set(selected_key_{$tbl.table_id});
+                {else if $col.edit_type == 'js' }
                 editor_{$tbl.table_id}.field("{$col.edit_field}").set(v_{$col.name});
                 {/if}
             {/foreach}

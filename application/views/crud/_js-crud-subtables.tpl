@@ -1,6 +1,8 @@
 <script type="text/javascript" defer> 
 
-var selected_key = 0;
+{foreach $subtables as $subtbl}
+var selected_key_{$subtbl.crud.table_id} = '';
+{/foreach}
 
 $(document).ready(function() {
 
@@ -15,13 +17,15 @@ $(document).ready(function() {
                 //on deselect all, clear subtables
                 {foreach $subtables as $subtbl}
                 dt_{$subtbl.crud.table_id}.clear().draw();
+                selected_key_{$subtbl.crud.table_id} = '';
                 {/foreach}
             } else {
                 //on select, reload subtables
                 {foreach $subtables as $subtbl}
-                selected_key = data[0]['{$subtbl.table_key_column}'];
-                dt_{$subtbl.crud.table_id}.ajax.url("{$subtbl.crud.ajax}/" +selected_key);
-                editor_{$subtbl.crud.table_id}.s.ajax = "{$subtbl.crud.ajax}/" +selected_key;
+                //master value
+                selected_key_{$subtbl.crud.table_id} = data[0]['{$subtbl.table_key_column}'];
+                dt_{$subtbl.crud.table_id}.ajax.url("{$subtbl.crud.ajax}/" +selected_key_{$subtbl.crud.table_id});
+                editor_{$subtbl.crud.table_id}.s.ajax = "{$subtbl.crud.ajax}/" +selected_key_{$subtbl.crud.table_id};
                 dt_{$subtbl.crud.table_id}.ajax.reload();
                 {/foreach}
             }
@@ -32,6 +36,7 @@ $(document).ready(function() {
 
 </script>
 
+
 {foreach $subtables as $subtbl}
-    {include file="crud/_js-crud-table.tpl" tbl=$subtbl.crud}
+    {include file="crud/_js-crud-table.tpl" tbl=$subtbl.crud fsubtable='1' fkey=$subtbl.subtable_fkey_column}
 {/foreach}

@@ -28,6 +28,11 @@
               conf._safeId = conf.attr.editorId + "_" + conf._safeId;
             };
 
+			//force read-only (if any)
+			if (typeof conf.readonly !== 'undefined' && conf.readonly != null && conf.readonly != "") {
+				conf.attr.readonly = conf.readonly;
+			}
+			
             // Create the elements to use for the input
             conf._input = $(
                 '<div id="'+conf._safeId+'"></div>');

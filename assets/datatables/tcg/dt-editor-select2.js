@@ -24,6 +24,11 @@
 				conf.attr.ajax = conf.ajax;
 			}
 
+			//force read-only (if any)
+			if (typeof conf.readonly !== 'undefined' && conf.readonly != null && conf.readonly != "") {
+				conf.attr.readonly = conf.readonly;
+			}
+
 			//some time, just the field name is not safe enough!
 			if (conf.attr.editorId != "") {
 				conf._safeId = conf.attr.editorId + "_" + conf._safeId;

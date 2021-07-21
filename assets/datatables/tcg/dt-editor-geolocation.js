@@ -26,6 +26,11 @@
 			//default language
 			conf.language = $.extend(true, {}, tcg_geolocation.messages, conf.language);
 
+			//force read-only (if any)
+			if (typeof conf.readonly !== 'undefined' && conf.readonly != null && conf.readonly != "") {
+				conf.attr.readonly = conf.readonly;
+			}
+			
             // Create the elements to use for the input
             conf._input = $('<div class="tcg-geo-location" id="'+conf._safeId+'"></div>');
 

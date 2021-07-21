@@ -23,6 +23,11 @@
 				conf._safeId = conf.attr.editorId + "_" + conf._safeId;
 			};
 
+			//force read-only (if any)
+			if (typeof conf.readonly !== 'undefined' && conf.readonly != null && conf.readonly != "") {
+				conf.attr.readonly = conf.readonly;
+			}
+			
             //default value
             if (typeof conf.attr.value === 'undefined' || conf.attr.value == null) {
                 conf.attr.value = 0;

@@ -39,6 +39,11 @@
 			if ( isNaN(conf.attr.maxLevel) ) {
 				conf.attr.maxLevel = conf.attr.level;
 			}
+
+			//force read-only (if any)
+			if (typeof conf.readonly !== 'undefined' && conf.readonly != null && conf.readonly != "") {
+				conf.attr.readonly = conf.readonly;
+			}
 			
 			conf._input = $('<div class="tcg-cascade" id="'+conf._safeId+'"></div>');
 

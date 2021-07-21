@@ -51,6 +51,11 @@
             conf._safeId = conf.attr.editorId + "_" + conf._safeId;
           };
 
+			//force read-only (if any)
+			if (typeof conf.readonly !== 'undefined' && conf.readonly != null && conf.readonly != "") {
+				conf.attr.readonly = conf.readonly;
+			}
+			
           conf._input = $('<div class="table-responsive dt-editor-table" id="' +conf._safeId+ '"></div>');
 
           // Create html table
@@ -321,12 +326,12 @@
 	var tcg_table = {};
 
 	tcg_table.defaults = {
-    //whether it is editable or not
-    readonly: false,
+		//whether it is editable or not
+		readonly: false,
 
-    //in case more than 1 editor has the same field name, this editor id can be used to distinguish it
-    editorId: "",
-  };
+		//in case more than 1 editor has the same field name, this editor id can be used to distinguish it
+		editorId: "",
+	};
 
   tcg_table.column_defaults = {
     //column title
