@@ -325,7 +325,7 @@ class Mcrud_tablemeta extends CI_Model
 
                 $col['display_format_js'] = $row['display_format_js'];
 
-                $col['foreign_key'] = ($row['foreign_key'] == 1);;
+                $col['foreign_key'] = ($row['foreign_key'] == 1);
                 $col['allow_insert'] = ($row['allow_insert'] == 1);
                 $col['allow_edit'] = ($row['allow_edit'] == 1);
                 $col['allow_filter'] = ($row['allow_filter'] == 1);
@@ -530,7 +530,7 @@ class Mcrud_tablemeta extends CI_Model
                 }
     
                 //bubble editor is still not working. disable it for now
-                $col['edit_bubble'] = false;
+                $col['edit_bubble'] = ($row['edit_bubble'] == 1);;
 
                 $this->column_metas[] = $col;
                 $this->select_columns[] = $col['column_name']." as ".$col['name'];

@@ -70,7 +70,7 @@ class Auth extends CI_Controller
             return;
         }
 		
-        $data['is_localhost'] = (strpos(base_url(), 'localhost') >= 0);
+        $data['is_localhost'] = (strpos(base_url(), 'localhost') >= 0) || (strpos(base_url(), '127.0.0.1') >= 0) || (strpos(base_url(), '::1') >= 0);
 
         $this->form_validation->set_rules('username', 'Username', 'required|max_length[128]|trim');
         $this->form_validation->set_rules('password', 'Password', 'required|max_length[32]');

@@ -678,7 +678,7 @@ function search() {
                         <span class="dtr-data">{literal}{{tahun}}{/literal}</span>
                     </li>
                     <li data-dtr-index="1" data-dt-column="1">
-                        <span class="dtr-title">Tanggal Bayar Pajak</span> 
+                        <span class="dtr-title">Tanggal Berakhir Pajak</span> 
                         <span class="dtr-data">{literal}{{tanggal_bayar_pajak}}{/literal}</span>
                     </li>
                     <li data-dtr-index="1" data-dt-column="1">

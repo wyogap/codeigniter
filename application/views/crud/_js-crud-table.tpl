@@ -216,25 +216,67 @@ $(document).ready(function() {
 
         /* Activate the bubble editor on click of a table cell */
         $('#{$tbl.table_id}').on( 'click', 'tbody td.editable', function (e) {
-            editor_{$tbl.table_id}.bubble( this );
+            editor_{$tbl.table_id}.bubble( this, {
+                buttons: [
+                    {
+                        text: "{__('Batal')}",
+                        className: 'btn-sm btn-secondary mr-md-1',
+                        action: function () {
+                            this.close();
+                        }
+                    },
+                    {
+                        text: "{__('Simpan')}",
+                        className: 'btn-sm btn-primary',
+                        action: function () {
+                            this.submit();
+                        }
+                    },
+                ]   
+            });
         } );
 
-        // /* Inline editing in responsive cell */
-        // $('#{$tbl.table_id}').on( 'click', 'tbody ul.dtr-details li', function (e) {
-        //     /* Ignore the Responsive control and checkbox columns */
-        //     if ( $(this).hasClass( 'control' ) || $(this).hasClass('select-checkbox') ) {
-        //         return;
-        //     }
+        /* Inline editing in responsive cell */
+        $('#{$tbl.table_id}').on( 'click', 'tbody ul.dtr-details li', function (e) {
+            /* Ignore the Responsive control and checkbox columns */
+            if ( $(this).hasClass( 'control' ) || $(this).hasClass('select-checkbox') ) {
+                return;
+            }
     
-        //     /* ignore read-only column */
-        //     var colnum = $(this).attr( 'data-dt-column' );
-        //     if ( colnum == 1 ) {
-        //         return;
-        //     }
-        
-        //     /* Edit the value, but this method allows clicking on label as well */
-        //     editor_{$tbl.table_id}.bubble( $('span.dtr-data', this) );
-        // });
+            /* ignore read-only column */
+            var editable = false;
+            var colnum = $(this).attr( 'data-dt-column' );
+            {foreach from=$tbl.columns key=k item=v}
+            {if !empty($v.edit_bubble)}
+            //{$v.name}
+            if ( colnum == {$k} ) {
+                editable = true;
+            }            
+            {/if}
+            {/foreach}
+
+            /* Edit the value, but this method allows clicking on label as well */
+            if (editable) {
+                editor_{$tbl.table_id}.bubble( $('span.dtr-data', this), {
+                    buttons: [
+                        {
+                            text: "{__('Batal')}",
+                            className: 'btn-sm btn-secondary mr-md-1',
+                            action: function () {
+                                this.close();
+                            }
+                        },
+                        {
+                            text: "{__('Simpan')}",
+                            className: 'btn-sm btn-primary',
+                            action: function () {
+                                this.submit();
+                            }
+                        },
+                    ]
+                });
+            }
+        });
 
         //hack: somehow the footer is nested inside the body.
         //TODO: find the real reason why it happens (note: in most cases, it does not happen)
@@ -369,6 +411,9 @@ $(document).ready(function() {
                     {else if isset($x.type) && $x.type=="tcg_upload"}
                     render: function ( data, type, row ) {
                         if (type == "export") {
+                            if (typeof data === 'undefined' || data == null) {
+                                return '';
+                            }
                             //put extra space after comma so that it is not treated as thousand separator
                             return data.replace(/,/g, ', ');
                         }
