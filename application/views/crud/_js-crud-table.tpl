@@ -246,12 +246,16 @@ $(document).ready(function() {
             /* ignore read-only column */
             var editable = false;
             var colnum = $(this).attr( 'data-dt-column' );
+            {assign var=i value=0}
             {foreach from=$tbl.columns key=k item=v}
+            {if $v.visible == 1}
             {if !empty($v.edit_bubble)}
             //{$v.name}
-            if ( colnum == {$k} ) {
+            if ( colnum == {$i} ) {
                 editable = true;
             }            
+            {/if}
+            {assign var=i value=$i+1}
             {/if}
             {/foreach}
 

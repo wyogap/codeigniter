@@ -78,7 +78,10 @@
 <link href="{$base_url}assets/bootstrap-tagsinput/bootstrap-tagsinput.css" rel="stylesheet">
 
 <!-- jquery js. must be loaded first before other js -->
-<script src="{$base_url}assets/jquery/jquery-3.6.0.min.js"></script>
+<script src="{$base_url}assets/jquery-3.4.1/jquery.min.js"></script>
+
+<!-- using jquery-3.6.0 screw up bubble editor layout! -->
+<!-- <script src="{$base_url}assets/jquery/jquery-3.6.0.min.js"></script> -->
 
 <!-- App css -->
 <link href="{$base_url}{$theme_prefix}/plugins/overlayScrollbars/css/OverlayScrollbars.min.css" rel="stylesheet" type="text/css" />
