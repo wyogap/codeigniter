@@ -1,5 +1,7 @@
 <?php if(!defined('BASEPATH')) exit('No direct script access allowed');
 
+require_once(APPPATH.'models/Mtablemeta.php');
+
 class Mcrud extends CI_Model
 {
     protected static $TABLE_NAME = "table";
@@ -20,6 +22,8 @@ class Mcrud extends CI_Model
     protected $initialized = false;
     protected $table_metas = null;
     
+    protected $level1_filter = array();
+
     function __construct() {
         if (isset(static::$COLUMNS) && is_array(static::$COLUMNS) && count(static::$COLUMNS) > 0) {
             if (!isset(static::$FILTERS) || !is_array(static::$FILTERS) || count(static::$FILTERS) == 0) {
@@ -204,7 +208,7 @@ class Mcrud extends CI_Model
         return $this->db->get_where($table_name, $filter)->row_array();       
     }
 
-    function update($id, $valuepair, $filter = null) {
+    function update($id, $valuepair, $filter = null, $enforce_edit_columns = true) {
         if (!isset($filter)) {
             $filter = array();
         }
@@ -212,11 +216,13 @@ class Mcrud extends CI_Model
         $filter[static::$PRIMARY_KEY] = $id;
 
         //clean up non existing columns
-        if (isset(static::$COLUMNS) && is_array(static::$COLUMNS) && count(static::$COLUMNS) > 0) {
-            foreach(array_keys($valuepair) as $key1) {
-                if (false === array_search($key1, static::$COLUMNS)) {
-                    //invalid columns
-                    unset($valuepair[$key1]);
+        if ($enforce_edit_columns) {
+            if (isset(static::$COLUMNS) && is_array(static::$COLUMNS) && count(static::$COLUMNS) > 0) {
+                foreach(array_keys($valuepair) as $key1) {
+                    if (false === array_search($key1, static::$COLUMNS)) {
+                        //invalid columns
+                        unset($valuepair[$key1]);
+                    }
                 }
             }
         }
@@ -267,13 +273,15 @@ class Mcrud extends CI_Model
         return $affected;
     }
 
-    function add($valuepair) {
+    function add($valuepair, $enforce_edit_columns = true) {
         //clean up non existing columns
-        if (isset(static::$COLUMNS) && is_array(static::$COLUMNS) && count(static::$COLUMNS) > 0) {
-            foreach(array_keys($valuepair) as $id) {
-                if (false === array_search($id, static::$COLUMNS)) {
-                    //invalid columns
-                    unset($valuepair[$id]);
+        if ($enforce_edit_columns) {
+            if (isset(static::$COLUMNS) && is_array(static::$COLUMNS) && count(static::$COLUMNS) > 0) {
+                foreach(array_keys($valuepair) as $id) {
+                    if (false === array_search($id, static::$COLUMNS)) {
+                        //invalid columns
+                        unset($valuepair[$id]);
+                    }
                 }
             }
         }
@@ -306,7 +314,7 @@ class Mcrud extends CI_Model
         $this->table_name = $arr['table_name'];
 
         //table info
-        $this->table_metas = static::$TABLE;
+        $this->table_metas = Mtablemeta::$TABLE;
         $this->table_metas['name'] = $this->name;
         $this->table_metas['id'] = $arr['id'];
 
@@ -384,6 +392,16 @@ class Mcrud extends CI_Model
         //not-implemented yet
         return null;
     }    
+
+    public function set_level1_filter($column_name, $value = null) {
+        if ($value == null) {
+            unset($this->level1_filter[$column_name]);
+        }
+        else {
+            $this->level1_filter[$column_name] = $value;
+        }
+    }
+
 }
 
   

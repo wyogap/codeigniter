@@ -1,6 +1,26 @@
 <?php
 	
+	global $_config, $_db;
 
+	$_config = array();
+
+	$_config['cookie_user_id'] = "c_user";
+	$_config['cookie_user_token'] = "xs";
+	$_config['cookie_user_referrer'] = "ref";
+
+	$_config['brute_force_detection_enabled'] = 1;
+
+	$ci =& get_instance();
+	isset($ci->db) OR $ci->load->database();	
+	$_db = $ci->db;
+
+	if ( ! function_exists('get_version'))
+	{
+		function get_version() {
+			return "1.0";
+		}
+	}
+	
 	/**
 	 * get_hash_token
 	 * 
@@ -285,8 +305,12 @@
 
 	if ( ! function_exists('theme_404'))
 	{
-		function theme_404() {
+		function theme_404($page_group = null, $controller = null) {
 			$ci	=&	get_instance();
+
+			if ($page_group == null) {
+				$page_group = 'user';
+			}
 
 			$page_data = array();
 			$page_data['page_name']              = "error-404";
@@ -294,10 +318,15 @@
 			$page_data['page_icon']              = null;
 			$page_data['query_params']           = null;
 
+			if ($controller == null) {
+				$controller = $ci->router->class;
+			}
+			$page_data['controller']           	 = $controller;
+
 			$page_data['page_role']           	 = $ci->session->userdata('page_role');
 
 			$ci->load->model('crud/Mnavigation');
-			$navigation = $ci->Mnavigation->get_navigation($ci->session->userdata('role_id'));
+			$navigation = $ci->Mnavigation->get_navigation($ci->session->userdata('role_id'), $page_group);
 			$page_data['navigation']	 = $navigation;
 
 			$template = "error/404.tpl";
@@ -307,8 +336,12 @@
 
 	if ( ! function_exists('theme_403'))
 	{
-		function theme_403() {
+		function theme_403($page_group = null, $controller = null) {
 			$ci	=&	get_instance();
+
+			if ($page_group == null) {
+				$page_group = 'user';
+			}
 
 			$page_data = array();
 			$page_data['page_name']              = "error-403";
@@ -316,10 +349,15 @@
 			$page_data['page_icon']              = null;
 			$page_data['query_params']           = null;
 
+			if ($controller == null) {
+				$controller = $ci->router->class;
+			}
+			$page_data['controller']           	 = $controller;
+
 			$page_data['page_role']           	 = $ci->session->userdata('page_role');
 
 			$ci->load->model('crud/Mnavigation');
-			$navigation = $ci->Mnavigation->get_navigation($ci->session->userdata('role_id'));
+			$navigation = $ci->Mnavigation->get_navigation($ci->session->userdata('role_id'), $page_group);
 			$page_data['navigation']	 = $navigation;
 
 			$template = "error/403.tpl";
@@ -347,4 +385,7 @@
 			return $str;
 		}
 	}
+
+
+
 ?>

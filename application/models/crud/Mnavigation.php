@@ -3,7 +3,7 @@
 class Mnavigation extends CI_Model
 {
 
-    public function get_navigation($role_id = null) {
+    public function get_navigation($role_id = null, $page_group = null) {
         if ($role_id == null) {
             $role_id = $this->session->userdata('role_id');
         }
@@ -12,7 +12,18 @@ class Mnavigation extends CI_Model
         $this->db->select('a.*, b.name as page_name');
         $this->db->order_by('a.order_no asc');
         $this->db->join('dbo_crud_pages b', 'b.id=a.page_id and b.is_deleted=0', 'LEFT OUTER');
-        $arr = $this->db->get_where('dbo_crud_navigations a', array('a.role_id'=>$role_id, 'a.is_deleted'=>0))->result_array();
+
+        $this->db->where('a.role_id', $role_id);
+        $this->db->where('a.is_deleted', 0);
+
+        if ($page_group != null) {
+            $this->db->group_start();
+            $this->db->where('a.page_group', $page_group);
+            $this->db->or_where('a.page_group', NULL);
+            $this->db->group_end();
+        }
+
+        $arr = $this->db->get('dbo_crud_navigations a')->result_array();
         if ($arr == null) {
             return false;
         }

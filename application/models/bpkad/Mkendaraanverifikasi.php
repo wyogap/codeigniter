@@ -4,7 +4,7 @@ require_once(APPPATH.'models/Mcrud_tablemeta.php');
 
 class Mkendaraanverifikasi extends Mcrud_tablemeta
 {
-    function update($id, $valuepair, $filter = null) {
+    function update($id, $valuepair, $filter = null, $enforce_edit_columns = true) {
         if (!empty($valuepair['status_verifikasi'])) {
             if ($valuepair['status_verifikasi'] == 'valid') {
                 $detail = $this->detail($id);

@@ -28,16 +28,29 @@ $(document).ready(function() {
             table: "#{$tbl.table_id}",
             idSrc: "{$tbl.key_column}",
             fields: [
+                {if !empty($level1_column)}
+                {
+                    name: "{$level1_column}",
+                    type: "hidden"
+                },
+                {/if}
                 {foreach $tbl.editor_columns as $col}
                 {
                     label: "{$col.edit_label} {if $col.edit_label && $col.edit_compulsory}<span class='text-danger font-weight-bold'>*</span>{/if}",
-                    name: "{$col.edit_field}",
+
+                    {if $col.edit_field|@count==1}
+                    name: "{$col.edit_field[0]}",
+                    {else if $col.edit_field|@count>1}
+                    name: "{$col.name}",
+                    {/if}
 
                     {if $col.edit_type == 'js'}
                     type: 'hidden',
                     {else if $col.edit_type == 'tcg_currency'}
                     type: 'tcg_mask',
                     mask: "#{$currency_thousand_separator}##0",
+                    {else if $col.edit_field|@count>1}
+                    type: "tcg_readonly",
                     {else}
                     type: '{$col.edit_type}',
                     {/if}
@@ -58,11 +71,17 @@ $(document).ready(function() {
                     attr: {$col.edit_attr|@json_encode nofilter},
                     {/if}
 
+                    {if !empty($col.options_data_url) && $col.edit_type=='tcg_select2'}
+                    {if $col.options_data_url_params|@count==0}
+                    ajax: "{$site_url}{$col.options_data_url}",
+                    {/if}
+                    {/if}
+
                     {if !empty($col.edit_info)}
                     fieldInfo:  "{$col.edit_info}",
                     {/if}
 
-                    {if $fsubtable == 1 && $col.edit_field == $fkey}
+                    {if $fsubtable == 1 && $col.edit_field[0] == $fkey}
                     readonly: 1,
                     {/if}
 
@@ -168,11 +187,38 @@ $(document).ready(function() {
         });
 
         editor_{$tbl.table_id}.on( 'open' , function ( e, type ) {
+            let data = this.s.editData;
+            let url = '';
+            let col = '';
+            let val = '';
             {foreach $tbl.editor_columns as $col}
-                {if $fsubtable == 1 && $col.edit_field == $fkey}
-                editor_{$tbl.table_id}.field("{$col.edit_field}").set(selected_key_{$tbl.table_id});
+                {if $fsubtable == 1 && $col.edit_field[0] == $fkey}
+                editor_{$tbl.table_id}.field("{$col.edit_field[0]}").set(selected_key_{$tbl.table_id});
                 {else if $col.edit_type == 'js' }
-                editor_{$tbl.table_id}.field("{$col.edit_field}").set(v_{$col.name});
+                editor_{$tbl.table_id}.field("{$col.edit_field[0]}").set(v_{$col.name});
+                {/if}
+
+                {if !empty($col.options_data_url) && $col.edit_type=='tcg_select2'}
+                {if $col.options_data_url_params|@count>0}
+                url = "{$site_url}{$col.options_data_url}";
+
+                {foreach $col.options_data_url_params as $param}
+                col = "{$param}";
+                val = data[col];
+                if (typeof val !== 'undefined' && val !== null) {
+                    //just get the first value (in case multiple value)
+                    let idx = Object.keys(val)[0];
+                    val = val[ idx ];
+                    col = "{literal}{{{/literal}" + col + "{literal}}}{/literal}";
+                    url = url.replace(col, val);
+                }
+                {/foreach}
+
+                if (url.length > 0) {
+                    this.field("{$col.edit_field[0]}").ajax(url);
+                    this.field("{$col.edit_field[0]}").reload();
+                }
+                {/if}
                 {/if}
             {/foreach}
         });
@@ -182,8 +228,8 @@ $(document).ready(function() {
                 let field = null;
 
                 {foreach $tbl.editor_columns as $col}
-                    {if isset($col.edit_compulsory) && $col.edit_compulsory == true && $col.edit_type != 'tcg_toggle'}
-                    field = this.field('{$col.edit_field}');
+                    {if isset($col.edit_compulsory) && $col.edit_compulsory == true && $col.edit_type != 'tcg_toggle' && $col.edit_type != 'tcg_readonly'}
+                    field = this.field('{$col.edit_field[0]}');
                     if (!field.isMultiValue()) {
                         if (!field.val() || field.val() == 0) {
                             field.error('{__("Harus diisi")}');
@@ -211,11 +257,17 @@ $(document).ready(function() {
             {foreach $tbl.editor_columns as $col}
                 {if $col["edit_type"] == "js"}
                 $.each(o.data, function (key, val) {
-                    o.data[key].{$col.edit_field} = v_{$col.name};
+                    o.data[key].{$col.edit_field[0]} = v_{$col.name};
                 });
                 {/if}
             {/foreach}
-            
+
+            /* level1 hidden field */
+            {if !empty($level1_column)}
+                $.each(o.data, function (key, val) {
+                    o.data[key].{$level1_column} = {$level1_id};
+                });
+            {/if}
         });        
 
         editor_{$tbl.table_id}.on('postSubmit', function(e, json, data, action, xhr) {
@@ -227,8 +279,8 @@ $(document).ready(function() {
 
         {foreach $tbl.columns as $col}
             {if isset($col.edit_event_js)}
-            $(editor_{$tbl.table_id}.field('{$col.edit_field}').node()).on('change', function() {
-                let val = editor.field('{$col.edit_field}').val();
+            $(editor_{$tbl.table_id}.field('{$col.edit_field[0]}').node()).on('change', function() {
+                let val = editor.field('{$col.edit_field[0]}').val();
                 {$col['edit_event_js']} (val, editor_{$tbl.table_id});
             });
             {/if}
@@ -421,7 +473,11 @@ $(document).ready(function() {
                     {else}
                         data: "{$x.name}", 
                         {if !empty($x.edit_field)}
-                        editField: "{$x.edit_field}",
+                        {if $x.edit_field|@count == 1}
+                        editField: "{$x.edit_field[0]}",
+                        {else if $x.edit_field|count > 1}
+                        editField: [ {foreach $x.edit_field as $field}"{$field}",{/foreach} ],
+                        {/if}
                         {/if}
                     {/if}
                     className: "col_{$x.type} {$x.css} {if !empty($x.edit_bubble)}editable{/if}",

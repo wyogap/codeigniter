@@ -1,21 +1,10 @@
 <?php if(!defined('BASEPATH')) exit('No direct script access allowed');
 
-require_once(APPPATH.'models/Mcrud.php');
+require_once(APPPATH.'models/Mcrud_tablemeta.php');
 
-class Mkeys extends Mcrud
+class Mkeys extends Mcrud_tablemeta
 {
-    protected static $TABLE_NAME = "dbo_api_keys";
-    protected static $PRIMARY_KEY = "id";
-    protected static $COLUMNS = array();
-    protected static $FILTERS = array();
-    protected static $SEARCHES = array();
-
-    protected static $COL_LABEL = 'key';
-    protected static $COL_VALUE = 'id';
-
-    protected static $SOFT_DELETE = true;
-
-    function add($valuepair) {
+    function add($valuepair, $enforce_edit_columns = true) {
         //generate the token
         $valuepair['key'] = generate_token(40);
 

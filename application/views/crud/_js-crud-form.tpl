@@ -23,8 +23,9 @@
 
         edit_list = [
             {foreach $tbl.editor_columns as $col}
+            {if $col.edit_field|@count==1}
             {
-                'name'      : "{$col.edit_field}",
+                'name'      : "{$col.edit_field[0]}",
                 'type'      : "{$col.edit_type}",
                 'label'     : "{$col.edit_label} {if $col.edit_label && $col.edit_compulsory}<span class='text-danger font-weight-bold'>*</span>{/if}",
                 'info'      : "{$col.edit_info}",
@@ -36,6 +37,15 @@
                 'options'   : {$col.edit_options|@json_encode nofilter},
                 'compulsory': {$col.edit_compulsory|@json_encode nofilter},
             },
+            {else if $col.edit_field|@count>1}
+            {
+                'name'      : "{$col.name}",
+                'type'      : "tcg_readonly",
+                'label'     : "{$col.edit_label} {if $col.edit_label && $col.edit_compulsory}<span class='text-danger font-weight-bold'>*</span>{/if}",
+                'info'      : "{$col.edit_info}",
+                'className' : "{$col.edit_css}",
+            },
+            {/if}
             {/foreach}
         ];
 

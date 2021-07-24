@@ -1,4 +1,5 @@
-{if $navigation|@count > 1}
+{if !empty($navigation)} 
+{if $navigation|@count > 0}
 <aside class="main-sidebar elevation-4 sidebar-light-info">
 
     <a href="#!" class="brand-link">
@@ -23,13 +24,17 @@
                 data-accordion="false">
                 <!-- Add icons to the links using the .nav-icon class  with font-awesome or any other icon font library -->
 
+                {if !empty($level1_title)}
+                <li class="side-nav-title side-nav-item">{$level1_title}</li>
+                {/if}
+
                 {foreach $navigation as $nav}
                 {if $nav.nav_type == 'title'}
                 <li class="nav-header">{__($nav.label)}</li>
                 {else if $nav.nav_type == 'item'}
                 {if $nav.action_type == 'page'}
                 <li class="nav-item">
-                    <a href="{site_url('crud')}/{$nav.page_name}{if !empty($nav.page_param)}{$nav.page_param}{/if}" class="nav-link {if $page_name==$nav.page_name}active{/if}">
+                    <a href="{site_url()}/{$controller}/{$nav.page_name}{if !empty($nav.page_param)}{$nav.page_param}{/if}" class="nav-link {if $page_name==$nav.page_name}active{/if}">
                         <i class="{$nav.icon}"></i>
                         <p>{__($nav.label)}</p>
                     </a>
@@ -37,6 +42,13 @@
                 {else if $nav.action_type == 'url'}
                 <li class="nav-item">
                     <a href="{$nav.url}" class="nav-link">
+                        <i class="{$nav.icon}"></i>
+                        <p>{__($nav.label)}</p>
+                    </a>
+                </li>
+                {else if $nav.action_type == 'param_url'}
+                <li class="nav-item">
+                    <a href="{site_url()}/{$nav.url}" class="nav-link">
                         <i class="{$nav.icon}"></i>
                         <p>{__($nav.label)}</p>
                     </a>
@@ -59,7 +71,7 @@
                         {foreach $nav.subitems as $subitem}
                         {if $subitem.action_type == 'page'}
                         <li class="nav-item">
-                            <a href="{site_url('crud')}/{$subitem.page_name}{if !empty($nav.page_param)}{$nav.page_param}{/if}"
+                            <a href="{site_url()}/{$controller}/{$subitem.page_name}{if !empty($nav.page_param)}{$nav.page_param}{/if}"
                                 class="nav-link {if $page_name=={$subitem.page_name}}active{/if}"><i
                                     class="far fa-circle nav-icon"></i>
                                 <p>{__($subitem.label)}</p>
@@ -68,6 +80,13 @@
                         {else if $subitem.action_type == 'url'}
                         <li class="nav-item">
                             <a href="{$subitem.url}" class="nav-link">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>{__($subitem.label)}</p>
+                            </a>
+                        </li>
+                        {else if $subitem.action_type == 'param_url'}
+                        <li class="nav-item">
+                            <a href="{site_url()}/{$subitem.url}" class="nav-link">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>{__($subitem.label)}</p>
                             </a>
@@ -86,4 +105,5 @@
     </div>
 
 </aside>
+{/if}
 {/if}

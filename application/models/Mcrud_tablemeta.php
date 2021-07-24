@@ -1,5 +1,7 @@
 <?php if(!defined('BASEPATH')) exit('No direct script access allowed');
 
+require_once(APPPATH.'models/Mtablemeta.php');
+
 class Mcrud_tablemeta extends CI_Model
 {
     protected static $DEF_TABLE_ID = 8;     //default table
@@ -32,137 +34,31 @@ class Mcrud_tablemeta extends CI_Model
 
     protected $lookup_columns = null;
 
+    protected $level1_filter = array();
+
+    protected $error_code = 0;
+    protected $error_message = null;
+
     public $error = array();
-
-    public static $TABLE = array (
-        'table_id' => 'tdata',
-        'ajax' => "",
-        'key_column' => "",
-        'lookup_column' => "",
-        'initial_load' => false,
-        'editor' => false,
-        'filter' => false,
-        'columns' => [],
-        'editor_columns' => [],
-        'filter_columns' => [],
-        'table_actions' => [],
-        'custom_actions' => [],
-        'row_actions' => [],
-        'row_id_column' => true,
-        'row_select_column' => false,
-        'table_name' => '',
-        'editable_table_name' => '',
-        'soft_delete' => true,
-        'join_tables' => [],
-        'custom_css' => '',
-        'custom_js' => ''
-    );
-    
-    public static $COLUMN = array (
-        'name' => '',
-        'label' => '',
-        'visible' => true,
-        'data_priority' => 100,
-        'css' => '',
-        'type' => 'text',
-        'options' => array(),
-        'column_name' => '',
-        'allow_insert' => true,
-        'allow_edit' => true,
-        'allow_filter' => false,
-        'width' => '',
-        'foreign_key' => false,
-        'display_format_js' => ''
-    );
-    
-    public static $EDITOR = array (
-        'name' => '',
-        'allow_insert' => true,
-        'allow_edit' => true,
-        'edit_field' => null,
-        'edit_label' => '',
-        'edit_type' => 'text',
-        'edit_css'  => '',
-        'edit_compulsory' => false,
-        'edit_options' => array(),
-        'edit_info' => null,
-        'edit_attr' => array(),
-        'edit_onchange_js' => '',
-        'edit_bubble' => false,
-        'edit_def_value' => null,
-    );
-    
-    public static $FILTER = array (
-        'name' => '',
-        'allow_filter' => false,
-        'filter_label' => '',
-        'filter_type' => 'text',
-        'filter_css' => '',
-        'filter_options' => array(),
-        'filter_onchange_js' => '',
-        'filter_attr' => array(),
-        'filter_invalid_value'  => false
-    );
-    
-    public static $TABLE_ACTION = array (
-        'add' => true,
-        'add_custom_js' => '',
-        'edit' => true,
-        'edit_row_action' => true,
-        'edit_custom_js' => '',
-        'delete' => true,
-        'delete_row_action' => true,
-        'delete_custom_js' => '',
-        'export' => false,
-        'export_custom_js' => '',
-        'import' => false,
-        'import_custom_js' => '',
-    );
-
-    public static $CUSTOM_ACTION = array (
-        'label' => '',
-        'icon' => '',
-        'icon_only' => false,
-        'css' => '',
-        'onclick_js' => '',
-    );
-    
-    public static $ROW_ACTION = array (
-        'label' => '',
-        'icon' => '',
-        'icon_only' => false,
-        'css' => '',
-        'onclick_js' => '',
-        'conditional_js' => '',
-    );
-
-    public static $TABLE_JOIN = array (
-        'name' => '',
-        'column_name' => "",
-        'reference_table_name' => '',
-        'reference_alias' => '',
-        'reference_key_column' => "",
-        'reference_lookup_column' => "",
-        'reference_soft_delete' => false,
-        'reference_where_clause' => "",
-    );
 
     public static $XLSX_FILE_TYPE = "Xlsx";
     public static $XLS_FILE_TYPE = "Xls";
 
-    function __construct($name_or_id = null, $is_table_id = false) {
+    function __construct($name_or_id = null, $is_table_id = false, $level1_column = null, $level1_value = null) {
         //dynamically load the table
         if (!empty($name_or_id)) {
-            $this->init($name_or_id, $is_table_id);
+            $this->init($name_or_id, $is_table_id, $level1_column, $level1_value);
         }
         else if (!empty(static::$DEF_TABLE_ID)) {
             $this->init(static::$DEF_TABLE_ID, true);
         }
     }
 
-    function init($name_or_id, $is_table_id = false) {
+    function init($name_or_id, $is_table_id = false, $level1_column = null, $level1_value = null) {
+        $this->reset_error();
+
         $this->initialized = false;
-        
+                
         //table metas
         $filter = null;
         if ($is_table_id) {
@@ -178,7 +74,7 @@ class Mcrud_tablemeta extends CI_Model
             return false;
         }
 
-        if (!$this->init_with_tablemeta($arr)) {
+        if (!$this->init_with_tablemeta($arr, $level1_column, $level1_value)) {
             return false;
         }
 
@@ -187,16 +83,23 @@ class Mcrud_tablemeta extends CI_Model
         return true;
     }
 
-    function init_with_tablemeta($arr) {
+    function init_with_tablemeta($arr, $level1_column = null, $level1_value = null) {
+        $this->reset_error();
+        
         $this->initialized = false;
         
+        //level1 filter
+        if ($level1_column !== null && $level1_value !== null) {
+            $this->level1_filter[$level1_column] = $level1_value;
+        }
+
         //table name
         $this->table_id = $arr['id'];
         $this->name = $arr['name'];
         $this->table_name = $arr['table_name'];
 
         //table info
-        $this->table_metas = static::$TABLE;
+        $this->table_metas = Mtablemeta::$TABLE;
         $this->table_metas['name'] = $this->name;
         $this->table_metas['id'] = $arr['id'];
 
@@ -239,11 +142,13 @@ class Mcrud_tablemeta extends CI_Model
         $this->table_metas['filter'] = ($arr['filter'] == 1);
         $this->table_metas['edit'] = ($arr['allow_add'] == 1 || $arr['allow_edit'] == 1 || $arr['allow_delete'] == 1);
 
+        $this->table_metas['title'] = empty($arr['title']) ? $this->name : $arr['title'];
+
         // if no filter -> always autoload
         if (!$this->table_metas['filter'])  $this->table_metas['initial_load'] = true;
 
         //table actions
-        $this->table_actions = static::$TABLE_ACTION;
+        $this->table_actions = Mtablemeta::$TABLE_ACTION;
         $this->table_actions['add'] = ($arr['allow_add'] == 1);
         $this->table_actions['edit'] = ($arr['allow_edit'] == 1);
         $this->table_actions['delete'] = ($arr['allow_delete'] == 1);
@@ -273,7 +178,7 @@ class Mcrud_tablemeta extends CI_Model
         
         //inline edit row
         if ($this->table_actions['edit_row_action'] && $this->table_actions['edit']) {
-            $row_action = static::$ROW_ACTION;
+            $row_action = Mtablemeta::$ROW_ACTION;
             $row_action['label'] = "Edit";
             $row_action['icon'] = "fa fa-edit fas";
             $row_action['icon_only'] = true;
@@ -284,7 +189,7 @@ class Mcrud_tablemeta extends CI_Model
 
         //inline delete row
         if ($this->table_actions['delete_row_action'] && $this->table_actions['delete']) {
-            $row_action = static::$ROW_ACTION;
+            $row_action = Mtablemeta::$ROW_ACTION;
             $row_action['label'] = "Delete";
             $row_action['icon'] = "fa fa-trash fas";
             $row_action['icon_only'] = true;
@@ -306,7 +211,10 @@ class Mcrud_tablemeta extends CI_Model
             }
     
             foreach($arr as $row) {
-                $col = static::$COLUMN;
+                //skip level1 column
+                if ($level1_column == $row['name']) continue;
+                
+                $col = Mtablemeta::$COLUMN;
                 $col['name'] = $row['name'];
                 $col['label'] = __($row['label']);
                 $col['visible'] = ($row['visible'] == 1);
@@ -339,15 +247,55 @@ class Mcrud_tablemeta extends CI_Model
                 else if (!empty($row['options_data_model'])) {
                     $model = null;
                     try {
-                        $model = $this->get_model($row['options_data_model']);
+                        if (strpos($row['options_data_model'], 'Mcrud_tablemeta') !== false) {
+                            $model = $this->get_dynamic_model($row['options_data_model']);
+                        }
+                        else {
+                            $model = $this->get_model($row['options_data_model']);
+                        }
+                        //set level1 filter if any
+                        if ($level1_column !== null && $level1_value !== null) {
+                            $model->set_level1_filter($level1_column, $level1_value);
+                        }
                     }
                     catch (exception $e) {
                         //ignore
                     }
 
                     if ($model != null) {
+                        $col['options_data_model'] = $model;
                         $col['options'] = $model->lookup();
                     }
+
+                    // var_dump($level1_column);
+                    // var_dump($level1_value);
+                    // var_dump($col['options']);
+                }
+
+                $col['options_data_url_params'] = array();
+                if (empty($row['options_data_url'])) {
+                    $col['options_data_url'] = '';
+                }
+                else {
+                    $url = $row['options_data_url'];
+                    $params = null;
+
+                    preg_match_all('{{{[\w]*}}}', $url, $matches);
+                    if ($matches != null && count($matches) > 0) {
+                        $params = array();
+                        foreach($matches[0] as $m) {
+                            $colname = substr($m, 2, strlen($m)-4);
+                            if ($colname == $level1_column) {
+                                $url = str_replace($m, $level1_value, $url);
+                            }
+                            else {
+                                $params[] = $colname;
+                            }
+                        }
+                    }
+
+                    $col['options_data_url'] = $url;
+                    $col['options_data_url_params'] = $params;
                 }
                 
                 $col['edit_field'] = $row['edit_field'];
@@ -355,6 +303,11 @@ class Mcrud_tablemeta extends CI_Model
                     $col['edit_field'] = $col['name'];
                 }
 
+                //split as array
+                $col['edit_field'] = array_map('trim', explode(',', $col['edit_field']));
+                
+                //var_dump($col['edit_field']);
+                
                 // //if type=upload, force foreign key lookup
                 // if ($col['type'] == "tcg_upload") {
                 //     //link as foreign key
@@ -372,7 +325,7 @@ class Mcrud_tablemeta extends CI_Model
                 }
 
                 if ($col['foreign_key']) {
-                    $ref = static::$TABLE_JOIN;
+                    $ref = Mtablemeta::$TABLE_JOIN;
                     $ref['name'] = $col['name'];
                     $ref['column_name'] = $col['column_name'];
                     $ref['reference_table_name'] = $row['reference_table_name'];
@@ -420,7 +373,7 @@ class Mcrud_tablemeta extends CI_Model
                     // }
 
                     //get lookup if not specified manually
-                    if (empty($col['options']) && ($row['edit_type'] == 'tcg_select2' || $row['filter_type'] == 'tcg_select2')) {
+                    if (empty($col['options']) && empty($col['options_data_url']) && ($row['edit_type'] == 'tcg_select2' || $row['filter_type'] == 'tcg_select2')) {
                         $col['options'] = $this->get_lookup_options($ref['reference_table_name'], $ref['reference_key_column'], $ref['reference_lookup_column'], $ref['reference_soft_delete'], $ref['reference_where_clause']);
                     }
 
@@ -436,7 +389,7 @@ class Mcrud_tablemeta extends CI_Model
                 }
 
                 if ($this->table_metas['edit'] && $col['allow_edit']) {
-                    $editor = static::$EDITOR;
+                    $editor = Mtablemeta::$EDITOR;
                     $editor['name'] = $row['name'];
                     $editor['allow_insert'] = $col['allow_insert'];
                     $editor['allow_edit'] = $col['allow_edit'];
@@ -485,6 +438,12 @@ class Mcrud_tablemeta extends CI_Model
                         $editor['edit_type'] = $col['type'];
                     }
 
+                    //option_url
+                    if ($editor['edit_type'] == 'tcg_select2' && !empty($col['options_data_url'])) {
+                        $editor['options_data_url'] = $col['options_data_url'];
+                        $editor['options_data_url_params'] = $col['options_data_url_params'];
+                    }
+
                     //var_dump($editor);
 
                     $this->editor_metas[] = $editor;
@@ -492,7 +451,7 @@ class Mcrud_tablemeta extends CI_Model
                 }
 
                 if ($this->table_metas['filter'] && $col['allow_filter']) {
-                    $filter = static::$FILTER;
+                    $filter = Mtablemeta::$FILTER;
                     $filter['name'] = $row['name'];
                     $filter['allow_filter'] = $col['allow_filter'];
 
@@ -529,7 +488,7 @@ class Mcrud_tablemeta extends CI_Model
                     $this->filter_columns[] = $col['name'];
                 }
     
-                //bubble editor is still not working. disable it for now
+                //bubble editor 
                 $col['edit_bubble'] = ($row['edit_bubble'] == 1);;
 
                 $this->column_metas[] = $col;
@@ -542,7 +501,7 @@ class Mcrud_tablemeta extends CI_Model
                     $col_label = $col['label'];
 
                     //filenames
-                    $col = static::$COLUMN;
+                    $col = Mtablemeta::$COLUMN;
                     $col['name'] = $col_name .'_filename';
                     $col['label'] = $col_label .' (File Name)';
                     $col['column_name'] = $this->table_name. "." .$col['name'];
@@ -558,7 +517,7 @@ class Mcrud_tablemeta extends CI_Model
                     $this->columns[] = $col['name'];
 
                     //path
-                    $col = static::$COLUMN;
+                    $col = Mtablemeta::$COLUMN;
                     $col['name'] = $col_name .'_path';
                     $col['label'] = $col_label .' (Path)';
                     $col['column_name'] = $this->table_name. "." .$col['name'];
@@ -574,7 +533,7 @@ class Mcrud_tablemeta extends CI_Model
                     $this->columns[] = $col['name'];
 
                     //thumbnail
-                    $col = static::$COLUMN;
+                    $col = Mtablemeta::$COLUMN;
                     $col['name'] = $col_name .'_thumbnail';
                     $col['label'] = $col_label .' (Thumbnail)';
                     $col['column_name'] = $this->table_name. "." .$col['name'];
@@ -599,7 +558,7 @@ class Mcrud_tablemeta extends CI_Model
         //always add lookup-column
         $key_column_name = $this->table_name. "." .$this->table_metas['lookup_column']. ' as ' .$this->table_metas['lookup_column'];       
         if (false === array_search($key_column_name, $this->select_columns)) {
-            $col = static::$COLUMN;
+            $col = Mtablemeta::$COLUMN;
             $col['name'] = $this->table_metas['lookup_column'];
             $col['label'] = __('Lookup');
             $col['visible'] = true;
@@ -618,7 +577,7 @@ class Mcrud_tablemeta extends CI_Model
         //always add key-column
         $key_column_name = $this->table_name. "." .$this->table_metas['key_column']. ' as ' .$this->table_metas['key_column'];       
         if (false === array_search($key_column_name, $this->select_columns)) {
-            $col = static::$COLUMN;
+            $col = Mtablemeta::$COLUMN;
             $col['name'] = $this->table_metas['key_column'];
             $col['label'] = __('Key');
             $col['visible'] = true;
@@ -644,7 +603,7 @@ class Mcrud_tablemeta extends CI_Model
             }
 
             foreach($arr as $row) {
-                $action = static::$CUSTOM_ACTION;
+                $action = Mtablemeta::$CUSTOM_ACTION;
                 $action['label'] = $row['label'];
                 $action['icon'] = $row['icon'];
                 $action['icon_only'] = ($row['icon_only'] == 1);
@@ -667,7 +626,7 @@ class Mcrud_tablemeta extends CI_Model
             }
 
             foreach($arr as $row) {
-                $action = static::$ROW_ACTION;
+                $action = Mtablemeta::$ROW_ACTION;
                 $action['label'] = $row['label'];
                 $action['icon'] = $row['icon'];
                 $action['icon_only'] = ($row['icon_only'] == 1);
@@ -748,11 +707,9 @@ class Mcrud_tablemeta extends CI_Model
         return $this->filter_columns;
     }
 
-    function get_error_message() {
-        return $this->error['message'];
-    }
-
     function distinct_lookup($column, $filter = null) {
+        $this->reset_error();
+        
         if (!$this->initialized)   return null;
 
         if ($filter == null)    $filter = array();
@@ -765,6 +722,13 @@ class Mcrud_tablemeta extends CI_Model
         foreach($filter as $key => $val) {
             //TODO: use columnmeta[$key] and use $column_name
             if (false !== array_search($key, $this->columns)) {
+                $this->db->where("$table_name.$key", $val);
+            }
+        }
+
+        //level1 filter if any
+        if (!empty($this->level1_filter) && count($this->level1_filter) > 0) {
+            foreach($this->level1_filter as $key => $val) {
                 $this->db->where("$table_name.$key", $val);
             }
         }
@@ -789,6 +753,8 @@ class Mcrud_tablemeta extends CI_Model
     }
 
     function lookup($filter = null) {
+        $this->reset_error();
+        
         if (!$this->initialized)   return null;
 
         if ($filter == null)    $filter = array();
@@ -805,6 +771,13 @@ class Mcrud_tablemeta extends CI_Model
             }
         }
 
+        //level1 filter if any
+        if (!empty($this->level1_filter) && count($this->level1_filter) > 0) {
+            foreach($this->level1_filter as $key => $val) {
+                $this->db->where("$table_name.$key", $val);
+            }
+        }
+
         if ($this->table_metas['soft_delete'])   $this->db->where('is_deleted', 0);
         if (!empty($this->table_metas['where_clause']))   
             $this->db->where($this->table_metas['where_clause']);
@@ -814,6 +787,8 @@ class Mcrud_tablemeta extends CI_Model
     }
 
     function search($query, $filter = null, $limit = null, $offset = null, $orderby = null) {
+        $this->reset_error();
+        
         if (!$this->initialized)   return null;
 
         //use dynamic crud
@@ -849,6 +824,13 @@ class Mcrud_tablemeta extends CI_Model
                         $this->db->where("$table_name.$key", $val);
                     }
                 }
+            }
+        }
+
+        //level1 filter if any
+        if (!empty($this->level1_filter) && count($this->level1_filter) > 0) {
+            foreach($this->level1_filter as $key => $val) {
+                $this->db->where("$table_name.$key", $val);
             }
         }
 
@@ -906,6 +888,8 @@ class Mcrud_tablemeta extends CI_Model
     }
 
     function list($filter = null, $limit = null, $offset = null, $orderby = null) {
+        $this->reset_error();
+        
         if (!$this->initialized)   return null;
 
         if ($filter == null) $filter = array();
@@ -933,6 +917,13 @@ class Mcrud_tablemeta extends CI_Model
                     $this->db->where("$table_name.$key", $val);
                 }
            }
+        }
+
+        //level1 filter if any
+        if (!empty($this->level1_filter) && count($this->level1_filter) > 0) {
+            foreach($this->level1_filter as $key => $val) {
+                $this->db->where("$table_name.$key", $val);
+            }
         }
 
         if ($this->table_metas['soft_delete'])   $this->db->where($table_name. '.is_deleted', 0);
@@ -989,6 +980,8 @@ class Mcrud_tablemeta extends CI_Model
     }
 
     function detail($id, $filter = null) {
+        $this->reset_error();
+        
         if (!$this->initialized)   return null;
 
         if ($filter == null) $filter = array();
@@ -1006,6 +999,13 @@ class Mcrud_tablemeta extends CI_Model
         //assume $id is unique/primary key => ignore other filters
         // if (!empty($this->table_metas['where_clause']))   
         //     $this->db->where($this->table_metas['where_clause']);
+
+        //level1 filter if any
+        if (!empty($this->level1_filter) && count($this->level1_filter) > 0) {
+            foreach($this->level1_filter as $key => $val) {
+                $this->db->where("$table_name.$key", $val);
+            }
+        }
 
         $select_str = implode(', ', $this->select_columns);
 
@@ -1040,8 +1040,12 @@ class Mcrud_tablemeta extends CI_Model
         return $arr;
     }
 
-    function update($id, $valuepair, $filter = null) {
+    function update($id, $valuepair, $filter = null, $enforce_edit_columns = true) {
+        $this->reset_error();
+        
         if (!$this->initialized)   return 0;
+
+        if (!$this->table_actions['edit'])    return 0;
 
         if ($filter == null) $filter = array();
 
@@ -1050,12 +1054,16 @@ class Mcrud_tablemeta extends CI_Model
 
         //use dynamic crud
         //clean up non existing columns
-        foreach(array_keys($valuepair) as $key) {
-            if (false === array_search($key, $this->edit_columns)) {
-                //invalid columns
-                unset($valuepair[$key]);
+        if ($enforce_edit_columns) {
+            foreach(array_keys($valuepair) as $key) {
+                if (false === array_search($key, $this->edit_columns)) {
+                    //invalid columns
+                    unset($valuepair[$key]);
+                }
             }
         }
+
+        if (count($valuepair) == 0)     return 0;
 
         //special transformation
         foreach($this->table_metas['columns'] as $key => $col) {
@@ -1079,14 +1087,21 @@ class Mcrud_tablemeta extends CI_Model
             }
         }
 
+        //use internal table if specified
+        $table_name = $this->table_metas['editable_table_name'];
+
+        //level1 filter if any
+        if (!empty($this->level1_filter) && count($this->level1_filter) > 0) {
+            foreach($this->level1_filter as $key => $val) {
+                $this->db->where("$table_name.$key", $val);
+            }
+        }
+
         $this->db->where($this->table_metas['key_column'], $id);
 
         //assume $id is unique/primary key => ignore other filters
         // if (!empty($this->table_metas['where_clause']))   
         //     $this->db->where($this->table_metas['where_clause']);
-
-        //use view if specified
-        $table_name = $this->table_metas['editable_table_name'];
 
         //inject updated 
         $valuepair['updated_on'] = date('Y/m/d H:i:s');
@@ -1112,7 +1127,11 @@ class Mcrud_tablemeta extends CI_Model
     }
 
     function delete($id, $filter = null) {
+        $this->reset_error();
+        
         if (!$this->initialized)   return 0;
+
+        if (!$this->table_actions['delete'])    return 0;
 
         if ($filter == null) $filter = array();
 
@@ -1128,6 +1147,13 @@ class Mcrud_tablemeta extends CI_Model
 
         //use view if specified
         $table_name = $this->table_metas['editable_table_name'];
+
+        //level1 filter if any
+        if (!empty($this->level1_filter) && count($this->level1_filter) > 0) {
+            foreach($this->level1_filter as $key => $val) {
+                $this->db->where("$table_name.$key", $val);
+            }
+        }
 
         if ($this->table_metas['soft_delete']) {
             $valuepair = array (
@@ -1151,15 +1177,28 @@ class Mcrud_tablemeta extends CI_Model
         return $affected;
     }
 
-    function add($valuepair) {
+    function add($valuepair, $enforce_edit_columns = true) {
+        $this->reset_error();
+        
         if (!$this->initialized)   return 0;
+
+        if (!$this->table_actions['add'])    return 0;
 
         //use dynamic crud
         //clean up non existing columns
-        foreach(array_keys($valuepair) as $key) {
-            if (false === array_search($key, $this->edit_columns)) {
-                //invalid columns
-                unset($valuepair[$key]);
+        if ($enforce_edit_columns) {
+            foreach(array_keys($valuepair) as $key) {
+                if (false === array_search($key, $this->edit_columns)) {
+                    //invalid columns
+                    unset($valuepair[$key]);
+                }
+            }
+        }
+
+        //enforce level1 filter if any
+        if (!empty($this->level1_filter) && count($this->level1_filter) > 0) {
+            foreach($this->level1_filter as $key => $val) {
+                $valuepair[$key] = $val;
             }
         }
 
@@ -1213,7 +1252,11 @@ class Mcrud_tablemeta extends CI_Model
     }
 
     function import($file) {
+        $this->reset_error();
+        
         if (!$this->initialized)   return 0;
+
+        if (!$this->table_actions['import'])    return 0;
 
         $this->error['message'] = "";
         
@@ -1422,6 +1465,13 @@ class Mcrud_tablemeta extends CI_Model
         $column_def[] = "_update_ varchar(100) default 0";
         $column_def[] = "_tag2_ varchar(100) default null";
         $column_def[] = "_tag3_ varchar(100) default null";
+
+        //enforce level1 filter if any
+        if (!empty($this->level1_filter) && count($this->level1_filter) > 0) {
+            foreach($this->level1_filter as $key => $val) {
+                $column_def[] = "$key varchar(100) default $val";
+            }
+        }
 
         //var_dump($column_def); exit();
 
@@ -1665,9 +1715,24 @@ class Mcrud_tablemeta extends CI_Model
         // $query = $this->db->query($sql);
 
         // var_dump($query->result_array());
-
+        
         //check for duplicate key
         $sql = "update " .$temp_table_name. " a join " .$table_name. " b on b." .$key_column_name. "=a." .$key_column_name. " set a._update_=1";
+
+        //enforce level1 filter if any
+        if (!empty($this->level1_filter) && count($this->level1_filter) > 0) {
+            $level1_filter = '';
+            foreach($this->level1_filter as $key => $val) {
+                if ($level1_filter == '') {
+                    $level1_filter = "b.$key=$val";
+                }
+                else {
+                    $level1_filter .= " AND b.$key=$val";
+                }
+            }
+            $sql .= ' where ' .$level1_filter; 
+        }
+
         $this->db->query($sql);
 
         //match foreign key
@@ -1677,31 +1742,41 @@ class Mcrud_tablemeta extends CI_Model
         }
 
         //insert new entry
-        $column_list = implode(',', $import_columns);
-        $sql = "insert into " .$table_name. "(" .$column_list. ") select " .$column_list. " from " .$temp_table_name. " where _update_ != 1";
-        $this->db->query($sql);
-
-        //update entry
-        //dont update key column name!
-        if (($key = array_search($key_column_name, $import_columns)) !== false) {
-            unset($import_columns[$key]);
+        if ($this->table_actions['add']) {
+            $column_list = implode(',', $import_columns);
+            //enforce level1 filter if any
+            if (!empty($this->level1_filter) && count($this->level1_filter) > 0) {
+                foreach($this->level1_filter as $key => $val) {
+                    $column_list .= ',$key';
+                }
+            }
+            $sql = "insert into " .$table_name. "(" .$column_list. ") select " .$column_list. " from " .$temp_table_name. " where _update_ != 1";
+            $this->db->query($sql);
         }
-        //update list
-        $update_list = implode(','
-                            , array_map(
-                                function($val) { 
-                                    return 'a.'.$val.'=b.'.$val; 
-                                }
-                                , $import_columns
-                            )
-                        );
 
-        $user_id = $this->session->userdata('user_id');
-        $timestamp = date('Y/m/d H:i:s');
         //update entry
-        $sql = "update " .$table_name. " a join " .$temp_table_name. " b on b." .$key_column_name. "=a." .$key_column_name. " set " .$update_list. ", a.is_deleted=0, a.updated_by=" .$user_id. ", a.updated_on='" .$timestamp. "' where b._update_=1";
+        if ($this->table_actions['edit']) {
+            //dont update key column name!
+            if (($key = array_search($key_column_name, $import_columns)) !== false) {
+                unset($import_columns[$key]);
+            }
+            //update list
+            $update_list = implode(','
+                                , array_map(
+                                    function($val) { 
+                                        return 'a.'.$val.'=b.'.$val; 
+                                    }
+                                    , $import_columns
+                                )
+                            );
 
-        $this->db->query($sql);
+            $user_id = $this->session->userdata('user_id');
+            $timestamp = date('Y/m/d H:i:s');
+            //update entry
+            $sql = "update " .$table_name. " a join " .$temp_table_name. " b on b." .$key_column_name. "=a." .$key_column_name. " set " .$update_list. ", a.is_deleted=0, a.updated_by=" .$user_id. ", a.updated_on='" .$timestamp. "' where b._update_=1";
+
+            $this->db->query($sql);
+        }
 
     }
 
@@ -1710,6 +1785,22 @@ class Mcrud_tablemeta extends CI_Model
 		$ci->load->model($path);
 
 		$name = basename($path);
+
+		return $ci->$name;
+	}
+
+    private function get_dynamic_model($path) {
+        $model_name = 'Mcrud_tablemeta';
+        $template = str_ireplace('Mcrud_tablemeta/', '', $path);
+
+		$ci	=&	get_instance();
+		$ci->load->model($model_name);
+
+		$name = basename($model_name);
+
+        if (!$ci->$name->init($template, false)) {
+            return null;
+        }
 
 		return $ci->$name;
 	}
@@ -1747,6 +1838,122 @@ class Mcrud_tablemeta extends CI_Model
         ";
 
         $this->db->query($sql, array($table_name, $ref_id, $ref_field, $values));
+    }
+
+    public function set_level1_filter($column_name, $value = null) {
+        $this->reset_error();
+        
+        if ($value == null) {
+            unset($this->level1_filter[$column_name]);
+        }
+        else {
+            $this->level1_filter[$column_name] = $value;
+            foreach($this->table_metas['columns'] as $key=>$val) {
+                if (empty($val['options_data_model']))   continue;
+
+                $model = $val['options_data_model'];
+                try {
+                    $model->set_level1_filter($column_name, $value);
+                }
+                catch (exception $e) {
+                    //ignore
+                    continue;
+                }
+
+                //get filtered lookup
+                $lookup = $model->lookup();
+
+                //var_dump($lookup);
+
+                //update lookup
+                $this->table_metas['columns'][$key]['options'] = $lookup;
+
+                //get column name
+                $name = $val['name'];
+
+                //find matching editor column if any
+                foreach($this->table_metas['editor_columns'] as $key=>$editor) {
+                    if ($editor['name'] !== $name)      continue;
+
+                    //var_dump($editor);
+
+                    //update editor lookup
+                    if ($editor['edit_type'] == 'tcg_select2') {
+                        $this->table_metas['editor_columns'][$key]['edit_options'] = $lookup;
+                    }
+                }
+
+                //find matching filter column if any
+                foreach($this->table_metas['filter_columns'] as $key=>$filter) {
+                    if ($filter['name'] !== $name)      continue;
+
+                    //var_dump($filter);
+
+                    //update filter lookup
+                    if ($filter['filter_type'] == 'tcg_select2') {
+                        $this->table_metas['filter_columns'][$key]['filter_options'] = $lookup;
+                    }          
+                }
+            }   //foreach editor column
+
+            foreach($this->table_metas['columns'] as $key=>$val) {
+                if (empty($val['options_data_url']))   continue;
+
+                $url = $val['options_data_url'];
+                $params = null;
+
+                preg_match_all('{{{[\w]*}}}', $url, $matches);
+                if ($matches != null && count($matches) > 0) {
+                    $params = array();
+                    foreach($matches[0] as $m) {
+                        $colname = substr($m, 2, strlen($m)-4);
+                        if ($colname == $column_name) {
+                            $url = str_replace($m, $value, $url);
+                        }
+                        else {
+                            $params[] = $colname;
+                        }
+                    }
+                }
+
+                $this->table_metas['columns'][$key]['options_data_url'] = $url;
+                $this->table_metas['columns'][$key]['options_data_url_params'] = $params;
+
+                //get column name
+                $name = $val['name'];
+
+                //find matching editor column if any
+                foreach($this->table_metas['editor_columns'] as $key=>$editor) {
+                    if ($editor['name'] !== $name)      continue;
+
+                    //var_dump($editor);
+
+                    //update editor lookup
+                    if ($editor['edit_type'] == 'tcg_select2') {
+                        $this->table_metas['editor_columns'][$key]['options_data_url'] = $url;
+                        $this->table_metas['editor_columns'][$key]['options_data_url_params'] = $params;
+                    }
+                }
+            }
+        }   //$value !== null
+    }
+
+    public function get_error_code() {
+        return $this->error_code;
+    }
+
+    public function get_error_message() {
+        return $this->error_message;
+    }
+
+    protected function reset_error() {
+        $this->error_code = 0;
+        $this->error_message = null;
+    }
+
+    protected function set_error($code, $message) {
+        $this->error_code = $code;
+        $this->error_message = $message;
     }
 }
 

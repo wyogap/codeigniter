@@ -3,7 +3,7 @@ if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
 if (!class_exists('Uploader')){
     class Uploader {
-        //diable loading setting from database. not really useful since it hardly changes!
+        //disable loading setting from database. not really useful since it hardly changes!
         public static $LOAD_SETTING = 1;
         public static $GENERATE_PDF_THUMBNAIL = 1;
 
@@ -471,7 +471,7 @@ if (!class_exists('Uploader')){
             $ci =& get_instance();
             $query = $ci->db->query($sql);
             foreach($query->result() as $row) {
-                if ($row->name == 'uploadmax_size_mb' && !empty($row->value)) {
+                if ($row->name == 'upload_max_size_mb' && !empty($row->value)) {
                     $this->max_size_mb = $row->value;
                 }
                 else if ($row->name == "upload_img_dim" && !empty($row->value)) {

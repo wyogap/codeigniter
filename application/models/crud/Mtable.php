@@ -12,7 +12,7 @@ class Mtable extends CI_Model
         //TODO
     }
 
-    public function init($name_or_id, $is_table_id = false) {
+    public function init($name_or_id, $is_table_id = false, $level1_column = null, $level1_value = null) {
         $this->initialized = false;
         
         //table metas
@@ -36,7 +36,7 @@ class Mtable extends CI_Model
         if (!empty($arr['data_model'])) {
             try {
                 $this->data_model = $this->get_model($arr['data_model']);
-                if (!$this->data_model->init_with_tablemeta($arr)) {
+                if (!$this->data_model->init_with_tablemeta($arr, $level1_column, $level1_value)) {
                     $this->data_model = null;
                 }
             }
@@ -46,7 +46,7 @@ class Mtable extends CI_Model
         }     
 
         if ($this->data_model == null) {
-            $this->data_model = new Mcrud_tablemeta($arr['id'], true);
+            $this->data_model = new Mcrud_tablemeta($arr['id'], true, $level1_column, $level1_value);
         }
 
         if($this->data_model != null) {
@@ -259,6 +259,17 @@ class Mtable extends CI_Model
             ";
 
         $this->db->query($sql, array($table_id_or_name, $table_id_or_name));
+    }
+
+    public function set_level1_filter($column_name, $value = null) {
+        if (!$this->initialized)   return null;
+
+        //use data model
+        if ($this->data_model != null) {
+            return $this->data_model->set_level1_filter($column_name, $value);
+        }
+
+        return null;
     }
 
     private function get_model($path) {
