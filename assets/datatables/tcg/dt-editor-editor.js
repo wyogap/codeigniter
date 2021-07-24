@@ -136,7 +136,7 @@
 		editorId: "",
 
 		//whether to convert to ckeditor WYSWYG
-		ckeditor: false,
+		ckeditor: true,
 
 		//basic ckeditor toolbar
 		toolbar: [

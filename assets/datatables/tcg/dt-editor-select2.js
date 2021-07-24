@@ -203,6 +203,17 @@
 			let val = conf._select.val();
 			let item = conf._select.find("option[value='" +val+ "']");
 			return item.attr("data-tag-2");
+		},
+		
+		ajax: function(conf, value=null) {
+			if (typeof value === 'undefined' || value === null || value === '')		return conf.attr.ajax;
+			
+			//set ajax value
+			conf.attr.ajax = value;
+		},
+		
+		reload: function(conf) {
+			tcg_select2.helpers._reload(conf);
 		}
 	};
 
@@ -253,6 +264,36 @@
 	};
 
 	tcg_select2.helpers = {
+		
+		_reload: function(_conf) {
+			let _options = null;
+			
+			//retrieve list from json
+			$.ajax({
+				url: _conf.attr.ajax,
+				type: 'GET',
+				dataType: 'json',
+				beforeSend: function (request) {
+					request.setRequestHeader("Content-Type", "application/json");
+				},
+				success: function (response) {
+					if (response.data === null) {
+						_conf._error = tcg_select2.messages.error.general;
+					} else if (typeof response.error !== 'undefined' && response.error !== null && response.error != "") {
+						_conf.error = response.error;
+					} else {
+						_options = response.data;
+					}
+					tcg_select2.helpers._select2_rebuild(_conf._input, _options, _conf.attr);
+				},
+				error: function (jqXhr, textStatus, errorMessage) {
+					_conf.error = errorMessage;
+				}
+			});	
+			
+			return _options;
+		},
+		
 		/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 		 * Private methods
 		 */
