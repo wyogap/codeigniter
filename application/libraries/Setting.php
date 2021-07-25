@@ -48,7 +48,7 @@ class Setting
         );
         if ($group != null)     $filters['group'] = $group;
 
-        $ci->update(static::$SETTING_TABLE, $values, $filters);
+        $ci->db->update(static::$SETTING_TABLE, $values, $filters);
     }
 
     public function list() {

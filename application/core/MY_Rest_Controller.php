@@ -175,14 +175,14 @@ class MY_Rest_Controller extends CI_Controller
     /**
      * The start of the response time from the server.
      *
-     * @var number
+     * @var int
      */
     protected $_start_rtime;
 
     /**
      * The end of the response time from the server.
      *
-     * @var number
+     * @var int
      */
     protected $_end_rtime;
 

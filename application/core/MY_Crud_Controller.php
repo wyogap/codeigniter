@@ -582,6 +582,7 @@ abstract class MY_Crud_Controller extends CI_Controller {
             
             $key = $this->input->post("field");
             if (!isset($key)) {
+				$data['error'] = 'invalid field';
                 echo json_encode($data, JSON_INVALID_UTF8_IGNORE);
                 return;
             }
@@ -614,6 +615,7 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		else if ($action=='removeFile'){
 			$files = $this->input->post("files");
             if (!isset($files)) {
+				$data['error'] = 'invalid files';
                 echo json_encode($data, JSON_INVALID_UTF8_IGNORE);
                 return;
             }
@@ -633,6 +635,7 @@ abstract class MY_Crud_Controller extends CI_Controller {
         else if ($action=='listFile') {
 			$files = $this->input->post("files");
             if (!isset($files)) {
+				$data['error'] = 'invalid files';
                 echo json_encode($data, JSON_INVALID_UTF8_IGNORE);
                 return;
             }
@@ -675,7 +678,7 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		return;
 	}
 
-	protected function table_lookup($model_name, $params = null) {
+	protected function table_lookup($model, $params = null) {
 			
 		//build params
 		$filters = array();

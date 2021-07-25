@@ -3,34 +3,21 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 abstract class MY_Level1_Crud_Controller extends CI_Controller {
 
-	// protected static $DEFAULT_MODEL = 'clazz/Clazz_classes';
-	// protected static $DEFAULT_PAGE = 'detail';
-
-	// protected static $PAGE_ROLE = 'clazz';
-	
 	protected static $PAGE_GROUP = null;
 
 	protected static $LEVEL1_COLUMN = null;
 
-	//abstract function get_ajax_url($table);
-
 	abstract function index($level1_name, $params = array());
 
-	// abstract function handle_no_permission($level1_name, $params = array());
+	abstract function can_view($level1_name);
 
-	abstract function check_group_permission($level1_name);
+	abstract function can_edit($level1_name);
 
 	abstract function get_level1_name($level1_name);
 
 	abstract function get_level1_title($level1_name);
 
 	abstract function get_level1_id($level1_name);
-
-	// abstract function get_group_name($level1_name);
-
-	// abstract function get_model_name($name);
-
-	// abstract function get_page_name($name);
 
 	public function _remap($method, $params = array())
 	{
@@ -47,7 +34,7 @@ abstract class MY_Level1_Crud_Controller extends CI_Controller {
 		$level1_name = $this->get_level1_name($level1_name);
 
 		//check permission
-		if (!$this->check_group_permission($level1_name)) {
+		if (!$this->can_view($level1_name)) {
 			theme_403(static::$PAGE_GROUP);
 			return;
 		}
@@ -308,6 +295,12 @@ abstract class MY_Level1_Crud_Controller extends CI_Controller {
 			return;
 		}
 
+		//check permission
+		if (!$this->can_edit($level1_name)) {
+			theme_403(static::$PAGE_GROUP);
+			return;
+		}
+
 		$level1_id = $this->get_level1_id($level1_name);
 
 		$page_data['level1_name']            = $level1_name;
@@ -408,6 +401,12 @@ abstract class MY_Level1_Crud_Controller extends CI_Controller {
 		$page_type = $page['page_type'];
 		if ($page_type != 'table') {
 			theme_404(static::$PAGE_GROUP, $controller);		//not-found
+			return;
+		}
+
+		//check permission
+		if (!$this->can_edit($level1_name)) {
+			theme_403(static::$PAGE_GROUP);
 			return;
 		}
 
@@ -620,6 +619,14 @@ abstract class MY_Level1_Crud_Controller extends CI_Controller {
             echo json_encode($json, JSON_INVALID_UTF8_IGNORE);	
 		}
 		else if ($action=='edit'){
+
+			//check permission
+			if (!$this->can_edit($level1_name)) {
+				$data['error'] = 'not-authorized';
+				echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
+				return;
+			}
+
 			$values = $this->input->post("data");
 
 			$errors = array();
@@ -646,6 +653,14 @@ abstract class MY_Level1_Crud_Controller extends CI_Controller {
 			echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
         }
         else if ($action=='remove') {
+
+			//check permission
+			if (!$this->can_edit($level1_name)) {
+				$data['error'] = 'not-authorized';
+				echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
+				return;
+			}
+
 			$values = $this->input->post("data");
 
             $error_msg = "";
@@ -663,6 +678,14 @@ abstract class MY_Level1_Crud_Controller extends CI_Controller {
 			echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
         }
         else if ($action=='create') {
+
+			//check permission
+			if (!$this->can_edit($level1_name)) {
+				$data['error'] = 'not-authorized';
+				echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
+				return;
+			}
+
 			$values = $this->input->post("data");
 
             $key = $model->add($values[0], $filters);
@@ -703,9 +726,17 @@ abstract class MY_Level1_Crud_Controller extends CI_Controller {
             return;
         }   
 		else if ($action=='uploadFile') {
+
+			//check permission
+			if (!$this->can_edit($level1_name)) {
+				$data['error'] = 'not-authorized';
+				echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
+				return;
+			}
             
             $key = $this->input->post("field");
             if (!isset($key)) {
+				$data['error'] = 'invalid field';
                 echo json_encode($data, JSON_INVALID_UTF8_IGNORE);
                 return;
             }
@@ -736,8 +767,17 @@ abstract class MY_Level1_Crud_Controller extends CI_Controller {
             return;
 		}
 		else if ($action=='removeFile'){
+
+			//check permission
+			if (!$this->can_edit($level1_name)) {
+				$data['error'] = 'not-authorized';
+				echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
+				return;
+			}
+
 			$files = $this->input->post("files");
             if (!isset($files)) {
+				$data['error'] = 'invalid files';
                 echo json_encode($data, JSON_INVALID_UTF8_IGNORE);
                 return;
             }
@@ -757,6 +797,7 @@ abstract class MY_Level1_Crud_Controller extends CI_Controller {
         else if ($action=='listFile') {
 			$files = $this->input->post("files");
             if (!isset($files)) {
+				$data['error'] = 'invalid files';
                 echo json_encode($data, JSON_INVALID_UTF8_IGNORE);
                 return;
             }
@@ -780,7 +821,15 @@ abstract class MY_Level1_Crud_Controller extends CI_Controller {
 			echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
         }
         else if ($action == "import") {
-            $status = $model->import($_FILES['upload']);
+
+			//check permission
+			if (!$this->can_edit($level1_name)) {
+				$data['error'] = 'not-authorized';
+				echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
+				return;
+			}
+
+			$status = $model->import($_FILES['upload']);
 
             if($status == 0) {
                 $data['error'] = $model->get_error_message();

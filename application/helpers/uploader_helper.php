@@ -37,7 +37,7 @@ if (!class_exists('Uploader')){
             
             //load upload setting
             if (Uploader::$LOAD_SETTING != 1) {
-                load_setting();
+                $this->load_setting();
             }
     
             $maxsize = 1096*1024*$this->max_size_mb;       //4MB
@@ -219,56 +219,56 @@ if (!class_exists('Uploader')){
                     //thumbnail file
                     $thumbpath = $upload_dir. $new_filename. "_thumb.". $ext;
                 }
-                else if ($ext == 'pdf' && Uploader::$GENERATE_PDF_THUMBNAIL == 1) {
-                    //copy the actual pdf file for backup
-                    copy($file, $path. $new_filename. ".pdf");
+                // else if ($ext == 'pdf' && Uploader::$GENERATE_PDF_THUMBNAIL == 1) {
+                //     //copy the actual pdf file for backup
+                //     copy($file, $path. $new_filename. ".pdf");
     
-                    //convert 
-                    $img_file = $path. $new_filename. ".png";
+                //     //convert 
+                //     $img_file = $path. $new_filename. ".png";
     
-                    $ci =& get_instance();
-                    $ci->load->helper("pdfconvert");
+                //     $ci =& get_instance();
+                //     $ci->load->helper("pdfconvert");
 
-                    $pdflib = new PdfConverter();
-                    $retval = $pdflib->convert($file, $img_file, $maxdim);
-                    if ($retval != 1) {
-                        $data["error"] = $retval;
-                        break;
-                    }
+                //     $pdflib = new PdfConverter();
+                //     $retval = $pdflib->convert($file, $img_file, $maxdim);
+                //     if ($retval != 1) {
+                //         $data["error"] = $retval;
+                //         break;
+                //     }
     
-                    //create thumbnail
-                    list($width, $height, $type, $attr) = getimagesize($img_file);
+                //     //create thumbnail
+                //     list($width, $height, $type, $attr) = getimagesize($img_file);
     
-                    // // Make sure it is true image and not fake image
-                    // if ($type != IMAGETYPE_PNG && $type != IMAGETYPE_GIF && $type != IMAGETYPE_JPEG) {
-                    //     $data['error'] = 'Tipe gambar tidak dikenal.';
-                    //     break;
-                    // }
+                //     // // Make sure it is true image and not fake image
+                //     // if ($type != IMAGETYPE_PNG && $type != IMAGETYPE_GIF && $type != IMAGETYPE_JPEG) {
+                //     //     $data['error'] = 'Tipe gambar tidak dikenal.';
+                //     //     break;
+                //     // }
     
-                    $thumb_width = 0; $thumb_height = 0;
-                    if ( $width > $thumbdim || $height > $thumbdim ) {
-                        $ratio = $width/$height;
-                        if( $ratio > 1) {
-                            $thumb_width = $thumbdim;
-                            $thumb_height = $thumbdim/$ratio;
-                        } else {
-                            $thumb_width = $thumbdim*$ratio;
-                            $thumb_height = $thumbdim;
-                        }
-                    }
+                //     $thumb_width = 0; $thumb_height = 0;
+                //     if ( $width > $thumbdim || $height > $thumbdim ) {
+                //         $ratio = $width/$height;
+                //         if( $ratio > 1) {
+                //             $thumb_width = $thumbdim;
+                //             $thumb_height = $thumbdim/$ratio;
+                //         } else {
+                //             $thumb_width = $thumbdim*$ratio;
+                //             $thumb_height = $thumbdim;
+                //         }
+                //     }
     
-                    //create the actual thumbnail image
-                    $imageResourceId = imagecreatefrompng($img_file);                         
-                    $targetLayer = $this->imageresize($imageResourceId,$width,$height,$thumb_width,$thumb_height);
-                    imagepng($targetLayer, $path. $new_filename. "_thumb.png");
-                    imagedestroy($targetLayer);
+                //     //create the actual thumbnail image
+                //     $imageResourceId = imagecreatefrompng($img_file);                         
+                //     $targetLayer = $this->imageresize($imageResourceId,$width,$height,$thumb_width,$thumb_height);
+                //     imagepng($targetLayer, $path. $new_filename. "_thumb.png");
+                //     imagedestroy($targetLayer);
     
-                    //web file
-                    $webpath = $upload_dir. $new_filename. ".png";
+                //     //web file
+                //     $webpath = $upload_dir. $new_filename. ".png";
     
-                    //thumbnail file
-                    $thumbpath = $upload_dir. $new_filename. "_thumb.png";
-                }
+                //     //thumbnail file
+                //     $thumbpath = $upload_dir. $new_filename. "_thumb.png";
+                // }
                 else if ($ext == 'pdf' && Uploader::$GENERATE_PDF_THUMBNAIL != 1) {  
                     //thumbnail file
                     $path_parts = pathinfo(Uploader::$PDF_THUMBNAIL_PATH);
