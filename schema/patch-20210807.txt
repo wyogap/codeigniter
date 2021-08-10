@@ -1,0 +1,44 @@
+ALTER TABLE `dbo_crud_pages` 
+ADD COLUMN `page_group` VARCHAR(45) NULL AFTER `page_size`;
+
+ALTER TABLE `dbo_crud_navigations` 
+ADD COLUMN `page_group` VARCHAR(45) NULL AFTER `order_no`;
+
+ALTER TABLE `dbo_crud_columns` 
+ADD COLUMN `options_data_url` VARCHAR(100) NULL DEFAULT NULL AFTER `options_data_model`;
+
+ALTER TABLE `dbo_crud_tables` 
+ADD COLUMN `title` VARCHAR(100) NULL DEFAULT NULL AFTER `name`;
+
+INSERT INTO `dbo_crud_columns` (`id`, `table_id`, `name`, `order_no`, `visible`, `label`, `column_type`, `data_priority`, `foreign_key`, `reference_soft_delete`, `allow_insert`, `allow_edit`, `edit_label`, `edit_type`, `edit_css`, `edit_compulsory`, `edit_bubble`, `allow_filter`, `filter_label`, `filter_css`, `filter_invalid_value`, `allow_search`, `created_on`, `updated_on`, `is_deleted`) VALUES (NULL, '8', 'title', '2', '1', 'Title', 'tcg_text', '2', '0', '1', '1', '1', '', 'tcg_text', '', '0', '0', '0', '', '', '0', '0', '2021-03-17 20:17:56', '2021-03-17 20:17:56', '0');
+
+INSERT INTO `dbo_crud_columns` (`id`, `table_id`, `name`, `order_no`, `visible`, `label`, `column_type`, `data_priority`, `foreign_key`, `reference_soft_delete`, `allow_insert`, `allow_edit`, `edit_label`, `edit_type`, `edit_css`, `edit_compulsory`, `edit_bubble`, `allow_filter`, `filter_label`, `filter_css`, `filter_invalid_value`, `allow_search`, `created_on`, `updated_on`, `is_deleted`) VALUES (NULL, '9', 'options_url', '12', '1', 'Lookup URL', 'tcg_text', '16', '0', '1', '1', '1', '', 'tcg_text', '', '0', '0', '0', '', '', '0', '0', '2021-03-17 20:17:56', '2021-03-17 20:17:56', '0');
+
+ALTER TABLE `dbo_crud_permissions` 
+ADD COLUMN `table_id` INT(11) NULL AFTER `page_id`,
+CHANGE COLUMN `page_id` `page_id` INT(11) NULL ;
+
+update dbo_crud_permissions a
+join dbo_crud_pages b on b.id=a.page_id and b.is_deleted=0
+set
+	a.table_id=b.crud_table_id;
+	
+-- ------
+
+INSERT INTO `sngine`.`dbo_lookups` (`id`, `group`, `label`, `value`, `level`, `optgroup`, `tag1`, `tag2`, `created_by`, `created_on`, `updated_by`, `updated_on`, `is_deleted`) VALUES ('29', 'column_type', 'Subtable', 'tcg_table', '1', '0', '', '', '1', '2021-03-13 23:31:46', '990', '2021-03-17 13:48:11', '0');
+INSERT INTO `sngine`.`dbo_lookups` (`id`, `group`, `label`, `value`, `level`, `optgroup`, `tag1`, `tag2`, `created_by`, `created_on`, `updated_by`, `updated_on`, `is_deleted`) VALUES ('50', 'edit_type', 'Subtable', 'tcg_table', '1', '0', '', '', '1', '2021-03-14 09:26:19', '990', '2021-03-17 13:38:35', '0');
+
+ALTER TABLE `sngine`.`dbo_crud_tables` 
+ADD COLUMN `row_reorder` SMALLINT NOT NULL DEFAULT 0 AFTER `custom_js`,
+ADD COLUMN `row_reorder_column` VARCHAR(45) NULL DEFAULT NULL AFTER `row_reorder`;
+
+ALTER TABLE `sngine`.`dbo_crud_tables` 
+ADD COLUMN `search_max_result` INT NOT NULL DEFAULT 0 AFTER `search`;
+
+ALTER TABLE `sngine`.`dbo_crud_tables` 
+ADD COLUMN `on_add_custom_js` VARCHAR(100) NULL DEFAULT NULL AFTER `import_custom_js`,
+ADD COLUMN `on_edit_custom_js` VARCHAR(100) NULL DEFAULT NULL AFTER `on_add_custom_js`,
+ADD COLUMN `on_delete_custom_js` VARCHAR(100) NULL DEFAULT NULL AFTER `on_edit_custom_js`;
+
+ALTER TABLE `sngine`.`dbo_audit_trails` 
+CHANGE COLUMN `reference_id` `reference_id` VARCHAR(1000) NULL ;
