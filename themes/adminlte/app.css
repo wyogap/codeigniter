@@ -22,6 +22,49 @@
 	vertical-align: -15%;
 }
 
+/* JConfirm */
+
+.jconfirm-box {
+    width: 100%;
+}
+
+.jconfirm-scrollpane, .jconfirm-row, .jconfirm-cell {
+    display: block !important;
+}
+
+.jconfirm .jconfirm-box div.jconfirm-content-pane .jconfirm-content {
+    overflow-x: hidden;
+    overflow-y: hidden;
+}
+
+.jconfirm-title-c {
+    border-bottom: 1px solid #dee2e6;
+    margin-left: -15px;
+    margin-right: -15px;
+    padding-left: 15px;
+    padding-right: 15px;
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+}
+
+.jconfirm-buttons {
+    border-top: 1px solid #dee2e6;
+    float: none !important;
+    margin-left: -15px;
+    margin-right: -15px;
+    padding-left: 15px;
+    padding-right: 15px;
+    padding-top: 15px;
+    justify-content: flex-end;
+    display: flex;
+}
+
+.select2-dropdown {
+    z-index: 999999999;
+}
+
+/* End JConfirm */
+
 @media (max-width: 768px) {
 
     .crud-form .form-group {

@@ -27,6 +27,11 @@
 			};
 
 			//force read-only (if any)
+			if (typeof conf.ajax !== 'undefined' && conf.ajax != null && conf.ajax != "") {
+				conf.attr.ajax = conf.ajax;
+			}
+
+			//force ajax (if any)
 			if (typeof conf.readonly !== 'undefined' && conf.readonly != null && conf.readonly != "") {
 				conf.attr.readonly = conf.readonly;
 			}
@@ -289,48 +294,50 @@
 			if (val.length == 0)	return;
 
 			//get file info
-			$.ajax({
-				type: 'POST',
-				url: conf.attr.ajax,
-				data: {action: "listFile", files: strVal},
-				success: function(response){
-					let json = "";
-					try {
-						json = JSON.parse(response);
+			if (strVal !== null && strVal.length > 0) {
+				$.ajax({
+					type: 'POST',
+					url: conf.attr.ajax,
+					data: {action: "listFile", files: strVal},
+					success: function(response){
+						let json = "";
+						try {
+							json = JSON.parse(response);
+						}
+						catch(err) {
+							//ignore
+							return;
+						}
+	
+						if (typeof json.files === 'undefined' || !Array.isArray(json.files) || json.files.length == 0) {
+							//ignore
+							return;
+						}
+	
+						if (typeof json.error !== 'undefined' && json.error != null && json.error != "") {
+							alert(json.error); 
+							return;
+						}
+	
+						let upload = null;
+						let url = null;
+						for(i=0; i<json.files.length; i++){
+							upload = json.files[i];
+							//url = "<a href='" +upload.web_path+ "'>" +upload.filename+ "</a>"
+							let mockFile = { id: upload.id, name: upload.filename, size: upload.filesize, url: upload.web_path };
+							dz.displayExistingFile(mockFile, upload.thumbnail_path);
+	
+							dz.files.push(mockFile); 
+						}					
+						
+						//check for maxfile
+						if (dz.options.maxFiles && dz.files.length >= dz.options.maxFiles) {
+							dz.disable();
+						}						
+	
 					}
-					catch(err) {
-						//ignore
-						return;
-					}
-
-					if (typeof json.files === 'undefined' || !Array.isArray(json.files) || json.files.length == 0) {
-						//ignore
-						return;
-					}
-
-					if (typeof json.error !== 'undefined' && json.error != null && json.error != "") {
-						alert(json.error); 
-						return;
-					}
-
-					let upload = null;
-					let url = null;
-					for(i=0; i<json.files.length; i++){
-						upload = json.files[i];
-						//url = "<a href='" +upload.web_path+ "'>" +upload.filename+ "</a>"
-						let mockFile = { id: upload.id, name: upload.filename, size: upload.filesize, url: upload.web_path };
-						dz.displayExistingFile(mockFile, upload.thumbnail_path);
-
-						dz.files.push(mockFile); 
-					}					
-					
-					//check for maxfile
-					if (dz.options.maxFiles && dz.files.length >= dz.options.maxFiles) {
-						dz.disable();
-					}						
-
-				}
-			});
+				});	
+			}
 
 		},
 
