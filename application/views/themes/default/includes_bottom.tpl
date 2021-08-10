@@ -13,7 +13,7 @@
 <script src="{$base_url}assets/jquery-mask/jquery.mask.min.js"></script>
 
 <!-- datatables -->
-<script src="{$base_url}assets/datatables/DataTables-1.10.20/js/jquery.dataTables.min.js" defer></script>
+<script src="{$base_url}assets/datatables/DataTables-1.10.20/js/jquery.dataTables.min.js"></script>
 <script src="{$base_url}assets/datatables/DataTables-1.10.20/js/dataTables.bootstrap4.min.js" defer></script>
 <script src="{$base_url}assets/datatables/Responsive-2.2.3/js/dataTables.responsive.min.js" defer></script>
 <script src="{$base_url}assets/datatables/Responsive-2.2.3/js/responsive.bootstrap4.min.js" defer></script>
@@ -32,8 +32,11 @@
 <script src="{$base_url}assets/datatables/KeyTable-2.5.1/js/dataTables.keyTable.min.js" defer></script>
 <script src="{$base_url}assets/datatables/KeyTable-2.5.1/js/keyTable.bootstrap4.min.js" defer></script>
 
-<script src="{$base_url}assets/datatables/Editor-1.9.2/js/dataTables.editor.min.js" defer></script>
+<script src="{$base_url}assets/datatables/Editor-1.9.2/js/dataTables.editor.min.js"></script>
 <script src="{$base_url}assets/datatables/Editor-1.9.2/js/editor.bootstrap4.min.js" defer></script>
+
+<script src="{$base_url}assets/datatables/RowReorder-1.2.6/js/dataTables.rowReorder.min.js" defer></script>
+<script src="{$base_url}assets/datatables/RowReorder-1.2.6/js/rowReorder.bootstrap4.min.js" defer></script>
 
 <script src="{$base_url}assets/datatables/tcg/dt-editor-select2.js" defer></script>
 <script src="{$base_url}assets/datatables/tcg/dt-editor-mask.js" defer></script>
@@ -102,6 +105,23 @@
 
 <script src="{$base_url}{$theme_prefix}/js/custom.js" defer></script>
 <script src="{$base_url}{$theme_prefix}/app.js" defer></script>
+
+<script type="text/javascript">
+    $.fn.dataTable.ext.errMode = 'throw';
+    $.extend($.fn.dataTable.defaults, {
+        responsive: true,
+    });
+    $.extend( true, $.fn.dataTable.Editor.defaults, {
+        formOptions: {
+            main: {
+                onBackground: 'none'
+            },
+            bubble: {
+                onBackground: 'none'
+            }
+        }
+    });
+</script>
 
 <!-- Toastr and alert notifications scripts -->
 <script type="text/javascript">

@@ -171,7 +171,202 @@
 			return $value;
 		}
 	}
-	
+
+	// function connect_mysql() {
+	// 	global $db;
+	// 	// connect to the database
+	// 	$db = new mysqli(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, DB_PORT);
+	// 	$db->set_charset('utf8mb4');
+	// 	if(mysqli_connect_error()) {
+	// 		_error(DB_ERROR);
+	// 	}
+	// 	/* set db time to UTC */
+	// 	$db->query("SET time_zone = '+0:00'");
+	// }
+
+	/**
+	 * secure
+	 * 
+	 * @param string $value
+	 * @param string $type
+	 * @param boolean $quoted
+	 * @return string
+	 */
+	if ( ! function_exists('secure_legacy'))
+	{
+		function secure_legacy($value, $type = "", $quoted = true) {
+			/**
+			 * @var object
+			 */
+			global $_db;
+
+			if($value !== 'null') {
+				// [1] Sanitize
+				/* Convert all applicable characters to HTML entities */
+				$value = htmlentities($value, ENT_QUOTES, 'utf-8');
+				// [2] Safe SQL
+				$value = $_db->real_escape_string($value);
+				switch ($type) {
+					case 'int':
+						$value = ($quoted)? "'".intval($value)."'" : intval($value);
+						break;
+					case 'datetime':
+						$value = ($quoted)? "'".set_datetime($value)."'" : set_datetime($value);
+						break;
+					case 'search':
+						if($quoted) {
+							$value = (!is_empty($value))? "'%".$value."%'" : "''";
+						} else {
+							$value = (!is_empty($value))? "'%%".$value."%%'" : "''";
+						}
+						break;
+					default:
+						$value = (!is_empty($value))? "'".$value."'" : "''";
+						break;
+				}
+			}
+			return $value;
+		}
+	}
+
+	/* ------------------------------- */
+	/* Date */
+	/* ------------------------------- */
+
+	/**
+	 * set_datetime
+	 * 
+	 * @param string $date
+	 * @return string
+	 */
+	function set_datetime($date) {
+		global $system;
+		$date = str_replace(['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨','٩'], range(0, 9), $date); /* check and replace arabic numbers if any */
+		$datetime = DateTime::createFromFormat($system['system_datetime_format'], $date);
+		return $datetime->format("Y-m-d H:i:s");
+	}
+
+
+	/**
+	 * get_datetime
+	 * 
+	 * @param string $date
+	 * @return string
+	 */
+	function get_datetime($date) {
+		global $system;
+		return date($system['system_datetime_format'], strtotime($date));
+	}
+
+
+	/* ------------------------------- */
+	/* STRING */
+	/* ------------------------------- */
+
+	/**
+	 * is_empty
+	 * 
+	 * @param string $value
+	 * @return boolean
+	 */
+	function is_empty($value) {
+		if(strlen(trim(preg_replace('/\xc2\xa0/',' ',$value))) == 0) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	/**
+	 * valid_email
+	 * 
+	 * @param string $email
+	 * @return boolean
+	 */
+	function valid_email($email) {
+		if(filter_var($email, FILTER_VALIDATE_EMAIL) !== false) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+
+	/**
+	 * valid_url
+	 * 
+	 * @param string $url
+	 * @return boolean
+	 */
+	function valid_url($url) {
+		if(filter_var($url, FILTER_VALIDATE_URL) !== false) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+
+	/**
+	 * valid_username
+	 * 
+	 * @param string $username
+	 * @return boolean
+	 */
+	function valid_username($username) {
+		if(strlen($username) >= 3 && preg_match('/^[a-zA-Z0-9]+([_|.]?[a-zA-Z0-9])*$/', $username)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+
+	/**
+	 * reserved_username
+	 * 
+	 * @param string $username
+	 * @return boolean
+	 */
+	function reserved_username($username) {
+		$reserved_usernames = array('install', 'static', 'contact', 'contacts', 'sign', 'signin', 'login', 'signup', 'register', 'signout', 'logout', 'reset', 'activation', 'connect', 'revoke', 'packages', 'started', 'search', 'friends', 'messages', 'message', 'notifications', 'notification', 'settings', 'setting', 'posts', 'post', 'photos', 'photo', 'create', 'pages', 'page', 'groups', 'group', 'events', 'event', 'games', 'game', 'saved', 'forums', 'forum', 'blogs', 'blog', 'articles', 'article', 'directory', 'products', 'product', 'market', 'admincp', 'admin', 'admins', 'modcp', 'moderator', 'moderators', 'moderatorcp', 'chat', 'ads', 'wallet', 'boosted', 'people', 'popular', 'movies', 'movie',  'api', 'apis', 'oauth', 'authorize');
+		if(in_array(strtolower($username), $reserved_usernames)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+
+	/**
+	 * valid_name
+	 * 
+	 * @param string $name
+	 * @return boolean
+	 */
+	function valid_name($name) {
+		if(preg_match('/[\'^£$%&*()}{@#~?><>,|=+¬]/', $name)) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+
+
+	/**
+	 * valid_location
+	 * 
+	 * @param string $location
+	 * @return boolean
+	 */
+	function valid_location($location) {
+		if(preg_match("/^[\\p{L} \-,()0-9]+$/ui", $location)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
 	/**
 	 * nohtml
 	 * 

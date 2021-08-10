@@ -121,15 +121,17 @@ class Mpages extends Mcrud
     function subtable_detail($id, $subtable_id, $with_table_meta = false) {
         $filter = array();
 
-        $filter['page_id'] = $id;
-        $filter['subtable_id'] = $subtable_id;
-        $filter['is_deleted'] = 0;
-
         //use view if specified
         $table_name = 'dbo_crud_pages_subtables';
 
-        $this->db->select('*');
-        $this->db->order_by('order_no asc');
+        $filter[$table_name. '.page_id'] = $id;
+        $filter[$table_name. '.subtable_id'] = $subtable_id;
+        $filter[$table_name. '.is_deleted'] = 0;
+
+        $this->db->select($table_name. '.*, lookup2.name as subtable_name');
+        //$this->db->join('dbo_crud_tables lookup1', 'lookup1.id=dbo_crud_pages_subtables.table_id AND lookup1.is_deleted=0', 'LEFT OUTER');
+        $this->db->join('dbo_crud_tables lookup2', 'lookup2.id=' .$table_name. '.subtable_id AND lookup2.is_deleted=0', 'LEFT OUTER');
+        $this->db->order_by($table_name. '.order_no asc');
         $arr = $this->db->get_where($table_name, $filter)->row_array();
 
         if ($arr == null)   return $arr;

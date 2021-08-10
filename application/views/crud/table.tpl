@@ -32,7 +32,7 @@
 
 {include file="crud/_css.tpl"}
 
-{if $crud.filter}
+{if $crud.filter || $crud.search}
 {include file='crud/crud-filter.tpl'}
 {/if}
 

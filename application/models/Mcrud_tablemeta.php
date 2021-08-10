@@ -4,7 +4,7 @@ require_once(APPPATH.'models/Mtablemeta.php');
 
 class Mcrud_tablemeta extends CI_Model
 {
-    protected static $DEF_TABLE_ID = 8;     //default table
+    protected static $DEF_TABLE_ID = 0;     //default table
 
     protected static $DEF_PAGE_SIZE = 25;
     protected static $REGEX_USERDATA = '/{{(\w+)}}/';
@@ -49,13 +49,20 @@ class Mcrud_tablemeta extends CI_Model
         if (!empty($name_or_id)) {
             $this->init($name_or_id, $is_table_id, $level1_column, $level1_value);
         }
-        else if (!empty(static::$DEF_TABLE_ID)) {
+        else if (static::$DEF_TABLE_ID>0) {
             $this->init(static::$DEF_TABLE_ID, true);
         }
     }
 
     function init($name_or_id, $is_table_id = false, $level1_column = null, $level1_value = null) {
         $this->reset_error();
+
+        if ($this->initialized && 
+            (($is_table_id && $this->table_id == $name_or_id) 
+                || (!$is_table_id && $this->table_name == $name_or_id))
+            ) {
+            return true;
+        }
 
         $this->initialized = false;
                 
@@ -85,6 +92,10 @@ class Mcrud_tablemeta extends CI_Model
 
     function init_with_tablemeta($arr, $level1_column = null, $level1_value = null) {
         $this->reset_error();
+        
+        if ($this->initialized && $this->table_id == $arr['id']) {
+            return true;
+        }
         
         $this->initialized = false;
         
@@ -138,7 +149,6 @@ class Mcrud_tablemeta extends CI_Model
         $this->table_metas['custom_css'] = $arr['custom_css'];
         $this->table_metas['custom_js'] = $arr['custom_js'];
 
-        $this->table_metas['search'] = ($arr['search'] == 1);
         $this->table_metas['filter'] = ($arr['filter'] == 1);
         $this->table_metas['edit'] = ($arr['allow_add'] == 1 || $arr['allow_edit'] == 1 || $arr['allow_delete'] == 1);
 
@@ -146,6 +156,22 @@ class Mcrud_tablemeta extends CI_Model
 
         // if no filter -> always autoload
         if (!$this->table_metas['filter'])  $this->table_metas['initial_load'] = true;
+
+        $this->table_metas['search'] = ($arr['search'] == 1);
+        $this->table_metas['search_max_result'] = empty($arr['search_max_result']) ? 0 : $arr['search_max_result'];
+
+        $this->table_metas['row_reorder'] = ($arr['row_reorder'] == 1);
+        $this->table_metas['row_reorder_column'] = empty($arr['row_reorder_column']) ? $arr['key_column'] : $arr['row_reorder_column'];
+
+        $this->table_metas['add_custom_js'] = $arr['add_custom_js'];
+        $this->table_metas['edit_custom_js'] = $arr['edit_custom_js'];
+        $this->table_metas['delete_custom_js'] = $arr['delete_custom_js'];
+        $this->table_metas['on_add_custom_js'] = $arr['on_add_custom_js'];
+        $this->table_metas['on_edit_custom_js'] = $arr['on_edit_custom_js'];
+        $this->table_metas['on_delete_custom_js'] = $arr['on_delete_custom_js'];
+
+        $this->table_metas['export_custom_js'] = $arr['export_custom_js'];
+        $this->table_metas['import_custom_js'] = $arr['import_custom_js'];
 
         //table actions
         $this->table_actions = Mtablemeta::$TABLE_ACTION;
@@ -335,21 +361,16 @@ class Mcrud_tablemeta extends CI_Model
                         $ref['reference_lookup_column'] = $ref['reference_key_column'];
                     }
                     $ref['reference_soft_delete'] = ($row['reference_soft_delete'] == 1);
-                    $ref['reference_where_clause'] = $row['reference_where_clause'];
 
+                    $ref['reference_where_clause'] = $row['reference_where_clause'];
+                    if (!empty($ref['reference_where_clause'])) {
+                        $ref['reference_where_clause'] = replace_userdata($ref['reference_where_clause']);
+                    }
+            
                     //use alias in case multiple reference of the same table (ie. lookup table)
                     $ref['reference_alias'] = 'lookup_' .$lookup_idx++;
 
-                    if ($col['type'] == 'tcg_select2') {
-                        $this->join_tables[ $col['name'] ] = $ref;
-
-                        //add into select
-                        $col['label_column'] = $ref['reference_alias'].".".$ref['reference_lookup_column'];
-                        $col['label_type'] = "join";
-
-                        $this->select_columns[] = $ref['reference_alias'].".".$ref['reference_lookup_column']." as ".$ref['name']."_label";
-                    }
-                    else if ($col['type'] == 'tcg_multi_select') {
+                    if ($col['type'] == 'tcg_multi_select') {
                         $subquery = "select group_concat(" .$ref['reference_lookup_column']. " separator ', ') from " .$ref['reference_table_name']. " where find_in_set(" .$ref['reference_key_column']. ", " .$ref['column_name']. ") > 0";
 
                         if ($ref['reference_soft_delete']) {
@@ -362,15 +383,16 @@ class Mcrud_tablemeta extends CI_Model
 
                         $this->select_columns[] = "(" .$subquery. ") as ".$ref['name']."_label";
                     }
-                    // else if ($col['type'] == 'tcg_upload') {
-                    //     $subquery = "select group_concat(x.filename, ':', x.path separator ', ') from dbo_uploads x where find_in_set(x.id, " .$ref['column_name']. ") > 0 and x.is_deleted=0";
+                    else {
+                        //default: tcg_select2
+                        $this->join_tables[ $col['name'] ] = $ref;
 
-                    //     //add into select
-                    //     $col['label_column'] = "(" .$subquery. ")";
-                    //     $col['label_type'] = "subquery";
+                        //add into select
+                        $col['label_column'] = $ref['reference_alias'].".".$ref['reference_lookup_column'];
+                        $col['label_type'] = "join";
 
-                    //     $this->select_columns[] = "(" .$subquery. ") as ".$ref['name']."_label";
-                    // }
+                        $this->select_columns[] = $ref['reference_alias'].".".$ref['reference_lookup_column']." as ".$ref['name']."_label";
+                    }
 
                     //get lookup if not specified manually
                     if (empty($col['options']) && empty($col['options_data_url']) && ($row['edit_type'] == 'tcg_select2' || $row['filter_type'] == 'tcg_select2')) {
@@ -463,14 +485,24 @@ class Mcrud_tablemeta extends CI_Model
                     $filter['filter_css'] = $row['filter_css'];
                     $filter['filter_onchange_js'] = $row['filter_onchange_js'];
 
-                    if (!empty($row['filter_options_array'])) {
+                    if (!empty($row['filter_attr_array'])) {
+                        $filter['filter_attr'] = json_decode($row['filter_attr_array']);
+                    }
+
+                    $row['filter_data_url'] = '';
+                    if (!empty($col['options_data_url'])) {
+                        $row['filter_data_url'] = $col['options_data_url'];
+                    }
+
+                    if (!empty($row['filter_data_url'])) {
+                        if (!isset($filter['filter_attr'])) {
+                            $filter['filter_attr'] = array();
+                        }
+                        $filter['filter_attr']['ajax'] = $row['filter_data_url'];
+                    } else if (!empty($row['filter_options_array'])) {
                         $filter['filter_options'] = json_decode($row['filter_options_array']);
                     } else if (!empty($col['options'])) {
                         $filter['filter_options'] = $col['options'];
-                    }
-
-                    if (!empty($row['filter_attr_array'])) {
-                        $filter['filter_attr'] = json_decode($row['filter_attr_array']);
                     }
 
                     //force select2
@@ -555,6 +587,16 @@ class Mcrud_tablemeta extends CI_Model
 
         //var_dump( $this->join_tables );
 
+        //var_dump($this->table_metas['columns']);
+
+        if (empty($this->table_metas['key_column']) && count($this->column_metas)>0) {
+            $this->table_metas['key_column'] = $this->column_metas[0]['name'];
+        }
+
+        if (empty($this->table_metas['lookup_column']) && count($this->column_metas)>0) {
+            $this->table_metas['lookup_column'] = $this->column_metas[0]['name'];
+        }
+        
         //always add lookup-column
         $key_column_name = $this->table_name. "." .$this->table_metas['lookup_column']. ' as ' .$this->table_metas['lookup_column'];       
         if (false === array_search($key_column_name, $this->select_columns)) {
@@ -639,19 +681,41 @@ class Mcrud_tablemeta extends CI_Model
 
         } while (false);
 
+        //var_dump($this->editor_metas);
+
         $this->table_metas['columns'] = $this->column_metas;
         $this->table_metas['editor_columns'] = $this->editor_metas;
-        if (count($this->editor_metas) > 0) {
-            $this->table_metas['editor'] = true;
-        }
         $this->table_metas['filter_columns'] = $this->filter_metas;
-        if (count($this->filter_metas) > 0) {
-            $this->table_metas['filter'] = true;
-        }
         $this->table_metas['table_actions'] = $this->table_actions;
         $this->table_metas['custom_actions'] = $this->custom_actions;
         $this->table_metas['row_actions'] = $this->row_actions;
         $this->table_metas['join_tables'] = $this->join_tables;
+
+        //disable editor if no edit columns
+        if (count($this->editor_metas) > 0) {
+            $this->table_metas['editor'] = true;
+        }
+        else {
+            $this->table_metas['editor'] = false;
+        }
+
+        //disable filter if no filter columns
+        if (count($this->filter_metas) > 0) {
+            $this->table_metas['filter'] = true;
+        }
+        else {
+            $this->table_metas['filter'] = false;
+        }
+
+        //disable search if no search columns
+        if (count($this->search_columns) > 0) {
+            $this->table_metas['search'] = true;
+        }
+        else {
+            $this->table_metas['search'] = false;
+        }
+
+        //var_dump( $this->filter_metas);
 
         // //always include key-column in column search
         // if (false === array_search($this->table_metas['key_column'], $this->search_columns)) {
@@ -663,15 +727,15 @@ class Mcrud_tablemeta extends CI_Model
         //     $this->search_columns[] = $this->table_metas['lookup_column'];
         // }
 
-        //disable editor if no edit columns
-        if (count($this->table_metas['editor_columns']) == 0) {
-            $this->table_metas['editor'] = false;
-        }
+        // //disable editor if no edit columns
+        // if (count($this->table_metas['editor_columns']) == 0) {
+        //     $this->table_metas['editor'] = false;
+        // }
 
-        //disable filter if no filter columns
-        if (count($this->table_metas['filter_columns']) == 0) {
-            $this->table_metas['filter'] = false;
-        }
+        // //disable filter if no filter columns
+        // if (count($this->table_metas['filter_columns']) == 0) {
+        //     $this->table_metas['filter'] = false;
+        // }
 
         $this->initialized = true;
 
@@ -791,12 +855,16 @@ class Mcrud_tablemeta extends CI_Model
         
         if (!$this->initialized)   return null;
 
+        if (empty($limit) && $this->table_metas['search_max_result'] > 0) {
+            $limit = $this->table_metas['search_max_result'];
+        }
+
         //use dynamic crud
         //use view if specified
         $table_name = $this->table_metas['table_name'];
 
         //group search filter
-        if ($query != "" && $query != null) {
+        if ($query != "" && $query != null && count($this->search_columns)>0) {
             $this->db->group_start();
             foreach($this->search_columns as $key => $val) {
                 $this->db->or_like($val, $query);
@@ -809,7 +877,7 @@ class Mcrud_tablemeta extends CI_Model
             foreach($filter as $key => $val) {
                 //TODO: use columnmeta[$key] and use $column_name
                 if (false !== array_search($key, $this->columns)) {
-                    if ($val == Mtable::INVALID_VALUE) {
+                    if ($val == Mcrud_tablemeta::INVALID_VALUE) {
                         $fkey = isset($this->join_tables[$key]) ? $this->join_tables[$key] : null;
                         if ($fkey != null) {
                             $this->db->where($fkey['reference_alias'].".".$fkey['reference_lookup_column'], NULL);

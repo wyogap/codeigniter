@@ -155,7 +155,7 @@ class Auth extends CI_Controller
             echo json_encode($data, JSON_INVALID_UTF8_IGNORE);
         } 
         else {
-            redirect(site_url() ."/$page_role/home");
+            redirect(site_url() ."/$page_role");
         }
     }
 
@@ -228,7 +228,7 @@ class Auth extends CI_Controller
 			//localhost
 			$secret = '6LdDOOoUAAAAADGh9tqM6i4Yni5TtX1oVJbdkXey';
 		} else {
-			$secret = $config_item('app_captcha_key');
+			$secret = $this->setting->get('app_captcha_key');
 		}
 
 		$url = 'https://www.google.com/recaptcha/api/siteverify';
@@ -268,6 +268,10 @@ class Auth extends CI_Controller
         $this->load->view('forgotPassword');
     }
     
+    function resetPasswordEmail($email) {
+        //TODO: send email
+    }
+
     /**
      * This function used to generate reset password request link
      */
@@ -295,7 +299,7 @@ class Auth extends CI_Controller
                 $data['email'] = $email;
                 $data['activation_id'] = random_string('alnum',15);
                 $data['createdDtm'] = date('Y-m-d H:i:s');
-                $data['agent'] = getBrowserAgent();
+                $data['agent'] = get_user_browser();
                 $data['client_ip'] = $this->input->ip_address();
                 
                 $save = $this->login_model->resetPasswordUser($data);                
@@ -311,26 +315,26 @@ class Auth extends CI_Controller
                         $data1["message"] = "Reset Password Anda";
                     }
 
-                    $sendStatus = resetPasswordEmail($data1);
+                    $sendStatus = $this->resetPasswordEmail($data1);
 
                     if($sendStatus){
-                        $status = "send";
-                        setFlashData($status, "Reset password link sent successfully, please check mails.");
+                        $status = "send"; 
+                        $this->session->set_flashdata($status, "Reset password link sent successfully, please check mails.");
                     } else {
                         $status = "notsend";
-                        setFlashData($status, "Email has been failed, try again.");
+                        $this->session->set_flashdata($status, "Email has been failed, try again.");
                     }
                 }
                 else
                 {
                     $status = 'unable';
-                    setFlashData($status, "It seems an error while sending your details, try again.");
+                    $this->session->set_flashdata($status, "It seems an error while sending your details, try again.");
                 }
             }
             else
             {
                 $status = 'invalid';
-                setFlashData($status, "Username/email tidak terdaftar.");
+                $this->session->set_flashdata($status, "Username/email tidak terdaftar.");
             }
             redirect('/forgotPassword');
         }
@@ -396,7 +400,7 @@ class Auth extends CI_Controller
                 $message = 'Password tidak berhasil diubah';
             }
             
-            setFlashData($status, $message);
+            $this->session->set_flashdata($status, $message);
 
             redirect("<?php echo site_url();?>/Auth");
         }

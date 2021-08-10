@@ -267,6 +267,39 @@
         return select;
     }
 
+
+    function select2_rebuild(select, attr, parent = null) {
+
+        //convert to select2
+        select.select2({
+            minimumResultsForSearch: attr.minimumResultsForSearch,
+            //dropdownCssClass: attr.cssClass,
+            dropdownParent: parent,
+            templateResult: function(data) {
+                // We only really care if there is an element to pull classes from
+                if (!data.element) {
+                    return data.text;
+                }
+
+                var $element = $(data.element);
+
+                var $wrapper = $('<div></div>');
+                $wrapper.addClass($element[0].className);
+
+                $wrapper.text(data.text);
+
+                return $wrapper;
+            }
+        });
+
+        //read-only?
+        if (typeof attr.readonly !== 'undefined' && attr.readonly == true) {
+            select.select2("readonly", true);
+        }
+
+        return select;
+    }
+    
 </script>
 
 <!-- Modals -->

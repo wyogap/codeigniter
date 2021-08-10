@@ -2,6 +2,7 @@
 
 {foreach $subtables as $subtbl}
 var selected_key_{$subtbl.crud.table_id} = '';
+var data_{$subtbl.crud.table_id} = null;
 {/foreach}
 
 $(document).ready(function() {
@@ -18,14 +19,18 @@ $(document).ready(function() {
                 {foreach $subtables as $subtbl}
                 dt_{$subtbl.crud.table_id}.clear().draw();
                 selected_key_{$subtbl.crud.table_id} = '';
+                data_{$subtbl.crud.table_id} = null;
                 {/foreach}
             } else {
                 //on select, reload subtables
                 {foreach $subtables as $subtbl}
                 //master value
                 selected_key_{$subtbl.crud.table_id} = data[0]['{$subtbl.table_key_column}'];
+                data_{$subtbl.crud.table_id} = data[0];
                 dt_{$subtbl.crud.table_id}.ajax.url("{$subtbl.crud.ajax}/" +selected_key_{$subtbl.crud.table_id});
+                {if $subtbl.crud.editor}
                 editor_{$subtbl.crud.table_id}.s.ajax = "{$subtbl.crud.ajax}/" +selected_key_{$subtbl.crud.table_id};
+                {/if}
                 dt_{$subtbl.crud.table_id}.ajax.reload();
                 {/foreach}
             }

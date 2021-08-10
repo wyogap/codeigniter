@@ -23,7 +23,17 @@ class Mtablemeta extends CI_Model
         'soft_delete' => true,
         'join_tables' => [],
         'custom_css' => '',
-        'custom_js' => ''
+        'custom_js' => '',
+        'search' => false,
+        'search_max_result' => 0,
+        'row_reorder' => false,
+        'row_reorder_column' => null,
+        'add_custom_js' => null,
+        'edit_custom_js' => null,
+        'delete_custom_js' => null,
+        'on_add_custom_js' => null,
+        'on_edit_custom_js' => null,
+        'on_delete_custom_js' => null,
     );
     
     public static $COLUMN = array (

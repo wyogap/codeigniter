@@ -7,6 +7,7 @@ class Mtable extends CI_Model
     protected static $TABLE_ID = null;     //table
 
     protected $data_model = null;
+    protected $initialized = false;
 
     public function __construct() {
         //TODO
@@ -260,6 +261,252 @@ class Mtable extends CI_Model
 
         $this->db->query($sql, array($table_id_or_name, $table_id_or_name));
     }
+
+    public function clone($table_id_or_name) {
+        //get table id
+        $sql = "SELECT a.id FROM `dbo_crud_tables` a WHERE (a.id=? or a.table_name=?) and a.is_deleted=0 LIMIT 1";
+        $detail = $this->db->query($sql, array($table_id_or_name, $table_id_or_name))->row_array();
+
+        if ($detail == null) {
+            return 0;
+        }
+
+        $table_id = $detail['id'];
+
+        //clone table
+        $sql = "
+            INSERT INTO `dbo_crud_tables`
+            (
+                `name`,
+                `title`,
+                `table_name`,
+                `editable_table_name`,
+                `key_column`,
+                `lookup_column`,
+                `ajax`,
+                `initial_load`,
+                `row_id_column`,
+                `row_select_column`,
+                `editor`,
+                `allow_add`,
+                `allow_edit`,
+                `allow_delete`,
+                `add_custom_js`,
+                `edit_custom_js`,
+                `delete_custom_js`,
+                `edit_row_action`,
+                `delete_row_action`,
+                `allow_export`,
+                `export_custom_js`,
+                `allow_import`,
+                `import_custom_js`,
+                `filter`,
+                `search`,
+                `soft_delete`,
+                `data_model`,
+                `where_clause`,
+                `orderby_clause`,
+                `limit_selection`,
+                `page_size`,
+                `custom_css`,
+                `custom_js`
+            )
+            SELECT 
+                concat(`name`, '_" .generate_token(5). "'),
+                `title`,
+                `table_name`,
+                `editable_table_name`,
+                `key_column`,
+                `lookup_column`,
+                `ajax`,
+                `initial_load`,
+                `row_id_column`,
+                `row_select_column`,
+                `editor`,
+                `allow_add`,
+                `allow_edit`,
+                `allow_delete`,
+                `add_custom_js`,
+                `edit_custom_js`,
+                `delete_custom_js`,
+                `edit_row_action`,
+                `delete_row_action`,
+                `allow_export`,
+                `export_custom_js`,
+                `allow_import`,
+                `import_custom_js`,
+                `filter`,
+                `search`,
+                `soft_delete`,
+                `data_model`,
+                `where_clause`,
+                `orderby_clause`,
+                `limit_selection`,
+                `page_size`,
+                `custom_css`,
+                `custom_js`
+            FROM `dbo_crud_tables`
+            WHERE (id=?) and is_deleted=0
+            limit 1";
+
+        $this->db->query($sql, array($table_id));
+        
+        $new_table_id = $this->db->insert_id();
+
+        //clone columns
+        $sql = "
+            INSERT INTO `dbo_crud_columns`
+            (
+                `table_id`,
+                `name`,
+                `column_name`,
+                `order_no`,
+                `visible`,
+                `label`,
+                `css`,
+                `column_type`,
+                `data_priority`,
+                `options_array`,
+                `options_data_model`,
+                `options_data_url`,
+                `foreign_key`,
+                `reference_table_name`,
+                `reference_alias`,
+                `reference_key_column`,
+                `reference_lookup_column`,
+                `reference_soft_delete`,
+                `reference_where_clause`,
+                `allow_insert`,
+                `allow_edit`,
+                `edit_field`,
+                `edit_label`,
+                `edit_type`,
+                `edit_css`,
+                `edit_compulsory`,
+                `edit_info`,
+                `edit_attr_array`,
+                `edit_bubble`,
+                `edit_onchange_js`,
+                `edit_options_array`,
+                `edit_def_value`,
+                `allow_filter`,
+                `filter_label`,
+                `filter_type`,
+                `filter_css`,
+                `filter_attr_array`,
+                `filter_onchange_js`,
+                `filter_options_array`,
+                `filter_invalid_value`,
+                `allow_search`,
+                `display_format_js`
+            )
+            SELECT 
+                ? as `table_id`,
+                `name`,
+                `column_name`,
+                `order_no`,
+                `visible`,
+                `label`,
+                `css`,
+                `column_type`,
+                `data_priority`,
+                `options_array`,
+                `options_data_model`,
+                `options_data_url`,
+                `foreign_key`,
+                `reference_table_name`,
+                `reference_alias`,
+                `reference_key_column`,
+                `reference_lookup_column`,
+                `reference_soft_delete`,
+                `reference_where_clause`,
+                `allow_insert`,
+                `allow_edit`,
+                `edit_field`,
+                `edit_label`,
+                `edit_type`,
+                `edit_css`,
+                `edit_compulsory`,
+                `edit_info`,
+                `edit_attr_array`,
+                `edit_bubble`,
+                `edit_onchange_js`,
+                `edit_options_array`,
+                `edit_def_value`,
+                `allow_filter`,
+                `filter_label`,
+                `filter_type`,
+                `filter_css`,
+                `filter_attr_array`,
+                `filter_onchange_js`,
+                `filter_options_array`,
+                `filter_invalid_value`,
+                `allow_search`,
+                `display_format_js`
+            FROM `dbo_crud_columns`
+            where table_id=? and is_deleted=0";
+
+        $this->db->query($sql, array($new_table_id, $table_id));
+
+
+        //clone custom actions
+        $sql = "
+        INSERT INTO `dbo_crud_custom_actions`
+        (
+            `table_id`,
+            `label`,
+            `order_no`,
+            `icon`,
+            `icon_only`,
+            `css`,
+            `onclick_js`,
+            `selected`
+        )
+        SELECT 
+            ? as `table_id`,
+            `label`,
+            `order_no`,
+            `icon`,
+            `icon_only`,
+            `css`,
+            `onclick_js`,
+            `selected`
+        FROM `dbo_crud_custom_actions`
+        where table_id=? and is_deleted=0";
+
+        $this->db->query($sql, array($new_table_id, $table_id));
+
+
+        //clone inline actions
+        $sql = "
+        INSERT INTO `dbo_crud_row_actions`
+        (
+            `table_id`,
+            `label`,
+            `order_no`,
+            `icon`,
+            `icon_only`,
+            `css`,
+            `onclick_js`,
+            `conditional_js`
+        )
+        SELECT 
+            ? as `table_id`,
+            `label`,
+            `order_no`,
+            `icon`,
+            `icon_only`,
+            `css`,
+            `onclick_js`,
+            `conditional_js`
+        FROM `dbo_crud_row_actions`
+        where table_id=? and is_deleted=0";
+
+        $this->db->query($sql, array($new_table_id, $table_id));
+
+        return $new_table_id;
+    }
+
 
     public function set_level1_filter($column_name, $value = null) {
         if (!$this->initialized)   return null;

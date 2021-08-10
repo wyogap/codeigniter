@@ -8,4 +8,10 @@ class Playground extends CI_Controller {
 		$this->load->view('playground/bubble');
 	}
 
+	
+	public function subtable()
+	{
+		$this->load->view('playground/subtable');
+	}
+
 }

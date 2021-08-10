@@ -114,13 +114,13 @@ abstract class MY_Crud_Controller extends CI_Controller {
 
 		if (isset($params) && count($params) > 0 && $params[0] == 'detail') {
 			unset($params[0]);
-			$this->table_detail($model, $params);
+			$this->table_detail($page['name'], $model, $params);
 			return;
 		}
 
 		if (isset($params) && count($params) > 0 && $params[0] == 'json') {
 			unset($params[0]);
-			$this->table_json($model, $params);
+			$this->table_json($page['name'], $model, $params);
 			return;
 		}
 
@@ -158,7 +158,9 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		$tablemeta['crud_url'] = $base_ajax_url;
 
 		//var_dump($tablemeta['crud_url']);
-		
+		//var_dump($tablemeta["columns"]);
+		//var_dump($tablemeta["editor_columns"]);
+
 		//upload columns
 		foreach($tablemeta["editor_columns"] as $key => $col) {
 			if ($col["edit_type"] == "tcg_upload") {
@@ -221,7 +223,11 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		$page_data['crud']			 = $tablemeta; 
 		$page_data['subtables']		 = $subtables;
 
-		//var_dump($subtables); exit;
+		//permission
+		$permissions = array (
+			'allow_edit'	=> $this->Mpermission->can_edit($name)
+		);
+		$page_data['permissions']	= $permissions;
 
 		//echo json_encode($page_data);
 		$this->smarty->render_theme($template, $page_data);
@@ -234,17 +240,21 @@ abstract class MY_Crud_Controller extends CI_Controller {
 			return;
 		}
 
+		$this->load->model(array('crud/Mpermission'));
+		if (!$this->Mpermission->can_add($page['name'])) {
+			theme_403(static::$PAGE_GROUP);		//not-authorized
+			return;
+		}
+
 		//navigation
 		$navigation = $this->get_navigation();
-
-		//var_dump($navigation); exit;
 
 		//controller name
 		$page_data['controller'] = $this->router->class;
 
 		$page_data['page_name']              = $page['name'];
-		$page_data['page_title']             = $page['page_title'];
-		$page_data['page_icon']              = $page['page_icon'];
+		//$page_data['page_title']             = $page['page_title'];
+		//$page_data['page_icon']              = $page['page_icon'];
 
 		$page_data['page_role']           	 = $this->session->userdata('page_role');
 
@@ -267,7 +277,7 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		
 		$tablemeta = $model->tablemeta();
 
-		$page_data['page_title']             = __("Buat") ." ". $tablemeta['name'];
+		$page_data['page_title']             = __("Buat") ." ". $tablemeta['title'];
 		$page_data['page_icon']              = $page['page_icon'];
 
 		//ajax url for data loading
@@ -328,6 +338,12 @@ abstract class MY_Crud_Controller extends CI_Controller {
 			return;
 		}
 
+		$this->load->model(array('crud/Mpermission'));
+		if (!$this->Mpermission->can_edit($page['name'])) {
+			theme_403(static::$PAGE_GROUP);		//not-authorized
+			return;
+		}
+
 		//navigation
 		$navigation = $this->get_navigation();
 
@@ -357,7 +373,7 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		
 		$tablemeta = $model->tablemeta();
 
-		$page_data['page_title']             = __("Ubah") ." ". $tablemeta['name'];
+		$page_data['page_title']             = __("Ubah") ." ". $tablemeta['title'];
 		$page_data['page_icon']              = $page['page_icon'];
 
 		//ajax url for data loading
@@ -436,9 +452,16 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		$this->smarty->render_theme($template, $page_data);
 	}
 
-	protected function table_detail($model, $params = null) {
+	protected function table_detail($page_name, $model, $params = null) {
 		if ($params == null || count($params) == 0) {
 			theme_404(static::$PAGE_GROUP);
+			return;
+		}
+
+		$this->load->model(array('crud/Mpermission'));
+		if (!$this->Mpermission->can_view($page_name)) {
+			$data['error'] = 'not-authorized';
+			echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
 			return;
 		}
 
@@ -455,18 +478,36 @@ abstract class MY_Crud_Controller extends CI_Controller {
 
 		$page_data['page_role']           	 = $this->session->userdata('page_role');
 
-		$page_data['table_meta']			 = $model->tablemeta(); 
+		$tablemeta = $model->tablemeta();
+
+		$page_data['page_title']             = __("Ubah") ." ". $tablemeta['title'];
+		$page_data['page_icon']              = '';
+
+		//ajax url for data loading
+		//Important: we only provide the base path! ie. /crud/page-name
+		$base_ajax_url = site_url() .'/'. $this->router->class .'/'. $page_name;
+
+		$tablemeta['ajax'] = $base_ajax_url .'/json';
+		$tablemeta['crud_url'] = $base_ajax_url;
+
+		$page_data['table_meta']			 = $tablemeta; 
 
 		$custom_view = $model->custom_view();
 		if (empty($custom_view)) {
 			$custom_view = 'crud/form.tpl';
 		}
+
+		//permission
+		$permissions = array (
+			'allow_edit'	=> $this->Mpermission->can_edit($page_name)
+		);
+		$page_data['permissions']	= $permissions;
 		
 		//echo json_encode($page_data);
 		$this->smarty->render_theme($custom_view, $page_data);
 	}
 
-	protected function table_json($model, $params = null) {
+	protected function table_json($page_name, $model, $params = null) {
 		$table_name = $model->tablename();
 		
 		//build params
@@ -485,17 +526,48 @@ abstract class MY_Crud_Controller extends CI_Controller {
 			$filters[substr($key, 2)] = $val;
 		}
 
+		//query string
+		$search = '';
+		if (!empty($this->input->post('search'))) {
+			$search = $this->input->post('search');
+		}
+		if (!empty($this->input->get('search'))) {
+			$search = $this->input->post('search');
+		}
+		$search = trim($search);
+
 		//var_dump($filters);
 		$key_column = $model->key_column();
 
 		$action = $this->input->post("action");
 		if (empty($action) || $action=='view') {
+
+			$this->load->model(array('crud/Mpermission'));
+			if (!$this->Mpermission->can_view($page_name)) {
+				$data['error'] = 'not-authorized';
+				echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
+				return;
+			}
 			
-            $json['data'] = $model->list($filters);
+			if (empty($search)) {
+				$json['data'] = $model->list($filters);
+			}
+			else {
+				$json['data'] = $model->search($search, $filters);
+			}
+            
 
             echo json_encode($json, JSON_INVALID_UTF8_IGNORE);	
 		}
 		else if ($action=='edit'){
+
+			$this->load->model(array('crud/Mpermission'));
+			if (!$this->Mpermission->can_edit($page_name)) {
+				$data['error'] = 'not-authorized';
+				echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
+				return;
+			}
+
 			$values = $this->input->post("data");
 
 			$errors = array();
@@ -522,6 +594,14 @@ abstract class MY_Crud_Controller extends CI_Controller {
 			echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
         }
         else if ($action=='remove') {
+
+			$this->load->model(array('crud/Mpermission'));
+			if (!$this->Mpermission->can_delete($page_name)) {
+				$data['error'] = 'not-authorized';
+				echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
+				return;
+			}
+
 			$values = $this->input->post("data");
 
             $error_msg = "";
@@ -539,6 +619,14 @@ abstract class MY_Crud_Controller extends CI_Controller {
 			echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
         }
         else if ($action=='create') {
+
+			$this->load->model(array('crud/Mpermission'));
+			if (!$this->Mpermission->can_add($page_name)) {
+				$data['error'] = 'not-authorized';
+				echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
+				return;
+			}
+
 			$values = $this->input->post("data");
 
             $key = $model->add($values[0], $filters);
@@ -554,7 +642,15 @@ abstract class MY_Crud_Controller extends CI_Controller {
             echo json_encode($data, JSON_INVALID_UTF8_IGNORE);
         }
         else if ($action == "upload") {
-            $key = $this->input->post("uploadField");
+
+			$this->load->model(array('crud/Mpermission'));
+			if (!$this->Mpermission->can_edit($page_name)) {
+				$data['error'] = 'not-authorized';
+				echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
+				return;
+			}
+
+			$key = $this->input->post("uploadField");
        
 			$this->load->helper("uploader");
 			$uploader = new Uploader();
@@ -579,6 +675,13 @@ abstract class MY_Crud_Controller extends CI_Controller {
             return;
         }   
 		else if ($action=='uploadFile') {
+
+			$this->load->model(array('crud/Mpermission'));
+			if (!$this->Mpermission->can_edit($page_name)) {
+				$data['error'] = 'not-authorized';
+				echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
+				return;
+			}
             
             $key = $this->input->post("field");
             if (!isset($key)) {
@@ -613,6 +716,14 @@ abstract class MY_Crud_Controller extends CI_Controller {
             return;
 		}
 		else if ($action=='removeFile'){
+
+			$this->load->model(array('crud/Mpermission'));
+			if (!$this->Mpermission->can_edit($page_name)) {
+				$data['error'] = 'not-authorized';
+				echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
+				return;
+			}
+
 			$files = $this->input->post("files");
             if (!isset($files)) {
 				$data['error'] = 'invalid files';
@@ -659,7 +770,15 @@ abstract class MY_Crud_Controller extends CI_Controller {
 			echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
         }
         else if ($action == "import") {
-            $status = $model->import($_FILES['upload']);
+
+			$this->load->model(array('crud/Mpermission'));
+			if (!$this->Mpermission->can_edit($page_name) || !$this->Mpermission->can_add($page_name)) {
+				$data['error'] = 'not-authorized';
+				echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
+				return;
+			}
+
+			$status = $model->import($_FILES['upload']);
 
             if($status == 0) {
                 $data['error'] = $model->get_error_message();
@@ -718,11 +837,20 @@ abstract class MY_Crud_Controller extends CI_Controller {
 			return;
 		}
 		
+		$page_name = $subtable['subtable_name'];
+
 		//build params
 		$filters = array();
 
 		$action = $this->input->post("action");
 		if (empty($action) || $action=='view') {
+
+			$this->load->model(array('crud/Mpermission'));
+			if (!$this->Mpermission->can_view_table_id($subtable_id)) {
+				$data['error'] = 'not-authorized';
+				echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
+				return;
+			}
 			
 			$filter_value = '';
 			if (isset($params) && count($params) > 0) {
@@ -735,6 +863,14 @@ abstract class MY_Crud_Controller extends CI_Controller {
             echo json_encode($json, JSON_INVALID_UTF8_IGNORE);	
 		}
 		else if ($action=='edit'){
+
+			$this->load->model(array('crud/Mpermission'));
+			if (!$this->Mpermission->can_edit_table_id($subtable_id)) {
+				$data['error'] = 'not-authorized';
+				echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
+				return;
+			}
+
 			$values = $this->input->post("data");
 
 			$error_msg = "";
@@ -754,6 +890,14 @@ abstract class MY_Crud_Controller extends CI_Controller {
 			echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
         }
         else if ($action=='remove') {
+
+			$this->load->model(array('crud/Mpermission'));
+			if (!$this->Mpermission->can_delete_table_id($subtable_id)) {
+				$data['error'] = 'not-authorized';
+				echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
+				return;
+			}
+
 			$values = $this->input->post("data");
 
             $error_msg = "";
@@ -769,6 +913,14 @@ abstract class MY_Crud_Controller extends CI_Controller {
 			echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
         }
         else if ($action=='create') {
+
+			$this->load->model(array('crud/Mpermission'));
+			if (!$this->Mpermission->can_add_table_id($subtable_id)) {
+				$data['error'] = 'not-authorized';
+				echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
+				return;
+			}
+
 			$values = $this->input->post("data");
 
 			$filter_value = '';
@@ -789,7 +941,15 @@ abstract class MY_Crud_Controller extends CI_Controller {
             echo json_encode($data, JSON_INVALID_UTF8_IGNORE);
         }
         else if ($action == "upload") {
-            $key = $this->input->post("uploadField");
+
+			$this->load->model(array('crud/Mpermission'));
+			if (!$this->Mpermission->can_edit_table_id($subtable_id)) {
+				$data['error'] = 'not-authorized';
+				echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
+				return;
+			}
+
+			$key = $this->input->post("uploadField");
        
 			$this->load->helper("uploader");
 			$uploader = new Uploader();

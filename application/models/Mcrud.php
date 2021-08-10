@@ -16,9 +16,9 @@ class Mcrud extends CI_Model
     protected static $SOFT_DELETE = true;
 
     protected static $JOIN_TABLES = array();
- 
+
     protected static $DEF_PAGE_SIZE = 25;
-   
+    
     protected $table_id = 0;
     protected $table_name = '';
     protected $initialized = false;

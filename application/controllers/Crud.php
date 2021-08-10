@@ -22,4 +22,12 @@ class Crud extends MY_Crud_Controller {
         return site_url('/crud/' .$page);
     }
 
+    public function index($params = array())
+	{
+        $page_role = $this->session->userdata('page_role');
+        
+        //TODO: Dashboard/
+        redirect(site_url() ."/$page_role/home");
+    }
+
 }

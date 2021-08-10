@@ -3,6 +3,40 @@
 class Mauth extends CI_Model
 {
     
+    // /**
+    //  * This function used to check the login credentials of the user
+    //  * @param string $username : This is username/email of the user
+    //  * @param string $password : This is encrypted password of the user
+    //  */
+    // function login($username, $password)
+    // {
+    //     $this->db->select('Users.*, Roles.role, Roles.page_role, Roles.admin');
+    //     $this->db->from('dbo_users as Users');
+    //     $this->db->join('dbo_roles as Roles','Roles.role_id = Users.role_id');
+    //     //$this->db->join('dbo_uploads as Upload','Upload.id = Users.profile_img', "LEFT OUTER");
+	// 	$this->db->group_start();
+    //     $this->db->where('Users.email', $username);
+    //     $this->db->or_where('Users.user_name', $username);
+	// 	$this->db->group_end();
+    //     $this->db->where('Users.is_deleted', 0);
+    //     $query = $this->db->get();
+        
+    //     $user = $query->row_array();
+    //     if ($user == null)  return $user;
+        
+    //     if (password_verify($password, $user['password'])) {
+    //         unset($user['password']);
+    //         unset($user['created_on']);
+    //         unset($user['created_by']);
+    //         unset($user['updated_on']);
+    //         unset($user['updated_by']);
+    //         unset($user['is_deleted']);
+    //         return $user;
+    //     }
+
+    //     return null;
+    // }
+
     /**
      * This function used to check the login credentials of the user
      * @param string $username : This is username/email of the user
@@ -10,21 +44,23 @@ class Mauth extends CI_Model
      */
     function login($username, $password)
     {
-        $this->db->select('Users.*, Roles.role, Roles.page_role, Roles.admin');
-        $this->db->from('dbo_users as Users');
-        $this->db->join('dbo_roles as Roles','Roles.role_id = Users.role_id');
+        $this->db->select('u.user_id, 
+                    u.user_banned, 
+                    u.user_password as password');
+        $this->db->from('users as u');
         //$this->db->join('dbo_uploads as Upload','Upload.id = Users.profile_img', "LEFT OUTER");
 		$this->db->group_start();
-        $this->db->where('Users.email', $username);
-        $this->db->or_where('Users.user_name', $username);
+        $this->db->where('u.user_name', $username);
+        $this->db->or_where('u.user_email', $username);
 		$this->db->group_end();
-        $this->db->where('Users.is_deleted', 0);
         $query = $this->db->get();
         
         $user = $query->row_array();
         if ($user == null)  return $user;
         
         if (password_verify($password, $user['password'])) {
+            //$user['profile_img'] = get_picture($user['profile_img'], $user['user_gender']);
+            $user['allow_login'] = empty($user['user_banned']) ? 1 : 0;
             unset($user['password']);
             unset($user['created_on']);
             unset($user['created_by']);
@@ -36,6 +72,7 @@ class Mauth extends CI_Model
 
         return null;
     }
+
 
     /**
      * This function used to check email exists or not

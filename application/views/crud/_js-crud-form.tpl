@@ -22,30 +22,107 @@
         {/if}
 
         edit_list = [
-            {foreach $tbl.editor_columns as $col}
-            {if $col.edit_field|@count==1}
+            {if !empty($level1_column)}
             {
-                'name'      : "{$col.edit_field[0]}",
-                'type'      : "{$col.edit_type}",
-                'label'     : "{$col.edit_label} {if $col.edit_label && $col.edit_compulsory}<span class='text-danger font-weight-bold'>*</span>{/if}",
-                'info'      : "{$col.edit_info}",
-                'className' : "{$col.edit_css}",
-                'def'       : "{$col.edit_def_value}",
-                'labelInfo' : "",
-                'message'   : "",
-                'attr'      : {$col.edit_attr|@json_encode nofilter},
-                'options'   : {$col.edit_options|@json_encode nofilter},
-                'compulsory': {$col.edit_compulsory|@json_encode nofilter},
-            },
-            {else if $col.edit_field|@count>1}
-            {
-                'name'      : "{$col.name}",
-                'type'      : "tcg_readonly",
-                'label'     : "{$col.edit_label} {if $col.edit_label && $col.edit_compulsory}<span class='text-danger font-weight-bold'>*</span>{/if}",
-                'info'      : "{$col.edit_info}",
-                'className' : "{$col.edit_css}",
+                name: "{$level1_column}",
+                type: "hidden"
             },
             {/if}
+            {foreach $tbl.editor_columns as $col}
+            {       
+                "label": "{$col.edit_label} {if $col.edit_label && $col.edit_compulsory}<span class='text-danger font-weight-bold'>*</span>{/if}",
+
+                {if $col.edit_field|@count==1}
+                "name": "{$col.edit_field[0]}",
+                {else if $col.edit_field|@count>1}
+                "name": "{$col.name}",
+                {/if}
+
+                {if $col.edit_type == 'js'}
+                "type": 'hidden',
+                {else if $col.edit_type == 'tcg_currency'}
+                "type": 'tcg_mask',
+                "mask": "#{$currency_thousand_separator}##0",
+                {else if $col.edit_field|@count>1}
+                "type": "tcg_readonly",
+                {else}
+                "type": '{$col.edit_type}',
+                {/if}
+
+                'info'      : "{$col.edit_info}",
+                'className' : "{$col.edit_css}",
+                'labelInfo' : "",
+                'message'   : "",
+
+                {if isset($col.edit_options)}
+                "options": [
+                    {foreach from=$col.edit_options key=k item=v}
+                    {if is_array($v)}
+                        { "label": "{$v.label}", "value": "{$v.value}" },
+                    {else}
+                        { "label": "{$v}", "value": "{$k}" },
+                        {/if}
+                    {/foreach}
+                ],
+                {/if}
+
+                {if !empty($col.edit_attr)}
+                "attr": {$col.edit_attr|@json_encode nofilter},
+                {/if}
+
+                {if !empty($col.options_data_url) && $col.edit_type=='tcg_select2'}
+                {if $col.options_data_url_params|@count==0}
+                "ajax": "{$site_url}{$col.options_data_url}",
+                {/if}
+                {/if}
+
+                {if $col.edit_type=='tcg_upload'}
+                ajax: "{$tbl.ajax}",
+                {/if}
+
+                {if !empty($col.edit_info)}
+                "fieldInfo":  "{$col.edit_info}",
+                {/if}
+
+                {if isset($col.edit_def_value) && $col.edit_def_value != null}
+                "def":  "{$col.edit_def_value}",
+                {/if}
+
+                {if $col.edit_type=='upload' || $col.edit_type=='image'}
+                "display": function ( file_id ) {
+                    if (!Number.isInteger(file_id)) {
+                        return '<img src="'+file_id+'"/>';
+                    }
+                    
+                    let files = null;
+                    let file = null;
+                    try {
+                        files = editor.files('files');
+                        file = files[file_id];
+                    }
+                    catch(err) {
+                        //ignore
+                    }
+
+                    if (file !== null) {
+                        return '<img src="'+editor.file( 'files', file_id ).thumbnail+'"/>';
+                    }
+                    else if (file_id != ""){
+                        return '<img src="'+file_id+'"/>';
+                    }
+                    else {
+                        return "";
+                    }
+                },
+                "clearText": "{__('Hapus')}",
+                "noImageText": "{__('No image')}",
+                "uploadText": "{__('Pilih fail...')}",
+                "noFileText": "{__('No file')}",
+                "processingText": "{__('Mengunggah')}",
+                "fileReadText": "{__('Membaca fail')}",
+                "dragDropText": "{__('Tarik dan taruh fail di sini untuk mengunggah')}"
+                {/if}
+            },
             {/foreach}
         ];
 
@@ -59,8 +136,8 @@
             }));
 
             //show info if necessary
-            if (conf.info.length > 0) {
-                dom.find('#{$col.name}_input_info').show();
+            if (typeof conf.info !== 'undefined' && conf.info !== null && conf.info.length > 0) {
+                dom.find('#' +conf.name+ '_input_info').show();
             }
 
             //the input field

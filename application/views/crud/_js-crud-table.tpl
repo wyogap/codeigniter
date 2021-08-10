@@ -1,4 +1,12 @@
 
+{if empty($fsubtable)}
+{assign var=fsubtable value=0}
+{/if}
+
+{if empty($fkey)}
+{assign var=fkey value=0}
+{/if}
+
 <script type="text/javascript" defer> 
 
 var base_url = "{$base_url}";
@@ -8,18 +16,20 @@ var ajax_url = "{$tbl.ajax}";
 var editor_{$tbl.table_id} = null;
 var dt_{$tbl.table_id} = null;
 
-{if empty($fsubtable)}
-{assign var=fsubtable value=0}
-{/if}
-
-{if empty($fkey)}
-{assign var=fkey value=0}
-{/if}
-
 $(document).ready(function() {
     $.fn.dataTable.ext.errMode = 'throw';
     $.extend($.fn.dataTable.defaults, {
-        responsive: true
+        responsive: true,
+    });
+    $.extend( true, $.fn.dataTable.Editor.defaults, {
+        formOptions: {
+            main: {
+                onBackground: 'none'
+            },
+            bubble: {
+                onBackground: 'none'
+            }
+        }
     });
 
     {if $tbl.editor}
@@ -75,6 +85,10 @@ $(document).ready(function() {
                     {if $col.options_data_url_params|@count==0}
                     ajax: "{$site_url}{$col.options_data_url}",
                     {/if}
+                    {/if}
+
+                    {if $col.edit_type=='tcg_upload'}
+                    ajax: "{$tbl.ajax}",
                     {/if}
 
                     {if !empty($col.edit_info)}
@@ -134,21 +148,21 @@ $(document).ready(function() {
             i18n: {
                 create: {
                     button: "{__('Baru')}",
-                    title: "{__('Buat')} {$tbl.name}",
+                    title: "{__('Buat')} {$tbl.title}",
                     submit: "{__('Simpan')}"
                 },
                 edit: {
                     button: "{__('Ubah')}",
-                    title: "{__('Ubah')} {$tbl.name}",
+                    title: "{__('Ubah')} {$tbl.title}",
                     submit: "{__('Simpan')}"
                 },
                 remove: {
                     button: "{__('Hapus')}",
-                    title: "{__('Hapus')} {$tbl.name}",
+                    title: "{__('Hapus')} {$tbl.title}",
                     submit: "{__('Hapus')}",
                     confirm: {
-                        _: "{__('Konfirmasi menghapus')} %d {$tbl.name}?",
-                        1: "{__('Konfirmasi menghapus')} 1 {$tbl.name}?"
+                        _: "{__('Konfirmasi menghapus')} %d {$tbl.title}?",
+                        1: "{__('Konfirmasi menghapus')} 1 {$tbl.title}?"
                     }
                 },
                 error: {
@@ -271,10 +285,24 @@ $(document).ready(function() {
         });        
 
         editor_{$tbl.table_id}.on('postSubmit', function(e, json, data, action, xhr) {
-            if (action=="upload") {
-
+            {if !empty($tbl.on_add_custom_js)}
+            if (action=="create") {
+                {$tbl.on_add_custom_js}(e, json, data, editor_{$tbl.table_id}, dt_{$tbl.table_id});
             }
+            {/if}
 
+            {if !empty($tbl.on_edit_custom_js)}
+            if (action=="edit") {
+                {$tbl.on_edit_custom_js}(e, json, data, editor_{$tbl.table_id}, dt_{$tbl.table_id});
+            }
+            {/if}
+            
+            {if !empty($tbl.on_delete_custom_js)}
+            if (action=="remove") {
+                {$tbl.on_delete_custom_js}(e, json, data, editor_{$tbl.table_id}, dt_{$tbl.table_id});
+            }
+            {/if}
+            
         });
 
         {foreach $tbl.columns as $col}
@@ -367,6 +395,7 @@ $(document).ready(function() {
         "processing": true,
         "responsive": true,
         "serverSide": false,
+        "scrollX": false,
         {if !empty($tbl.page_size)}
         "pageLength": {$tbl.page_size},
         {else}
@@ -425,6 +454,7 @@ $(document).ready(function() {
                 "sLast": "{__('Terakhir')}"
             }
         },
+        rowId: '{$tbl.key_column}',
         {if !$tbl.initial_load}
         "ajax": function(
             data, callback, settings) {
@@ -452,7 +482,7 @@ $(document).ready(function() {
             {
                 data: null,
                 className: "text-right",
-                orderable: 'false',
+                orderable: false,
                 defaultContent: ''
             },
             {/if}
@@ -460,11 +490,16 @@ $(document).ready(function() {
             {
                 data: null,
                 className: "text-right",
-                orderable: 'false',
+                orderable: false,
                 defaultContent: ''
             },
             {/if}
             {foreach $tbl.columns as $x}
+                {* Hide reference column when displaying as subtable *}
+                {if (!empty($fkey) && $fkey == $x.name)}
+                    {continue}
+                {/if}
+
                 {if $x.visible == 1}
                 { 
                     {if $x.foreign_key && $x.type=="tcg_select2"}
@@ -593,7 +628,7 @@ $(document).ready(function() {
             {if count($tbl.row_actions) > 0}
             {
                 data: null,
-                className: 'text-right inline-flex text-nowrap',
+                className: 'text-right inline-flex text-nowrap inline-actions',
                 "orderable": false,
                 render: function(data, type, row, meta) {
                     if(type != 'display') {
@@ -647,6 +682,14 @@ $(document).ready(function() {
                 }
             },
             {/if}
+            {if $tbl.row_reorder}
+            {
+                data: null,
+                className: "reorder",
+                orderable: false,
+                defaultContent: ''
+            },
+            {/if}
         ],
         "columnDefs": [
             // {
@@ -671,7 +714,20 @@ $(document).ready(function() {
             if ( $('ul.dropdown-menu span', row).length == 0 ) {
                 $('.btn-dropdown', row).addClass('d-none')
             }
-        }
+        },
+        {if $tbl.row_reorder}
+        rowReorder: {
+            selector: 'td.reorder',
+            dataSrc: '{$tbl.row_reorder_column}',
+            update: false,
+            editor: editor_{$tbl.table_id}
+        },
+        {/if}
+        // "drawCallback": function( settings ) {
+        //     let that = this;
+        //     var api = this.api();
+        //     api.columns.adjust().responsive.recalc();
+        // }
     });
 
     dt_{$tbl.table_id}.buttons( 0, null ).container().addClass("mr-md-2 mb-1");
@@ -801,6 +857,17 @@ $(document).ready(function() {
     //     console.log( 'Column width recalculated in table' );
     // });
 
+    {if $tbl.row_reorder}
+    dt_{$tbl.table_id}.on( 'row-reorder', function ( e, details, changes ) {
+        editor_{$tbl.table_id}
+            .edit( changes.nodes, false, {
+                submit: 'changed'
+            } )
+            .multiSet( changes.dataSrc, changes.values )
+            .submit();
+    });
+    {/if}
+
 });
 
 var dt_{$tbl.table_id}_initialized = false;
@@ -828,6 +895,7 @@ function dt_{$tbl.table_id}_ajax_load(data) {
                         f_{$f.name}: $("#f_{$f.name}").val(),
                     {/if}
                 {/foreach}
+                search: $("#search").val(),
             },
             beforeSend: function(request) {
                 request.setRequestHeader("Content-Type",
@@ -904,7 +972,7 @@ function dt_{$tbl.table_id}_delete_row(row_id, dt) {
 function dt_{$tbl.table_id}_import(e, dt, node, conf){
     $.confirm({
         columnClass: 'medium',
-        title: '{__("Impor")} {$tbl.name}',
+        title: '{__("Impor")} {$tbl.title}',
         content: '' +
         '<form action="" class="formName">' +
         '<div class="form-group">' +
