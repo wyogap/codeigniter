@@ -42,3 +42,12 @@ ADD COLUMN `on_delete_custom_js` VARCHAR(100) NULL DEFAULT NULL AFTER `on_edit_c
 
 ALTER TABLE `sngine`.`dbo_audit_trails` 
 CHANGE COLUMN `reference_id` `reference_id` VARCHAR(1000) NULL ;
+
+ALTER TABLE `sngine`.`dbo_crud_columns` 
+ADD COLUMN `subtable_id` BIGINT NULL DEFAULT NULL AFTER `display_format_js`,
+ADD COLUMN `subtable_key_column` VARCHAR(100) NULL DEFAULT NULL AFTER `subtable_id`,
+ADD COLUMN `subtable_fkey_column` VARCHAR(100) NULL DEFAULT NULL AFTER `subtable_key_column`;
+
+UPDATE `sngine`.`dbo_lookups` SET `label` = 'Virtual', `value` = 'virtual' WHERE (`id` = '29');
+
+UPDATE `sngine`.`dbo_lookups` SET `id` = '30', `group` = 'column_type', `label` = 'DateTime', `value` = 'tcg_datetime' WHERE (`id` = '33');
