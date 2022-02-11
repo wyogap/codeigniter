@@ -97,6 +97,14 @@ body[data-layout=detached] .content-page {
 
 /* End JConfirm */
 
+.col-form-label {
+    font-weight: bolder;
+}
+
+.dropdown-item:focus, .dropdown-item:hover {
+    background-color: #dee2e6 !important;
+}
+
 @media (max-width: 768px) {
 	body[data-layout=detached] .content-page {
 		padding: 0px 8px 24px 8px;
@@ -109,7 +117,7 @@ body[data-layout=detached] .content-page {
     .crud-form .form-group {
         margin-bottom: 0.5rem;
     }
-		
+
     .DTE .form-group {
         margin-bottom: 0.5rem;
     }

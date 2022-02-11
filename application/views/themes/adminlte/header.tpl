@@ -30,7 +30,7 @@
 
                 <li class="user-footer">
                     <div class="pull-left" style="display: inline-block;">
-                        <a href="{$site_url}crud/profile" class="btn btn-default btn-flat">{__('Profil')}</a>
+                        <a href="{$site_url}user/profile" class="btn btn-default btn-flat">{__('Profil')}</a>
                     </div>
                     <div class="pull-right" style="display: inline-block; float: right;">
                         <a href="{$site_url}auth/logout" class="btn btn-default btn-flat">{__('Logout')}</a>

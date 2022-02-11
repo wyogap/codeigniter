@@ -1,3 +1,26 @@
+
+div.DTE_Bubble_Background {
+    z-index: 1100 !important;
+}
+
+div.DTE_Bubble {
+    z-index: 1101 !important;
+    
+}
+
+div.DTE_Field_Type_tcg_table table tbody {
+    border-top: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;
+}
+
+div.DTE_Field_Type_tcg_table table.dataTable {
+    margin-bottom: 0px!important;
+}
+
+div.DTE_Field_Type_tcg_table .dt-col-action {
+    text-align: center!important;
+}
+
 div.DTE_Field_Type_tcg_table label[data-dte-e='label'] {
     max-width: 100% !important;
     flex-grow: 1;
@@ -5,6 +28,12 @@ div.DTE_Field_Type_tcg_table label[data-dte-e='label'] {
     flex-basis: 100%;
 	margin-top: -0.25rem;
 }
+
+/*
+div.DTE_Bubble div.DTE_Bubble_Liner .DTE_Field_Type_tcg_textarea .tcg-textarea-input {
+    width: 700px;
+}
+*/
 
 div.DTE_Field_Type_tcg_table div[data-dte-e='input'] {
 	max-width: 100% !important;
@@ -47,9 +76,14 @@ div.DTE_Field_Type_tcg_table div[data-dte-e='input'] {
     max-width: 175px;
 }
 
-.dt-editor-table .dt-col-action {
-    max-width: 20px;
-    padding: 8px 10px;
+.dt-editor-table th.dt-col-action {
+    max-width: 40px;
+    padding: 8px 10px 8px;
+}
+
+.dt-editor-table td.dt-col-action {
+    max-width: 40px;
+    padding: 16px 10px 16px;
 }
 
 /* .dt-editor-table table.dataTable thead th, .dt-editor-table table.dataTable thead td {
@@ -64,6 +98,10 @@ div.DTE_Field_Type_tcg_table div[data-dte-e='input'] {
 
 
 @media screen and (max-width: 640px) {
+
+	div.DTE_Bubble div.DTE_Bubble_Liner .DTE_Field_Type_tcg_textarea .tcg-textarea-input {
+		max-width: 300px;
+	}
 
     div.DTE_Field_Type_tcg_table .DTE_Label {
         width: 100% !important;

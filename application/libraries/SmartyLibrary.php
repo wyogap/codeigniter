@@ -68,6 +68,11 @@ class SmartyLibrary extends Smarty {
     function render($template, $data = array()) {
         $ci =& get_instance();
 
+        //failback in case controller is not set
+        if (empty($data['controller'])) {
+            $data['controller'] = $ci->router->class;
+        }
+
         //assign form validation
         $validation_error = validation_errors();
         if (!empty($validation_error)) {
@@ -103,6 +108,11 @@ class SmartyLibrary extends Smarty {
 
         if ($theme == null) {
             $theme = $this->theme;
+        }
+
+        //failback in case controller is not set
+        if (empty($data['controller'])) {
+            $data['controller'] = $ci->router->class;
         }
 
         //assign form validation

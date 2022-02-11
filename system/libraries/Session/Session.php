@@ -155,7 +155,7 @@ class CI_Session {
 			{
 				$this->sess_regenerate((bool) config_item('sess_regenerate_destroy'));
 			}
-		}
+		}		
 		// Another work-around ... PHP doesn't seem to send the session cookie
 		// unless it is being currently created or regenerated
 		elseif (isset($_COOKIE[$this->_config['cookie_name']]) && $_COOKIE[$this->_config['cookie_name']] === session_id())

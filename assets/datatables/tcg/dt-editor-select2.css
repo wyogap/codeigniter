@@ -215,6 +215,10 @@
 	border-radius: unset;
 }
 
+.select2-container--default .select2-selection--single .select2-selection__clear {
+    margin-right: 16px;
+}
+
 @media screen and (min-width: 768px) {
 	div.DTE_Body div.DTE_Body_Content div.DTE_Field {
 		padding: 5px 10% !important;

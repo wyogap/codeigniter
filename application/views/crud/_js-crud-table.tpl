@@ -13,6 +13,9 @@ var base_url = "{$base_url}";
 var site_url = "{$site_url}";
 var ajax_url = "{$tbl.ajax}";
 
+var level1_name = "{if !empty($level1_name)}{$level1_name}{/if}";
+var level1_id = "{if !empty($level1_id)}{$level1_id}{/if}";
+
 var editor_{$tbl.table_id} = null;
 var dt_{$tbl.table_id} = null;
 
@@ -47,6 +50,11 @@ $(document).ready(function() {
                 {foreach $tbl.editor_columns as $col}
                 {
                     label: "{$col.edit_label} {if $col.edit_label && $col.edit_compulsory}<span class='text-danger font-weight-bold'>*</span>{/if}",
+                    className: "{$col.edit_css}",
+
+                    {if $col.edit_compulsory}
+                    compulsory: true,
+                    {/if}
 
                     {if $col.edit_field|@count==1}
                     name: "{$col.edit_field[0]}",
@@ -95,7 +103,9 @@ $(document).ready(function() {
                     fieldInfo:  "{$col.edit_info}",
                     {/if}
 
-                    {if $fsubtable == 1 && $col.edit_field[0] == $fkey}
+                    {if $col.edit_readonly}
+                    readonly: 1,
+                    {else if $fsubtable == 1 && $col.edit_field[0] == $fkey}
                     readonly: 1,
                     {/if}
 
@@ -136,6 +146,42 @@ $(document).ready(function() {
                     processingText: "{__('Mengunggah')}",
                     fileReadText: "{__('Membaca fail')}",
                     dragDropText: "{__('Tarik dan taruh fail di sini untuk mengunggah')}"
+                    {/if}
+
+                    {if $col.edit_type=='tcg_table'}
+                    {if !empty($col.subtable_orde)}
+                    subtableOrder: {$col.subtable_order},
+                    {/if}
+                    columns: [
+                        {foreach $col.subtable_columns as $subcol}
+                        {
+                            title: "{$subcol.label}",
+                            data: "{$subcol.name}",
+                            className: "col_{$subcol.type} {$subcol.css}",
+                            dataPriority: "{$subcol.data_priority}",
+                            {if $subcol.edit_field|@count==1}
+                            editorField: "{$subcol.edit_field[0]}",
+                            {else if $subcol.edit_field|@count>1}
+                            editorField: "{$subcol.name}",
+                            {/if}
+                            {if $subcol.edit_type == 'tcg_currency'}
+                            editorType: 'tcg_mask',
+                            editorAttr: {
+                                mask: "#{$currency_thousand_separator}##0",
+                            }
+                            {else if $subcol.edit_type == 'tcg_select2'}
+                            editorType: 'tcg_select2',
+                            editorAttr: {
+                                ajax: "{$site_url}{$subcol.options_data_url}",
+                            }
+                            {else if $subcol.edit_field|@count>1}
+                            editorType: "tcg_readonly",
+                            {else}
+                            editorType: '{$subcol.edit_type}',
+                            {/if}
+                        },
+                        {/foreach}
+                    ]
                     {/if}
                 },
                 {/foreach}
@@ -240,21 +286,38 @@ $(document).ready(function() {
         editor_{$tbl.table_id}.on('preSubmit', function(e, o, action) {
             if (action === 'create' || action === 'edit') {
                 let field = null;
+                let hasError = false;
 
                 {foreach $tbl.editor_columns as $col}
-                    {if isset($col.edit_compulsory) && $col.edit_compulsory == true && $col.edit_type != 'tcg_toggle' && $col.edit_type != 'tcg_readonly'}
-                    field = this.field('{$col.edit_field[0]}');
-                    if (!field.isMultiValue()) {
-                        if (!field.val() || field.val() == 0) {
-                            field.error('{__("Harus diisi")}');
+                {if $col.edit_type == 'tcg_toggle' || $col.edit_type == 'tcg_readonly'} {continue} {/if}
+                {if empty($col.edit_compulsory) && empty($col.edit_validation_js)} {continue} {/if}
+                field = this.field('{$col.edit_field[0]}');
+                if (!field.isMultiValue()) {
+                    hasError = false;
+                    {if isset($col.edit_compulsory) && $col.edit_compulsory == true}
+                    //console.log('value: ' + field.val());
+                    if (!field.val() || field.val() == 0) {
+                        hasError = true;
+                        field.error('{__("Harus diisi")}');
+                    }
+                    {/if}
+
+                    {if !empty($col.edit_validation_js)}
+                    if (!hasError) {
+                        try {
+                            hasError = !{$col.edit_validation_js}(field, field.val());
+                        }
+                        catch(e) {
+                            console.log(e);
                         }
                     }
                     {/if}
+                }
                 {/foreach}
 
                 /* If any error was reported, cancel the submission so it can be corrected */
                 if (this.inError()) {
-                    this.error('{__("Data wajib belum diisi")}');
+                    this.error('{__("Data wajib belum diisi atau tidak berhasil divalidasi")}');
                     return false;
                 }
             }
@@ -305,6 +368,108 @@ $(document).ready(function() {
             
         });
 
+        var onchange_flag = false;
+        {foreach $tbl.editor_columns as $col}
+            {if empty($col.edit_onchange_js)} {continue} {/if}
+            var v_{$col.name} = '';
+            $(editor_{$tbl.table_id}.field('{$col.name}').node()).on('change', function() {
+                let val = editor_{$tbl.table_id}.field('{$col.name}').val();
+                if (val == null || v_{$col.name} == val) {
+                    return;
+                }
+
+                //in the middle of onchange processing. dont let it recursive
+                if (onchange_flag)  return;
+
+                onchange_flag = true;
+                try {
+                    let retval = {$col.edit_onchange_js}(editor_{$tbl.table_id}.field('{$col.name}'), v_{$col.name}, val);
+                    if (retval != val) {
+                        //reset the new value
+                        editor_{$tbl.table_id}.field('{$col.name}').val(retval);
+                    }
+                }
+                catch (e) {
+                    console.log(e);
+                }
+                onchange_flag = false;
+            });
+        {/foreach}
+
+        {* Subtable editor *}
+        {assign var=cnt value=0}
+        {foreach $tbl.editor_columns as $col}
+            {if $col.edit_type=='tcg_table'}
+            {assign var=cnt value=$cnt+1}
+            {/if}
+        {/foreach}
+
+        {if $cnt>0}
+        editor_{$tbl.table_id}.on( 'initEdit', function (e, node, data, items, type) {
+            {foreach $tbl.editor_columns as $col}
+                {if $col.edit_type!=='tcg_table'}
+                    {continue}
+                {/if}
+                $.ajax( {
+                    url: '{$tbl.ajax}',
+                    data: {
+                        action: 'subtable',
+                        column_name: '{$col.name}',
+                        f_{$col.subtable_fkey_column}: data['{$col.subtable_key_column}']
+                    },
+                    done: function (json, textStatus, jqXHR) {
+                        editor_{$tbl.table_id}.field('{$col.edit_field[0]}').set(json.data);
+                        resolve();
+                    },
+                    fail: function (jqXHR, textStatus, errorThrown) {
+                        resolve();
+                    }
+                });
+            {/foreach}
+
+            // return Promise.all([
+            //     {foreach $tbl.editor_columns as $col}
+            //     {if $col.edit_type!=='tcg_table'}
+            //         {continue}
+            //     {/if}
+            //     $.ajax( {
+            //         url: '{$tbl.ajax}',
+            //         data: {
+            //             action: 'subtable',
+            //             column_name: '{$col.name}',
+            //             f_{$col.subtable_fkey_column}: data['{$col.subtable_key_column}']
+            //         },
+            //         done: function (json, textStatus, jqXHR) {
+            //             editor_{$tbl.table_id}.field('{$col.edit_field[0]}').set(json.data);
+            //             resolve();
+            //         },
+            //         fail: function (jqXHR, textStatus, errorThrown) {
+            //             resolve();
+            //         }
+            //     });
+
+                // new Promise ( function (resolve, reject) {
+                //     $.ajax( {
+                //         url: '{$tbl.ajax}',
+                //         data: {
+                //             action: 'subtable',
+                //             column_name: '{$col.name}',
+                //             f_{$col.subtable_fkey_column}: data['{$col.subtable_key_column}']
+                //         },
+                //         done: function (json, textStatus, jqXHR) {
+                //             editor_{$tbl.table_id}.field('{$col.edit_field[0]}').set(json.data);
+                //             resolve();
+                //         },
+                //         fail: function (jqXHR, textStatus, errorThrown) {
+                //             resolve();
+                //         }
+                //     });
+                // }),
+            //     {/foreach}
+            // ]);
+        });  
+        {/if}
+
         {foreach $tbl.columns as $col}
             {if isset($col.edit_event_js)}
             $(editor_{$tbl.table_id}.field('{$col.edit_field[0]}').node()).on('change', function() {
@@ -320,7 +485,7 @@ $(document).ready(function() {
                 buttons: [
                     {
                         text: "{__('Batal')}",
-                        className: 'btn-sm btn-secondary mr-md-1',
+                        className: 'btn-sm btn-secondary mr-1',
                         action: function () {
                             this.close();
                         }
@@ -365,7 +530,7 @@ $(document).ready(function() {
                     buttons: [
                         {
                             text: "{__('Batal')}",
-                            className: 'btn-sm btn-secondary mr-md-1',
+                            className: 'btn-sm btn-secondary mr-1',
                             action: function () {
                                 this.close();
                             }
@@ -473,6 +638,9 @@ $(document).ready(function() {
                 {foreach $tbl.filter_columns as $f}
                 d.f_{$f.name} = v_{$f.name};
                 {/foreach}
+                {if $crud.search}
+                d.search = $('input#search').val();
+                {/if}
                 return d;
             }
         },
@@ -494,136 +662,159 @@ $(document).ready(function() {
                 defaultContent: ''
             },
             {/if}
-            {foreach $tbl.columns as $x}
+            {foreach $tbl.columns as $x}         
+                {if $x.visible != 1}
+                    {continue}
+                {/if}
                 {* Hide reference column when displaying as subtable *}
                 {if (!empty($fkey) && $fkey == $x.name)}
                     {continue}
                 {/if}
-
-                {if $x.visible == 1}
-                { 
-                    {if $x.foreign_key && $x.type=="tcg_select2"}
-                        data: "{$x.name}_label", 
-                        editField: "{$x.name}", 
-                    {else}
-                        data: "{$x.name}", 
-                        {if !empty($x.edit_field)}
-                        {if $x.edit_field|@count == 1}
-                        editField: "{$x.edit_field[0]}",
-                        {else if $x.edit_field|count > 1}
-                        editField: [ {foreach $x.edit_field as $field}"{$field}",{/foreach} ],
-                        {/if}
-                        {/if}
+                {* Hide virtual column *}
+                {if $x.type=="virtual" || $x.type=="tcg_table"}
+                    {continue}
+                {/if}
+            {    
+                {if $x.foreign_key && $x.type=="tcg_select2"}
+                    data: "{$x.name}_label", 
+                    editField: "{$x.name}", 
+                {else}
+                    data: "{$x.name}", 
+                    {if !empty($x.edit_field)}
+                    {if $x.edit_field|@count == 1}
+                    editField: "{$x.edit_field[0]}",
+                    {else if $x.edit_field|count > 1}
+                    editField: [ {foreach $x.edit_field as $field}"{$field}",{/foreach} ],
                     {/if}
-                    className: "col_{$x.type} {$x.css} {if !empty($x.edit_bubble)}editable{/if}",
-                    {if isset($x.type) && $x.type=="tcg_select2"}
-                    render: function ( data, type, row ) {
-                        // if (type == "export") {
-                        //     //export raw data?
-                        // }
-                        return data;
-                    }
-                    {else if isset($x.type) && $x.type=="tcg_upload"}
-                    render: function ( data, type, row ) {
-                        if (type == "export") {
-                            if (typeof data === 'undefined' || data == null) {
-                                return '';
-                            }
-                            //put extra space after comma so that it is not treated as thousand separator
-                            return data.replace(/,/g, ', ');
+                    {/if}
+                {/if}
+                className: "col_{$x.type} {$x.css} {if !empty($x.edit_bubble)}editable{/if}",
+                {if isset($x.type) && $x.type=="tcg_select2"}
+                render: function ( data, type, row ) {
+                    // if (type == "export") {
+                    //     //export raw data?
+                    // }
+                    return data;
+                }
+                {else if isset($x.type) && $x.type=="tcg_upload"}
+                render: function ( data, type, row ) {
+                    if (type == "export") {
+                        if (typeof data === 'undefined' || data == null) {
+                            return '';
                         }
+                        //put extra space after comma so that it is not treated as thousand separator
+                        return data.replace(/,/g, ', ');
+                    }
 
-                        if (type == "display") {
-                            let filename = row['{$x.name}_filename'];
-                            let path = row['{$x.name}_path'];
-                            if (typeof data !== 'undefined' && data !== null && data != "" && data != 0
-                                    && typeof filename !== 'undefined' && filename !== null && filename != ""
-                                    && typeof path !== 'undefined' && path !== null && path != ""
-                                    ) {
-                                let filenames = filename.split(";");
-                                let paths = path.split(";");
-                                let arr = data.split(",");
-                                for(let i=0; i<arr.length, i<filenames.length, i<paths.length; i++) {
-                                    arr[i] = "<a href='{$base_url}" +paths[i]+ "' target='_blank'>" +filenames[i]+ "</a>";
-                                }
+                    if (type == "display") {
+                        let filename = row['{$x.name}_filename'];
+                        let path = row['{$x.name}_path'];
+                        if (typeof data !== 'undefined' && data !== null && data != "" && data != 0
+                                && typeof filename !== 'undefined' && filename !== null && filename != ""
+                                && typeof path !== 'undefined' && path !== null && path != ""
+                                ) {
+                            let filenames = filename.split(";");
+                            let paths = path.split(";");
+                            let arr = data.split(",");
+                            for(let i=0; i<arr.length, i<filenames.length, i<paths.length; i++) {
+                                arr[i] = "<a href='{$base_url}" +paths[i]+ "' target='_blank'>" +filenames[i]+ "</a>";
+                            }
 
-                                if (arr.length <= 1) {
-                                    data = arr.join(",");
-                                }
-                                else {
-                                    data = "<ul><li>";
-                                    data += arr.join("</li><li>");
-                                    data += "</li></ul>";
-                                }
+                            if (arr.length <= 1) {
+                                data = arr.join(",");
                             }
                             else {
-                                data = "";
+                                data = "<ul><li>";
+                                data += arr.join("</li><li>");
+                                data += "</li></ul>";
                             }
-                            {if $x.display_format_js}
-                            return {$x.display_format_js}(data, type, row);
-                            {else}
-                            return data;
-                            {/if}
                         }
+                        else {
+                            data = "";
+                        }
+                        {if $x.display_format_js}
+                        return {$x.display_format_js}(data, type, row);
+                        {else}
                         return data;
-                    },
-                    {else if isset($x.type) && $x.type=="tcg_date"}
-                    render: function ( data, type, row ) {
-                        // if (type == "export") {
-                        //     //export raw data?
-                        //     return data;
-                        // }
+                        {/if}
+                    }
+                    return data;
+                },
+                {else if isset($x.type) && $x.type=="tcg_date"}
+                render: function ( data, type, row ) {
+                    // if (type == "export") {
+                    //     //export raw data?
+                    //     return data;
+                    // }
 
-                        if (type == "display") {
-                            if (typeof data !== 'undefined' && data !== null && data != "") {
-                                data = moment(data).format('YYYY-MM-DD');
-                            }
-                            {if $x.display_format_js}
-                            return {$x.display_format_js}(data, type, row);
-                            {else}
-                            return data;
-                            {/if}
+                    if (type == "display") {
+                        if (typeof data !== 'undefined' && data !== null && data != "") {
+                            data = moment.utc(data).local().format('YYYY-MM-DD');
                         }
+                        {if $x.display_format_js}
+                        return {$x.display_format_js}(data, type, row);
+                        {else}
                         return data;
-                    },
-                    {else if isset($x.type) && $x.type=="tcg_currency"}
-                    render: function ( data, type, row ) {
-                        // if (type == "export") {
-                        //     //export raw data?
-                        //     return data;
-                        // }
+                        {/if}
+                    }
+                    return data;
+                },
+                {else if isset($x.type) && $x.type=="tcg_datetime"}
+                render: function ( data, type, row ) {
+                    // if (type == "export") {
+                    //     //export raw data?
+                    //     return data;
+                    // }
 
-                        if (type == "display") {
-                            if (typeof data === 'undefined' || data === null || data == "") {
-                                data = 0;
-                            }
-                            data = $.fn.dataTable.render.number('{$currency_thousand_separator}', '{$currency_decimal_separator}', {$currency_decimal_precision}, '{$currency_prefix}').display(data);
-                            {if $x.display_format_js}
-                            return {$x.display_format_js}(data, type, row);
-                            {else}
-                            return data;
-                            {/if}
+                    if (type == "display") {
+                        if (typeof data !== 'undefined' && data !== null && data != "") {
+                            data = moment.utc(data).local().format('YYYY-MM-DD HH:mm:ss');
                         }
+                        {if $x.display_format_js}
+                        return {$x.display_format_js}(data, type, row);
+                        {else}
                         return data;
-                    },
-                    {else if $x.display_format_js}
-                    render: function ( data, type, row ) {
-                        // if (type == "export") {
-                        //     //export raw data?
-                        //     return data;
-                        // }
+                        {/if}
+                    }
+                    return data;
+                },
+                {else if isset($x.type) && $x.type=="tcg_currency"}
+                render: function ( data, type, row ) {
+                    // if (type == "export") {
+                    //     //export raw data?
+                    //     return data;
+                    // }
 
-                        if (type == "display") {
-                            if (typeof data === 'undefined' || data === null) {
-                                data = "";
-                            }
-                            return {$x.display_format_js}(data, type, row);
+                    if (type == "display") {
+                        if (typeof data === 'undefined' || data === null || data == "") {
+                            data = 0;
                         }
+                        data = $.fn.dataTable.render.number('{$currency_thousand_separator}', '{$currency_decimal_separator}', {$currency_decimal_precision}, '{$currency_prefix}').display(data);
+                        {if $x.display_format_js}
+                        return {$x.display_format_js}(data, type, row);
+                        {else}
                         return data;
-                    },
-                    {/if}
+                        {/if}
+                    }
+                    return data;
+                },
+                {else if $x.display_format_js}
+                render: function ( data, type, row ) {
+                    // if (type == "export") {
+                    //     //export raw data?
+                    //     return data;
+                    // }
+
+                    if (type == "display") {
+                        if (typeof data === 'undefined' || data === null) {
+                            data = "";
+                        }
+                        return {$x.display_format_js}(data, type, row);
+                    }
+                    return data;
                 },
                 {/if}
+            },
             {/foreach}
             {if count($tbl.row_actions) > 0}
             {
@@ -636,7 +827,14 @@ $(document).ready(function() {
                     }
 
                     {if count($tbl.row_actions) == 1 && $tbl.row_actions[0].icon_only == false}
-                        return "<button href='#' onclick='event.stopPropagation(); {$tbl.row_actions[0].onclick_js}(" +meta.row+ ", dt_{$tbl.table_id});' data-tag='" +meta.row+ "' class='btn btn-sm {$tbl.row_actions[0].css}'><i class='{$tbl.row_actions[0].icon}'></i> {$tbl.row_actions[0].label}</button>";
+                        {if !empty($tbl.row_actions[0].conditional_js)}
+                        if ({$tbl.row_actions[0].conditional_js}(data, row, meta)) {
+                        {/if}
+                            return "<button href='#' onclick='event.stopPropagation(); {$tbl.row_actions[0].onclick_js}(" +meta.row+ ", dt_{$tbl.table_id}, \"" +row['{$tbl.key_column}']+ "\");' data-tag='" +meta.row+ "' class='btn btn-sm {$tbl.row_actions[0].css}'><i class='{$tbl.row_actions[0].icon}'></i> {$tbl.row_actions[0].label}</button>";
+                        {if !empty($tbl.row_actions[0].conditional_js)}
+                        }
+                        {/if}
+                        return '';
                     {else}
                         let str = '';
 
@@ -646,9 +844,9 @@ $(document).ready(function() {
                                 {assign var=num_of_dropdown value=$num_of_dropdown+1 }
                             {else}
                                 {if !empty($x.conditional_js)}
-                                if ({$x.conditional_js}(meta.row)) {
+                                if ({$x.conditional_js}(data, row, meta)) {
                                 {/if}
-                                str += "<button href='#' onclick='event.stopPropagation(); {$x.onclick_js}(" +meta.row+ ", dt_{$tbl.table_id});' data-tag='" +meta.row+ "' class='btn btn-icon-circle {$x.css}'><i class='{$x.icon}'></i></button>"                           
+                                str += "<button href='#' onclick='event.stopPropagation(); {$x.onclick_js}(" +meta.row+ ", dt_{$tbl.table_id}, \"" +row['{$tbl.key_column}']+ "\");' data-tag='" +meta.row+ "' class='btn btn-icon-circle {$x.css}'><i class='{$x.icon}'></i></button>"                           
                                 {if !empty($x.conditional_js)}
                                 }
                                 {/if}
@@ -656,7 +854,10 @@ $(document).ready(function() {
                         {/foreach}
                         
                         {if $num_of_dropdown > 0}
-                            str += '<div class="dropright dt-row-actions" data-tag="' +meta.row+ '" style="display: inline-block;">'
+                            let dropdown = '';
+                            let dropdown_cnt = 0;
+
+                            dropdown += '<div class="dropright dt-row-actions" data-tag="' +meta.row+ '" style="display: inline-block;">'
                                 + '<button type="button" class="btn btn-icon-circle btn-outline-success" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">'
                                     + '<i class="fa fa-ellipsis-v fas"></i>'
                                 + '</button>'
@@ -665,16 +866,21 @@ $(document).ready(function() {
                             {foreach $tbl.row_actions as $x}
                                 {if !$x.icon_only}
                                     {if $x.conditional_js}
-                                    if ({$x.conditional_js}(meta.row)) {
+                                    if ({$x.conditional_js}(data, row, meta)) {
                                     {/if}
-                                    str += "<span style='cursor: pointer;' onclick='event.stopPropagation(); {$x.onclick_js}(" +meta.row+ ", dt_{$tbl.table_id});' data-tag='" +meta.row+ "' class='dropdown-item'><i class='{$x.icon}'></i> {$x.label}</span>";
+                                    dropdown += "<span style='cursor: pointer;' onclick='event.stopPropagation(); {$x.onclick_js}(" +meta.row+ ", dt_{$tbl.table_id}, \"" +row['{$tbl.key_column}']+ "\");' data-tag='" +meta.row+ "' class='dropdown-item'><i class='{$x.icon}'></i> {$x.label}</span>";
+                                    dropdown_cnt++;
                                     {if $x.conditional_js}
                                     }
                                     {/if}
                                 {/if}
                             {/foreach}
 
-                            str += '</ul></div>';
+                            dropdown += '</ul></div>';
+
+                            if (dropdown_cnt > 0) {
+                                str += dropdown;
+                            }
                         {/if}      
 
                         return str;  
@@ -801,31 +1007,68 @@ $(document).ready(function() {
         dt_{$tbl.table_id}.buttons( 1, null ).container()
     );
 
-    {if count($tbl.custom_actions) > 0}
     buttons = new $.fn.dataTable.Buttons( dt_{$tbl.table_id}, {
         buttons: [
-            {foreach $tbl.custom_actions as $x}
+            {if $tbl.client_side_filter}
             {
-                {if $x.selected==1}
-                extend: 'selectedSingle',
-                {else if $x.selected>1}
-                extend: 'selected',
-                {/if}
-                text: '{__($x.label)}',
-                action: function ( e, dt, node, conf ) {
-                    {$x.onclick_js}(e, dt, node, conf);
-                },
-                className: 'btn-sm {$x.css}'
+                //text: '{__("Filter")}',
+                className: 'btn-sm btn-primary',
+                extend: 'searchPanes',
+                config: {
+                    cascadePanes: true
+                }
             },
-            {/foreach}
+            {/if}
+            {if $tbl.client_side_query}
+            {
+                //text: '{__("Kuery")}',
+                className: 'btn-sm btn-primary',
+                extend: 'searchBuilder',
+                config: {
+                    depthLimit: 2
+                }
+            },
+            {/if}
         ]
     } );
  
-    buttons.container().addClass('mr-md-2 mb-1 dt-custom-buttons');
+    cnt = buttons.c.buttons.length;
+    if (cnt == 0) {
+        buttons.container().addClass('d-none dt-filter-buttons');
+    }
+    else {
+        buttons.container().addClass('mr-md-2 mb-1 dt-filter-buttons');
+    }
 
     dt_{$tbl.table_id}.buttons( 1, null ).container().after(
         dt_{$tbl.table_id}.buttons( 2, null ).container()
     );
+    
+    {if count($tbl.custom_actions) > 0}
+        buttons = new $.fn.dataTable.Buttons( dt_{$tbl.table_id}, {
+            buttons: [
+                {foreach $tbl.custom_actions as $x}
+                {
+                    {if $x.selected==1}
+                    extend: 'selectedSingle',
+                    {else if $x.selected>1}
+                    extend: 'selected',
+                    {/if}
+                    text: '{__($x.label)}',
+                    action: function ( e, dt, node, conf ) {
+                        {$x.onclick_js}(e, dt, node, conf);
+                    },
+                    className: 'btn-sm {$x.css}'
+                },
+                {/foreach}
+            ]
+        } );
+    
+        buttons.container().addClass('mr-md-2 mb-1 dt-custom-buttons');
+
+        dt_{$tbl.table_id}.buttons( 2, null ).container().after(
+            dt_{$tbl.table_id}.buttons( 3, null ).container()
+        );
     {/if}
 
     {if $tbl.row_id_column}
@@ -929,8 +1172,8 @@ function dt_{$tbl.table_id}_ajax_load(data) {
     });
 }
 
-function dt_{$tbl.table_id}_edit_row(row_id, dt) {
-    let row = dt.row(row_id);
+function dt_{$tbl.table_id}_edit_row(row_id, dt, key) {
+    let row = dt.row('#' +key);
 
     editor_{$tbl.table_id}
             .title("{__('Ubah')} {$tbl.name}")
@@ -951,8 +1194,8 @@ function dt_{$tbl.table_id}_edit_row(row_id, dt) {
     return;
 }
 
-function dt_{$tbl.table_id}_delete_row(row_id, dt) {
-    let row = dt.row(row_id);
+function dt_{$tbl.table_id}_delete_row(row_id, dt, key) {
+    let row = dt.row('#' +key);
 
     editor_{$tbl.table_id}
             .title("{__('Hapus')} {$tbl.name}")
@@ -978,7 +1221,7 @@ function dt_{$tbl.table_id}_import(e, dt, node, conf){
         '<div class="form-group">' +
         '<input id="upload" type="file" name="import" accept=".xlsx, .xls, .csv" style="width: 100%;" />' +
         '<div id="error" class="d-none text-danger mt-2"></div>' +
-        '<div class="d-none text-center justify-content-center" id="loading" style="position: absolute; width: 100%; top: 0px;">' +
+        '<div class="d-none text-center justify-content-center" id="spinner" style="position: absolute; width: 100%; top: 0px;">' +
         '  <div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div>' +
         '</div>' +
         '</div>' +
@@ -1011,6 +1254,11 @@ function dt_{$tbl.table_id}_import(e, dt, node, conf){
                     formData.append("action", "import");
 
                     spinner.removeClass('d-none');
+
+                    upload.attr('disabled', 'disabled');
+                    this.buttons.cancel.disable();
+                    this.buttons.formSubmit.disable();
+
                     $.ajax({
                         type: "POST",
                         url: "{$tbl.ajax}",
@@ -1028,6 +1276,9 @@ function dt_{$tbl.table_id}_import(e, dt, node, conf){
                                 message.removeClass("d-none");
                                 //hide spinner
                                 spinner.addClass('d-none');
+                                upload.removeAttr('disabled');
+                                that.buttons.cancel.enable();
+                                that.buttons.formSubmit.enable();
                                 return;
                             }
 
@@ -1043,6 +1294,11 @@ function dt_{$tbl.table_id}_import(e, dt, node, conf){
                             message.removeClass("d-none");
                             //hide spinner
                             spinner.addClass('d-none');
+
+                            upload.removeAttr('disabled');
+                            that.buttons.cancel.enable();
+                            that.buttons.formSubmit.enable();
+
                             return;
                         }
                     });

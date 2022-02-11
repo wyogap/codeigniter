@@ -23,6 +23,10 @@
 <link href="{$base_url}assets/datatables/KeyTable-2.5.1/css/keyTable.bootstrap4.css" rel="stylesheet" type="text/css" >
 <link href="{$base_url}assets/datatables/Editor-1.9.2/css/editor.bootstrap4.css" rel="stylesheet" type="text/css" >
 
+<link href="{$base_url}assets/datatables/RowReorder-1.2.6/css/rowReorder.bootstrap4.css" rel="stylesheet" type="text/css" >
+<link href="{$base_url}assets/datatables/SearchBuilder-1.3.0/css/searchBuilder.bootstrap4.css" rel="stylesheet" type="text/css" >
+<link href="{$base_url}assets/datatables/SearchPanes-1.4.0/css/searchPanes.bootstrap4.css" rel="stylesheet" type="text/css" >
+
 <link href="{$base_url}assets/datatables/tcg/dt-editor-select2.bootstrap4.css" rel="stylesheet" />
 <link href="{$base_url}assets/datatables/tcg/dt-editor-mask.css" rel="stylesheet" />
 <link href="{$base_url}assets/datatables/tcg/dt-editor-toggle.bootstrap4.css" rel="stylesheet" />

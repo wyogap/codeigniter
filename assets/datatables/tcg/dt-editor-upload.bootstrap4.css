@@ -43,3 +43,20 @@ div.DTE_Field_Type_tcg_upload div[data-dte-e='input'] {
     border: 1px solid rgba(200,200,200,0.8);
     background-color: rgba(255,255,255,0.8)
 }
+
+.dropzone.disabled .dz-message {
+	display: none;
+}
+
+.dropzone.disabled .dz-details {
+	display: none;
+}
+.dropzone.disabled {
+	cursor: unset;
+}
+
+.dropzone.disabled .dz-preview .dz-container:hover .dz-image img {
+	transform: unset !important;
+    -webkit-filter: unset !important;
+    filter: unset !important;
+}

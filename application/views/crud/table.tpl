@@ -5,7 +5,7 @@
                 <div class="card">
                     <div class="card-body">
                         <h4 class="page-title"> <i class="mdi {$page_icon} title_icon"></i>
-                            {$page_title} {if !empty($level1_title)}- {$level1_title}{/if}
+                            {$page_title}
                         </h4>
                     </div> <!-- end card body-->
                 </div> <!-- end card -->

@@ -1,5 +1,17 @@
 <?php if(!defined('BASEPATH')) exit('No direct script access allowed');
 
+/**
+ * Mtable
+ * 
+ * This the CRUD class used by the framework. 
+ * 
+ * If data_model is provided, it will use the data_model class (presumably a subclass of Mcrud). 
+ * The data_model class provide encapsulation of the table definition and configuration
+ * 
+ * If data_model is not provided, it will retrieve the table definition and configuration from database.
+ * It will then use Mcrud_tablemeta as the data model class
+ *  
+ */
 require_once(APPPATH.'models/Mcrud_tablemeta.php');
 
 class Mtable extends CI_Model
@@ -194,6 +206,17 @@ class Mtable extends CI_Model
         //use data model
         if ($this->data_model != null) {
             return $this->data_model->tablename();
+        }
+
+        return null;
+    }
+
+    function editable_table() {
+        if (!$this->initialized)   return null;
+
+        //use data model
+        if ($this->data_model != null) {
+            return $this->data_model->editable_table();
         }
 
         return null;
@@ -398,7 +421,12 @@ class Mtable extends CI_Model
                 `filter_options_array`,
                 `filter_invalid_value`,
                 `allow_search`,
-                `display_format_js`
+                `display_format_js`,
+                `subtable_id`,
+                `subtable_key_column`,
+                `subtable_fkey_column`,
+                `subtable_order`,
+                `subtable_row_reorder_column`
             )
             SELECT 
                 ? as `table_id`,
@@ -442,7 +470,12 @@ class Mtable extends CI_Model
                 `filter_options_array`,
                 `filter_invalid_value`,
                 `allow_search`,
-                `display_format_js`
+                `display_format_js`,
+                `subtable_id`,
+                `subtable_key_column`,
+                `subtable_fkey_column`,
+                `subtable_order`,
+                `subtable_row_reorder_column`
             FROM `dbo_crud_columns`
             where table_id=? and is_deleted=0";
 

@@ -33,9 +33,12 @@ abstract class MY_Level1_Crud_Controller extends CI_Controller {
 		//get actual level1 name, in case we get level1_id
 		$level1_name = $this->get_level1_name($level1_name);
 
+		//navigation
+		$navigation = $this->get_navigation();
+
 		//check permission
 		if (!$this->can_view($level1_name)) {
-			theme_403(static::$PAGE_GROUP);
+			theme_403_with_navigation($navigation);
 			return;
 		}
 
@@ -53,34 +56,34 @@ abstract class MY_Level1_Crud_Controller extends CI_Controller {
 		//for consistency, remove the group-name from params
 		array_shift($params);
 
-		$this->handle($level1_name, $method, $params);
+		$this->handle($level1_name, $navigation, $method, $params);
 	}
 
-	public function handle($level1_name, $name = '', $params = array())
+	public function handle($level1_name, $navigation, $name = '', $params = array())
 	{
 		$controller = $this->router->class .'/'. $level1_name;
 
 		if (empty($level1_name) || empty($name)) {
-			theme_403(static::$PAGE_GROUP, $controller);
+			theme_403_with_navigation($navigation, $controller);
 			return;
 		}
 
 		//check for permission
-		$this->load->model(array('crud/Mpages', 'crud/Mpermission', 'crud/Mnavigation'));
+		$this->load->model(array('crud/Mpages', 'crud/Mpermission'));
 		if (!$this->Mpermission->can_view($name)) {
-			theme_403(static::$PAGE_GROUP, $controller);		//not-authorized
+			theme_403_with_navigation($navigation, $controller);		//not-authorized
 			return;
 		}
 		
 		$page = $this->Mpages->get_page($name, static::$PAGE_GROUP);
 		if ($page == null) {
-			theme_404(static::$PAGE_GROUP, $controller);
+			theme_404_with_navigation($navigation, $controller);
 			return;
 		}
 
 		if (isset($params) && count($params) > 0 && $params[0] == 'add') {
 			unset($params[0]);
-			$this->table_add($level1_name, $page);
+			$this->table_add($level1_name, $page, $navigation);
 			return;
 		}
 
@@ -90,23 +93,51 @@ abstract class MY_Level1_Crud_Controller extends CI_Controller {
 			//var_dump($params);
 
 			$id = array_shift($params);
-			if ($id != null)		$this->table_edit($level1_name, $page, $id);
-			else					$this->table_add($level1_name, $page);
+			if ($id != null)		$this->table_edit($level1_name, $page, $navigation, $id);
+			else					$this->table_add($level1_name, $page, $navigation);
 			
 			return;
 		}
 
 		$level1_id = $this->get_level1_id($level1_name);
 
+		//crud pages
+		$model = $this->get_model($page['crud_table_id'], $level1_id);
+		if ($model == null) {
+			theme_404_with_navigation($navigation, $controller);
+			return;
+		}
+
+		if (isset($params) && count($params) > 0 && $params[0] == 'detail') {
+			unset($params[0]);
+			$this->table_detail($level1_name, $page['name'], $model, $navigation, $params);
+			return;
+		}
+
+		if (isset($params) && count($params) > 0 && $params[0] == 'json') {
+			unset($params[0]);
+			$this->table_json($level1_name, $page['name'], $model, $params);
+			return;
+		}
+
+		if (isset($params) && count($params) > 0 && $params[0] == 'lookup') {
+			unset($params[0]);
+			$this->table_lookup($level1_name, $model, $params);
+			return;
+		}
+
+		if (isset($params) && count($params) > 1 && $params[0] == 'subtable') {
+			unset($params[0]);
+			$subtable_id = array_shift($params);
+			$this->table_subtable($level1_name, $page['id'], $subtable_id, $params);
+			return;
+		}
+
+		//table crud
 		$page_data['level1_name']            = $level1_name;
 		$page_data['level1_id']           	 = $level1_id;
 		$page_data['level1_title']           = $this->get_level1_title($level1_name);
 		$page_data['level1_column']        	 = static::$LEVEL1_COLUMN;
-
-		//navigation
-		$navigation = $this->get_navigation();
-
-		//var_dump($navigation); exit;
 
 		//controller name
 		$page_data['controller'] = $this->router->class .'/'. $level1_name;
@@ -150,38 +181,6 @@ abstract class MY_Level1_Crud_Controller extends CI_Controller {
 
 			$this->smarty->render_theme($template, $page_data);
 			
-			return;
-		}
-
-		//crud pages
-		$model = $this->get_model($page['crud_table_id'], $level1_id);
-		if ($model == null) {
-			theme_404(static::$PAGE_GROUP, $controller);
-			return;
-		}
-
-		if (isset($params) && count($params) > 0 && $params[0] == 'detail') {
-			unset($params[0]);
-			$this->table_detail($level1_name, $page['name'], $model, $params);
-			return;
-		}
-
-		if (isset($params) && count($params) > 0 && $params[0] == 'json') {
-			unset($params[0]);
-			$this->table_json($level1_name, $page['name'], $model, $params);
-			return;
-		}
-
-		if (isset($params) && count($params) > 0 && $params[0] == 'lookup') {
-			unset($params[0]);
-			$this->table_lookup($level1_name, $model, $params);
-			return;
-		}
-
-		if (isset($params) && count($params) > 1 && $params[0] == 'subtable') {
-			unset($params[0]);
-			$subtable_id = array_shift($params);
-			$this->table_subtable($level1_name, $page['id'], $subtable_id, $params);
 			return;
 		}
 
@@ -290,24 +289,24 @@ abstract class MY_Level1_Crud_Controller extends CI_Controller {
 	  
 	}
 
-	protected function table_add($level1_name, $page) {
+	protected function table_add($level1_name, $page, $navigation) {
 		$controller = $this->router->class .'/'. $level1_name;
 
 		$page_type = $page['page_type'];
 		if ($page_type != 'table') {
-			theme_404(static::$PAGE_GROUP, $controller);		//not-found
+			theme_404_with_navigation($navigation, $controller);		//not-found
 			return;
 		}
 
 		//check permission
 		if (!$this->can_edit($level1_name)) {
-			theme_403(static::$PAGE_GROUP);
+			theme_403_with_navigation($navigation, $controller);
 			return;
 		}
 
 		$this->load->model(array('crud/Mpermission'));
 		if (!$this->Mpermission->can_edit($page['name'])) {
-			theme_403(static::$PAGE_GROUP);		//not-authorized
+			theme_403_with_navigation($navigation, $controller);		//not-authorized
 			return;
 		}
 
@@ -317,9 +316,6 @@ abstract class MY_Level1_Crud_Controller extends CI_Controller {
 		$page_data['level1_id']           	 = $level1_id;
 		$page_data['level1_title']           = $this->get_level1_title($level1_name);
 		$page_data['level1_column']        	 = static::$LEVEL1_COLUMN;
-
-		//navigation
-		$navigation = $this->get_navigation();
 
 		//var_dump($navigation); exit;
 
@@ -345,7 +341,7 @@ abstract class MY_Level1_Crud_Controller extends CI_Controller {
 		//crud pages
 		$model = $this->get_model($page['crud_table_id'], $level1_id);
 		if ($model == null) {
-			theme_404(static::$PAGE_GROUP, $controller);
+			theme_404_with_navigation($navigation, $controller);
 			return;
 		}
 		
@@ -405,24 +401,24 @@ abstract class MY_Level1_Crud_Controller extends CI_Controller {
 		$this->smarty->render_theme($template, $page_data);
 	}
 
-	protected function table_edit($level1_name, $page, $id=null) {
+	protected function table_edit($level1_name, $page, $navigation, $id=null) {
 		$controller = $this->router->class .'/'. $level1_name;
 
 		$page_type = $page['page_type'];
 		if ($page_type != 'table') {
-			theme_404(static::$PAGE_GROUP, $controller);		//not-found
+			theme_404_with_navigation($navigation, $controller);		//not-found
 			return;
 		}
 
 		//check permission
 		if (!$this->can_edit($level1_name)) {
-			theme_403(static::$PAGE_GROUP);
+			theme_403_with_navigation($navigation, $controller);
 			return;
 		}
 
 		$this->load->model(array('crud/Mpermission'));
 		if (!$this->Mpermission->can_edit($page['name'])) {
-			theme_403(static::$PAGE_GROUP);		//not-authorized
+			theme_403_with_navigation($navigation, $controller);		//not-authorized
 			return;
 		}
 
@@ -432,9 +428,6 @@ abstract class MY_Level1_Crud_Controller extends CI_Controller {
 		$page_data['level1_id']           	 = $level1_id;
 		$page_data['level1_title']           = $this->get_level1_title($level1_name);
 		$page_data['level1_column']        	 = static::$LEVEL1_COLUMN;
-
-		//navigation
-		$navigation = $this->get_navigation();
 
 		//controller name
 		$page_data['controller'] = $this->router->class .'/'. $level1_name;
@@ -456,7 +449,7 @@ abstract class MY_Level1_Crud_Controller extends CI_Controller {
 		//crud pages
 		$model = $this->get_model($page['crud_table_id'], $level1_id);
 		if ($model == null) {
-			theme_404(static::$PAGE_GROUP, $controller);
+			theme_404_with_navigation($navigation, $controller);
 			return;
 		}
 		
@@ -556,23 +549,23 @@ abstract class MY_Level1_Crud_Controller extends CI_Controller {
 		$this->smarty->render_theme($template, $page_data);
 	}
 
-	protected function table_detail($level1_name, $page_name, $model, $params = null) {
+	protected function table_detail($level1_name, $page_name, $model, $navigation, $params = null) {
 		$controller = $this->router->class .'/'. $level1_name;
 
 		if ($params == null || count($params) == 0) {
-			theme_404(static::$PAGE_GROUP, $controller);
+			theme_404_with_navigation($navigation, $controller);
 			return;
 		}
 
 		//check permission
 		if (!$this->can_view($level1_name)) {
-			theme_403(static::$PAGE_GROUP);
+			theme_403_with_navigation($navigation, $controller);
 			return;
 		}
 
 		$this->load->model(array('crud/Mpermission'));
 		if (!$this->Mpermission->can_view($page_name)) {
-			theme_403(static::$PAGE_GROUP);
+			theme_403_with_navigation($navigation, $controller);
 			return;
 		}
 
@@ -625,6 +618,7 @@ abstract class MY_Level1_Crud_Controller extends CI_Controller {
 
 	protected function table_json($level1_name, $page_name, $model, $params = null) {
 		$table_name = $model->tablename();
+		$db_table_name = $model->editable_table();
 		
 		//build params
 		$filters = array();
@@ -837,7 +831,7 @@ abstract class MY_Level1_Crud_Controller extends CI_Controller {
             //prevent generation of pdf thumbnail
             Uploader::$GENERATE_PDF_THUMBNAIL = 0;
 
-            $fileObj = $uploader->upload($_FILES['file'], $table_name);
+            $fileObj = $uploader->upload($_FILES['file'], $db_table_name);
 
             $data['files'] = array();
             if(!empty($fileObj['error'])) {
@@ -879,7 +873,7 @@ abstract class MY_Level1_Crud_Controller extends CI_Controller {
 
             $error_msg = "";
 			foreach ($files as $key) {
-                $uploader->remove($key, $table_name);
+                $uploader->remove($key, $db_table_name);
             }
 
             $data['status'] = 1;
@@ -1149,6 +1143,8 @@ abstract class MY_Level1_Crud_Controller extends CI_Controller {
 	}
 
 	protected function get_navigation() {
-		$this->Mnavigation->get_navigation($this->session->userdata('role_id'), static::$PAGE_GROUP);
+		$this->load->model('crud/Mnavigation');
+
+		return $this->Mnavigation->get_navigation($this->session->userdata('role_id'), static::$PAGE_GROUP);
 	}
 }

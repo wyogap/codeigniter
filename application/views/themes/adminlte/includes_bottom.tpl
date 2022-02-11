@@ -12,6 +12,8 @@
 <!-- select2 -->
 <script src="{$base_url}assets/select2/js/select2.min.js"></script>
 
+<script src="{$base_url}assets/ckeditor5/ckeditor.js"></script>
+
 <!-- datatables -->
 <script src="{$base_url}assets/datatables/DataTables-1.10.20/js/jquery.dataTables.min.js" defer></script>
 <script src="{$base_url}assets/datatables/DataTables-1.10.20/js/dataTables.bootstrap4.min.js" defer></script>
@@ -35,6 +37,15 @@
 <script src="{$base_url}assets/datatables/Editor-1.9.2/js/dataTables.editor.min.js" defer></script>
 <script src="{$base_url}assets/datatables/Editor-1.9.2/js/editor.bootstrap4.min.js" defer></script>
 
+<script src="{$base_url}assets/datatables/RowReorder-1.2.6/js/dataTables.rowReorder.min.js" defer></script>
+<script src="{$base_url}assets/datatables/RowReorder-1.2.6/js/rowReorder.bootstrap4.min.js" defer></script>
+
+<script src="{$base_url}assets/datatables/SearchBuilder-1.3.0/js/dataTables.searchBuilder.min.js" defer></script>
+<script src="{$base_url}assets/datatables/SearchBuilder-1.3.0/js/searchBuilder.bootstrap4.min.js" defer></script>
+
+<script src="{$base_url}assets/datatables/SearchPanes-1.4.0/js/dataTables.searchPanes.min.js" defer></script>
+<script src="{$base_url}assets/datatables/SearchPanes-1.4.0/js/searchPanes.bootstrap4.min.js" defer></script>
+
 <script src="{$base_url}assets/datatables/tcg/dt-editor-select2.js" defer></script>
 <script src="{$base_url}assets/jquery-mask/jquery.mask.min.js" defer></script>
 <script src="{$base_url}assets/datatables/tcg/dt-editor-mask.js" defer></script>
@@ -57,10 +68,11 @@
 <script src="{$base_url}assets/datatables/tcg/dt-editor-upload.js" defer></script>
 
 <!-- WYSIWYG editor -->
-<script src="{$base_url}assets/ckeditor/ckeditor.js" defer></script>
-<script src="{$base_url}assets/ckeditor/adapters/jquery.js" defer></script>
+<!-- <script src="{$base_url}assets/ckeditor/ckeditor.js" defer></script>
+<script src="{$base_url}assets/ckeditor/adapters/jquery.js" defer></script> -->
 <!-- <script src="{$base_url}assets/backend/js/vendor/summernote-bs4.min.js"></script>
 <script src="{$base_url}assets/backend/js/pages/demo.summernote.js"></script> -->
+
 
 <!-- full calendar -->
 <script src="{$base_url}assets/fullcalendar/core/main.min.js" defer></script>

@@ -66,8 +66,15 @@ class Mtablemeta extends CI_Model
         'edit_info' => null,
         'edit_attr' => array(),
         'edit_onchange_js' => '',
+        'edit_validation_js' => '',
         'edit_bubble' => false,
         'edit_def_value' => null,
+        'subtable_id' => 0,
+        'subtable_key_column' => null,
+        'subtable_fkey_column' => null,
+        'subtable_columns' => array(),
+        'subtable_order' => null,
+        'subtable_row_reorder_column' => null
     );
     
     public static $FILTER = array (

@@ -158,32 +158,85 @@
     color: #727cf5
 }
 
+.x-max-20 {
+	max-width: 20px;
+}
+
+.x-max-40 {
+	max-width: 40px;
+    width: 40px;
+}
+
+.x-max-60 {
+	max-width: 60px;
+}
+
+.x-max-80 {
+	max-width: 80px;
+}
+
+.x-max-100 {
+	max-width: 100px;
+}
+
+.x-max-120 {
+	max-width: 120px;
+}
+
+.x-max-140 {
+	max-width: 140px;
+}
+
+.x-max-160 {
+	max-width: 160px;
+}
+
+.x-max-180 {
+	max-width: 180px;
+}
+
+.x-max-200 {
+	max-width: 200px;
+}
+
 .x-text-120 {
 	min-width: 120px;
-}
-
-.x-text-125 {
-	min-width: 125px;
-}
-
-.x-text-130 {
-	min-width: 130px;
-}
-
-.x-text-135 {
-	min-width: 135px;
 }
 
 .x-text-140 {
 	min-width: 140px;
 }
 
-.x-text-145 {
-	min-width: 125px;
+.x-text-160 {
+	min-width: 160px;
 }
 
-.x-text-150 {
-	min-width: 130px;
+.x-text-180 {
+	min-width: 180px;
+}
+
+.x-text-200 {
+	min-width: 200px;
+}
+
+.x-text-220 {
+	min-width: 220px;
+}
+
+.x-text-240 {
+	min-width: 240px;
+}
+
+.x-text-260 {
+	min-width: 260px;
+}
+
+.x-text-280 {
+	min-width: 280px;
+}
+
+.x-text-300 {
+	min-width: 300px;
 }
 
 .card-body .divider {
@@ -224,6 +277,15 @@
 
 .select2-container--bootstrap .select2-selection--multiple .select2-selection__choice:first-child {
 	margin-left: 0px;
+}
+
+.need-attention {
+    border: 1px red solid !important;
+}
+
+select.need-attention+ .select2>.selection>.select2-selection {
+    border: 1px red solid !important;
+    border-radius: .25rem;
 }
 
 @media (min-width: 576px) {

@@ -14,4 +14,9 @@ class Playground extends CI_Controller {
 		$this->load->view('playground/subtable');
 	}
 
+	public function selecttable()
+	{
+		$this->load->view('playground/selecttable');
+	}
+
 }

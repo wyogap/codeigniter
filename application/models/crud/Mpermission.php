@@ -155,12 +155,46 @@ class Mpermission extends CI_Model
         return false;
     }
 
+    public function is_guardian() {
+		$isLoggedIn = $this->session->userdata('is_logged_in');
+		if(!isset($isLoggedIn) || $isLoggedIn != TRUE)      return false;   //not logged-in
+
+        $guardian = $this->session->userdata('is_guardian');
+        if ($guardian)     return true;
+
+        return false;
+    }
+
+    public function is_student() {
+		$isLoggedIn = $this->session->userdata('is_logged_in');
+		if(!isset($isLoggedIn) || $isLoggedIn != TRUE)      return false;   //not logged-in
+
+        $student = $this->session->userdata('is_student');
+        if ($student)     return true;
+
+        return false;
+    }
+
+    public function is_teacher() {
+		$isLoggedIn = $this->session->userdata('is_logged_in');
+		if(!isset($isLoggedIn) || $isLoggedIn != TRUE)      return false;   //not logged-in
+
+        $admin = $this->session->userdata('is_teacher');
+        if ($admin)     return true;
+
+        return false;
+    }
+
     public function is_admin() {
 		$isLoggedIn = $this->session->userdata('is_logged_in');
 		if(!isset($isLoggedIn) || $isLoggedIn != TRUE)      return false;   //not logged-in
 
         $admin = $this->session->userdata('admin');
         if ($admin)     return true;
+
+        $is_admin = $this->session->userdata('is_admin');
+        $is_superadmin = $this->session->userdata('is_superadmin');
+        if ($is_admin || $is_superadmin)    return true;
         
         $role_id = $this->session->userdata('role_id');
         return ($role_id == static::$ADMIN_ROLE_ID);

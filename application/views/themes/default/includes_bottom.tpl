@@ -2,18 +2,24 @@
 <!-- bootstrap. bundle includes popper.js -->
 <script src="{$base_url}assets/bootstrap/js/bootstrap.bundle.min.js" defer></script>
 
+<script src="{$base_url}assets/bootstrap-datepicker/js/bootstrap-datepicker.min.js" defer></script>
+
 <!-- leaflet -->
+{if !empty($flag_geolocation)}
 <script src="{$base_url}assets/leaflet/leaflet/leaflet.js"></script>
 <script src="{$base_url}assets/leaflet/esri/esri-leaflet.js"></script>
 <script src="{$base_url}assets/leaflet/esri/esri-leaflet-geocoder.js"></script>
 <script src="{$base_url}assets/leaflet/fullscreen/Leaflet.fullscreen.min.js"></script>
 <script src="{$base_url}assets/leaflet/easybutton/easy-button.js"></script>
+{/if}
 
 <script src="{$base_url}assets/select2/js/select2.min.js"></script>
 <script src="{$base_url}assets/jquery-mask/jquery.mask.min.js"></script>
 
+<script src="{$base_url}assets/ckeditor5/ckeditor.js"></script>
+
 <!-- datatables -->
-<script src="{$base_url}assets/datatables/DataTables-1.10.20/js/jquery.dataTables.min.js"></script>
+<script src="{$base_url}assets/datatables/DataTables-1.10.20/js/jquery.dataTables.js"></script>
 <script src="{$base_url}assets/datatables/DataTables-1.10.20/js/dataTables.bootstrap4.min.js" defer></script>
 <script src="{$base_url}assets/datatables/Responsive-2.2.3/js/dataTables.responsive.min.js" defer></script>
 <script src="{$base_url}assets/datatables/Responsive-2.2.3/js/responsive.bootstrap4.min.js" defer></script>
@@ -32,11 +38,17 @@
 <script src="{$base_url}assets/datatables/KeyTable-2.5.1/js/dataTables.keyTable.min.js" defer></script>
 <script src="{$base_url}assets/datatables/KeyTable-2.5.1/js/keyTable.bootstrap4.min.js" defer></script>
 
-<script src="{$base_url}assets/datatables/Editor-1.9.2/js/dataTables.editor.min.js"></script>
-<script src="{$base_url}assets/datatables/Editor-1.9.2/js/editor.bootstrap4.min.js" defer></script>
+<script src="{$base_url}assets/datatables/Editor-2.0.4/js/dataTables.editor.min.js"></script>
+<script src="{$base_url}assets/datatables/Editor-2.0.4/js/editor.bootstrap4.min.js" defer></script>
 
-<script src="{$base_url}assets/datatables/RowReorder-1.2.6/js/dataTables.rowReorder.min.js" defer></script>
+<script src="{$base_url}assets/datatables/RowReorder-1.2.6/js/dataTables.rowReorder.js" defer></script>
 <script src="{$base_url}assets/datatables/RowReorder-1.2.6/js/rowReorder.bootstrap4.min.js" defer></script>
+
+<script src="{$base_url}assets/datatables/SearchBuilder-1.3.0/js/dataTables.searchBuilder.min.js" defer></script>
+<script src="{$base_url}assets/datatables/SearchBuilder-1.3.0/js/searchBuilder.bootstrap4.min.js" defer></script>
+
+<script src="{$base_url}assets/datatables/SearchPanes-1.4.0/js/dataTables.searchPanes.min.js" defer></script>
+<script src="{$base_url}assets/datatables/SearchPanes-1.4.0/js/searchPanes.bootstrap4.min.js" defer></script>
 
 <script src="{$base_url}assets/datatables/tcg/dt-editor-select2.js" defer></script>
 <script src="{$base_url}assets/datatables/tcg/dt-editor-mask.js" defer></script>
@@ -54,13 +66,16 @@
 <script src="{$base_url}assets/datatables/tcg/dt-editor-date.js" defer></script>
 <script src="{$base_url}assets/datatables/tcg/dt-editor-textarea.js" defer></script>
 <script src="{$base_url}assets/datatables/tcg/dt-editor-editor.js" defer></script>
+<script src="{$base_url}assets/datatables/tcg/dt-editor-options.js" defer></script>
+
+<script src="{$base_url}assets/datatables/tcg/dt-editor-table-select.js" defer></script>
 
 <script src="{$base_url}assets/dropzone/dropzone.min.js"></script>
 <script src="{$base_url}assets/datatables/tcg/dt-editor-upload.js" defer></script>
 
 <!-- WYSIWYG editor -->
-<script src="{$base_url}assets/ckeditor/ckeditor.js"></script>
-<script src="{$base_url}assets/ckeditor/adapters/jquery.js"></script>
+<!-- <script src="{$base_url}assets/ckeditor/ckeditor.js"></script>
+<script src="{$base_url}assets/ckeditor/adapters/jquery.js"></script> -->
 <!-- <script src="{$base_url}assets/backend/js/vendor/summernote-bs4.min.js"></script>
 <script src="{$base_url}assets/backend/js/pages/demo.summernote.js"></script> -->
 

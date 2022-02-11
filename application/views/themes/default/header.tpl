@@ -24,7 +24,7 @@
                     </div>
 
                     <!-- Logout-->
-                    <a href="{$site_url}crud/profile" class="dropdown-item notify-item">
+                    <a href="{$site_url}user/profile" class="dropdown-item notify-item">
                         <i class="mdi mdi-account mr-1"></i>
                         <span>{__('Profil')}</span>
                     </a>

@@ -25,29 +25,127 @@ set
 	
 -- ------
 
-INSERT INTO `sngine`.`dbo_lookups` (`id`, `group`, `label`, `value`, `level`, `optgroup`, `tag1`, `tag2`, `created_by`, `created_on`, `updated_by`, `updated_on`, `is_deleted`) VALUES ('29', 'column_type', 'Subtable', 'tcg_table', '1', '0', '', '', '1', '2021-03-13 23:31:46', '990', '2021-03-17 13:48:11', '0');
-INSERT INTO `sngine`.`dbo_lookups` (`id`, `group`, `label`, `value`, `level`, `optgroup`, `tag1`, `tag2`, `created_by`, `created_on`, `updated_by`, `updated_on`, `is_deleted`) VALUES ('50', 'edit_type', 'Subtable', 'tcg_table', '1', '0', '', '', '1', '2021-03-14 09:26:19', '990', '2021-03-17 13:38:35', '0');
+INSERT INTO `dbo_lookups` (`id`, `group`, `label`, `value`, `level`, `optgroup`, `tag1`, `tag2`, `created_by`, `created_on`, `updated_by`, `updated_on`, `is_deleted`) VALUES ('29', 'column_type', 'Subtable', 'tcg_table', '1', '0', '', '', '1', '2021-03-13 23:31:46', '990', '2021-03-17 13:48:11', '0');
+INSERT INTO `dbo_lookups` (`id`, `group`, `label`, `value`, `level`, `optgroup`, `tag1`, `tag2`, `created_by`, `created_on`, `updated_by`, `updated_on`, `is_deleted`) VALUES ('50', 'edit_type', 'Subtable', 'tcg_table', '1', '0', '', '', '1', '2021-03-14 09:26:19', '990', '2021-03-17 13:38:35', '0');
 
-ALTER TABLE `sngine`.`dbo_crud_tables` 
+ALTER TABLE `dbo_crud_tables` 
 ADD COLUMN `row_reorder` SMALLINT NOT NULL DEFAULT 0 AFTER `custom_js`,
 ADD COLUMN `row_reorder_column` VARCHAR(45) NULL DEFAULT NULL AFTER `row_reorder`;
 
-ALTER TABLE `sngine`.`dbo_crud_tables` 
+ALTER TABLE `dbo_crud_tables` 
 ADD COLUMN `search_max_result` INT NOT NULL DEFAULT 0 AFTER `search`;
 
-ALTER TABLE `sngine`.`dbo_crud_tables` 
+ALTER TABLE `dbo_crud_tables` 
 ADD COLUMN `on_add_custom_js` VARCHAR(100) NULL DEFAULT NULL AFTER `import_custom_js`,
 ADD COLUMN `on_edit_custom_js` VARCHAR(100) NULL DEFAULT NULL AFTER `on_add_custom_js`,
 ADD COLUMN `on_delete_custom_js` VARCHAR(100) NULL DEFAULT NULL AFTER `on_edit_custom_js`;
 
-ALTER TABLE `sngine`.`dbo_audit_trails` 
+ALTER TABLE `dbo_audit_trails` 
 CHANGE COLUMN `reference_id` `reference_id` VARCHAR(1000) NULL ;
 
-ALTER TABLE `sngine`.`dbo_crud_columns` 
+ALTER TABLE `dbo_crud_columns` 
 ADD COLUMN `subtable_id` BIGINT NULL DEFAULT NULL AFTER `display_format_js`,
 ADD COLUMN `subtable_key_column` VARCHAR(100) NULL DEFAULT NULL AFTER `subtable_id`,
 ADD COLUMN `subtable_fkey_column` VARCHAR(100) NULL DEFAULT NULL AFTER `subtable_key_column`;
 
-UPDATE `sngine`.`dbo_lookups` SET `label` = 'Virtual', `value` = 'virtual' WHERE (`id` = '29');
+UPDATE `dbo_lookups` SET `label` = 'Virtual', `value` = 'virtual' WHERE (`id` = '29');
 
-UPDATE `sngine`.`dbo_lookups` SET `id` = '30', `group` = 'column_type', `label` = 'DateTime', `value` = 'tcg_datetime' WHERE (`id` = '33');
+----
+
+UPDATE `dbo_lookups` SET `id` = '30', `group` = 'column_type', `label` = 'DateTime', `value` = 'tcg_datetime' WHERE (`id` = '33');
+
+INSERT INTO `dbo_lookups` (`id`, `group`, `label`, `value`, `level`, `optgroup`, `created_by`, `created_on`, `is_deleted`) VALUES ('97', 'nav_action_type', 'Parameterized URL', 'param_url', '1', '0', '1', '2021-03-18 01:43:23', '0');
+
+ALTER TABLE `sngine`.`dbo_crud_pages` 
+ADD COLUMN `page_filter` VARCHAR(1000) NULL DEFAULT NULL AFTER `is_public`;
+
+ALTER TABLE `sngine`.`dbo_crud_columns` 
+ADD COLUMN `edit_readonly` SMALLINT(6) NOT NULL DEFAULT '0' AFTER `edit_compulsory`;
+
+INSERT INTO `sngine`.`dbo_lookups` (`id`, `group`, `label`, `value`, `level`, `optgroup`, `created_by`, `created_on`, `is_deleted`) VALUES ('67', 'filter_type', 'Date Range', 'daterange', '1', '0', '1', '2021-03-13 23:31:46', '0');
+
+CREATE TABLE `dbo_crud_filters` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `table_id` int(11) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `order_no` int(11) NOT NULL DEFAULT '99',
+  `column_id` int(11) DEFAULT NULL,
+  `filter_label` varchar(100) NOT NULL DEFAULT '',
+  `filter_type` varchar(100) DEFAULT NULL,
+  `filter_css` varchar(100) NOT NULL DEFAULT '',
+  `filter_attr_array` varchar(1000) DEFAULT NULL,
+  `filter_onchange_js` varchar(100) DEFAULT NULL,
+  `filter_options_array` varchar(1000) DEFAULT NULL,
+  `filter_invalid_value` smallint(6) NOT NULL DEFAULT '0',
+  `created_on` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `created_by` bigint(20) DEFAULT NULL,
+  `updated_on` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_by` bigint(20) DEFAULT NULL,
+  `is_deleted` smallint(6) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_columns_tableid_name` (`table_id`,`name`,`is_deleted`)
+) ENGINE=InnoDB AUTO_INCREMENT=100 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+DROP procedure IF EXISTS `usp_init_filter_table`;
+
+DELIMITER $$
+CREATE PROCEDURE `usp_init_filter_table`()
+BEGIN
+	INSERT INTO `dbo_crud_filters`
+	(
+	`table_id`,
+	`name`,
+	`order_no`,
+	`column_id`,
+	`filter_label`,
+	`filter_type`,
+	`filter_css`,
+	`filter_attr_array`,
+	`filter_onchange_js`,
+	`filter_options_array`,
+	`filter_invalid_value`,
+	`created_on`,
+	`created_by`,
+	`updated_on`,
+	`updated_by`,
+	`is_deleted`)
+	SELECT 
+		a.`table_id`,
+		a.`name`,
+		a.`order_no`,
+		a.`id` as column_id,
+		a.`filter_label`,
+		a.`filter_type`,
+		a.`filter_css`,
+		a.`filter_attr_array`,
+		a.`filter_onchange_js`,
+		a.`filter_options_array`,
+		a.`filter_invalid_value`,
+		a.`created_on`,
+		a.`created_by`,
+		a.`updated_on`,
+		a.`updated_by`,
+		a.`is_deleted`
+	FROM `dbo_crud_columns` a 
+	left join `dbo_crud_filters` b on b.table_id=a.table_id and b.name=a.name and b.is_deleted=0
+	where a.allow_filter=1 and b.id is null
+	;
+END$$
+
+DELIMITER ;
+;
+
+-- manual: create tablemeta: filters (and related columns)
+
+ALTER TABLE `sngine`.`dbo_crud_filters` 
+ADD COLUMN `is_required` SMALLINT(6) NOT NULL DEFAULT '0' AFTER `filter_invalid_value`;
+
+ALTER TABLE `sngine`.`dbo_crud_filters` 
+ADD COLUMN `options_data_url` VARCHAR(100) NULL DEFAULT NULL AFTER `is_required`;
+
+ALTER TABLE `sngine`.`dbo_crud_tables` 
+ADD COLUMN `lookup_value_column` VARCHAR(100) NULL DEFAULT NULL AFTER `key_column`;
+
+ALTER TABLE `sngine`.`dbo_crud_tables` 
+CHANGE COLUMN `search_max_result` `xxxsearch_max_result` INT(11) NOT NULL DEFAULT '0' ;

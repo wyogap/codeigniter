@@ -21,6 +21,96 @@
 		}
 	}
 	
+	if (!function_exists('str_truncate')) {
+		function str_truncate($in, $len) {
+			if ($in == null)	return $in;
+			return strlen($in) > $len ? substr($in,0,$len)."..." : $in;
+		}
+	}
+
+	if (!function_exists('str_starts_with')) {
+		function str_starts_with($haystack, $needle, $case = true)
+		{
+		  if ($case) {
+			return strpos($haystack, $needle, 0) === 0;
+		  }
+		  return stripos($haystack, $needle, 0) === 0;
+		}
+	}
+	  
+	if (!function_exists('str_ends_with')) {
+		function str_ends_with($haystack, $needle, $case = true)
+		{
+		  $expectedPosition = strlen($haystack) - strlen($needle);
+		  if ($case) {
+			return strrpos($haystack, $needle, 0) === $expectedPosition;
+		  }
+		  return strripos($haystack, $needle, 0) === $expectedPosition;
+		}
+	}
+
+	if ( ! function_exists('str_replace_first'))
+	{
+		function str_replace_first($needle, $replace, $haystack) {
+			$pos = strpos($haystack, $needle);
+			if ($pos !== false) {
+				return substr_replace($haystack, $replace, $pos, strlen($needle));
+			}
+
+			return $haystack;
+		}
+	}
+
+	if ( ! function_exists('str_replace_last'))
+	{
+		function str_replace_last($needle, $replace, $haystack) {
+			$pos = strrpos($haystack, $needle);
+			if ($pos !== false) {
+				return substr_replace($haystack, $replace, $pos, strlen($needle));
+			}
+
+			return $haystack;
+		}
+	}
+
+	if ( ! function_exists('get_upload_list'))
+	{	
+		function get_upload_list($values) {
+			global $_db;
+			
+			$sql = "
+			select 
+				group_concat(x.id separator ',') as upload_id,
+				group_concat(x.filename separator ';') as filename,
+				group_concat(x.web_path separator ';') as web_path,
+				group_concat(x.thumbnail_path separator ';') as thumbnail_path
+			from dbo_uploads x 
+			where x.is_deleted=0 and find_in_set(x.id, ?) > 0
+			";
+
+			return $_db->query($sql, array($values))->row_array();
+		}
+	}
+
+
+	if ( ! function_exists('get_upload_info'))
+	{	
+		function get_upload_info($file_id) {
+			global $_db;
+			
+			$sql = "
+			select 
+				x.id as upload_id,
+				x.filename,
+				x.web_path,
+				x.thumbnail_path
+			from dbo_uploads x 
+			where x.is_deleted=0 and x.id=?
+			";
+
+			return $_db->query($sql, array($file_id))->row_array();
+		}
+	}	
 	/**
 	 * get_hash_token
 	 * 
@@ -192,7 +282,7 @@
 	 * @param boolean $quoted
 	 * @return string
 	 */
-	if ( ! function_exists('secure_legacy'))
+	if ( ! function_exists('secure'))
 	{
 		function secure_legacy($value, $type = "", $quoted = true) {
 			/**
@@ -555,6 +645,59 @@
 			$navigation = $ci->Mnavigation->get_navigation($ci->session->userdata('role_id'), $page_group);
 			$page_data['navigation']	 = $navigation;
 
+			var_dump($page_group);
+			var_dump($navigation);
+
+			$template = "error/403.tpl";
+			$ci->smarty->render_theme($template, $page_data);
+		}
+	}
+
+	if ( ! function_exists('theme_404_with_navigation'))
+	{
+		function theme_404_with_navigation($navigation, $controller = null) {
+			$ci	=&	get_instance();
+
+			$page_data = array();
+			$page_data['page_name']              = "error-404";
+			$page_data['page_title']             = __("Not Found");
+			$page_data['page_icon']              = null;
+			$page_data['query_params']           = null;
+
+			if ($controller == null) {
+				$controller = $ci->router->class;
+			}
+			$page_data['controller']           	 = $controller;
+
+			$page_data['page_role']           	 = $ci->session->userdata('page_role');
+
+			$page_data['navigation']	 = $navigation;
+
+			$template = "error/404.tpl";
+			$ci->smarty->render_theme($template, $page_data);
+		}
+	}
+
+	if ( ! function_exists('theme_403_with_navigation'))
+	{
+		function theme_403_with_navigation($navigation, $controller = null) {
+			$ci	=&	get_instance();
+
+			$page_data = array();
+			$page_data['page_name']              = "error-403";
+			$page_data['page_title']             = __("Not Authorized");
+			$page_data['page_icon']              = null;
+			$page_data['query_params']           = null;
+
+			if ($controller == null) {
+				$controller = $ci->router->class;
+			}
+			$page_data['controller']           	 = $controller;
+
+			$page_data['page_role']           	 = $ci->session->userdata('page_role');
+
+			$page_data['navigation']	 = $navigation;
+
 			$template = "error/403.tpl";
 			$ci->smarty->render_theme($template, $page_data);
 		}
@@ -581,6 +724,28 @@
 		}
 	}
 
+	if ( ! function_exists('json_not_login'))
+	{
+		function json_not_login() {
+			$data['error'] = 'not-login';
+			echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
 
+			exit;
+		}
+
+		function json_not_authorized() {
+			$data['error'] = 'not-authorized';
+			echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
+
+			exit;
+		}
+
+		function json_not_implemented() {
+			$data['error'] = 'not-implemented';
+			echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
+
+			exit;
+		}
+	}
 
 ?>

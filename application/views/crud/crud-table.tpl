@@ -33,7 +33,7 @@
     }
 
     td.inline-actions {
-        padding-right: 0px !important;
+        padding-right: 4px !important;
     }
     {/if}
 </style>
@@ -49,14 +49,20 @@
                 <th class="text-center" data-priority="1">#</th>
                 {/if}
                 {foreach from=$tbl.columns key=i item=col}
+                    {if $col.visible != 1}
+                        {continue}
+                    {/if}
+                    {* Hide reference column when displaying as subtable *}
                     {if (!empty($fkey) && $fkey == $col.name)}
                         {continue}
                     {/if}
-                    {if $col.visible == 1}
+                    {* Hide virtual column *}
+                    {if $col.type=="virtual" || $col.type=="tcg_table"}
+                        {continue}
+                    {/if}
                     <th class="{if $col.data_priority < 0}none {else if $col.css}{$col.css} {/if}text-center" data-priority="{$col.data_priority}" style="word-break: normal!important;">
                     {if isset($col.edit_bubble) && $col.edit_bubble}<i class="dripicons-document-edit"></i> {/if}{$col.label}
                     </th>
-                    {/if}
                 {/foreach}
                 {if count($tbl.row_actions) > 0}
                 <th class="text-center" data-priority="1"></th>

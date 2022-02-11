@@ -168,7 +168,7 @@ div.DTE_Bubble div.DTE_Bubble_Liner {
   position: absolute;
   bottom: 0;
   border: 1px solid black;
-  width: 300px;
+  min-width: 300px;
   margin-left: -150px;
   background-color: white;
   box-shadow: 0 12px 30px 0 rgba(0, 0, 0, 0.5);

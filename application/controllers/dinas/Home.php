@@ -63,7 +63,8 @@ class Home extends CI_Controller {
 		$page_data['per_peruntukan'] = $this->Mdashboard->kendaraan_per_peruntukan();
 		$page_data['per_umur_kendaraan'] = $this->Mdashboard->kendaraan_per_umur_kendaraan();
 
-		//$page_data['per_opd'] = $this->Mdashboard->kendaraan_per_opd();
+		//controller name
+		$page_data['controller'] = "crud";
 
 		$this->smarty->render_theme('dinas/home.tpl', $page_data);
 	}

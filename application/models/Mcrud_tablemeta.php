@@ -1,5 +1,11 @@
 <?php if(!defined('BASEPATH')) exit('No direct script access allowed');
 
+/**
+ * Mcrud_tablemeta
+ * 
+ * This is the base class for CRUD Model which retrieve table definition from dabatase (TableMeta)
+ */
+
 require_once(APPPATH.'models/Mtablemeta.php');
 
 class Mcrud_tablemeta extends CI_Model
@@ -39,7 +45,7 @@ class Mcrud_tablemeta extends CI_Model
     protected $error_code = 0;
     protected $error_message = null;
 
-    public $error = array();
+    //public $error = array();
 
     public static $XLSX_FILE_TYPE = "Xlsx";
     public static $XLS_FILE_TYPE = "Xls";
@@ -163,6 +169,9 @@ class Mcrud_tablemeta extends CI_Model
         $this->table_metas['row_reorder'] = ($arr['row_reorder'] == 1);
         $this->table_metas['row_reorder_column'] = empty($arr['row_reorder_column']) ? $arr['key_column'] : $arr['row_reorder_column'];
 
+        $this->table_metas['client_side_query'] = ($arr['client_side_query'] == 1);
+        $this->table_metas['client_side_filter'] = ($arr['client_side_filter'] == 1);
+
         $this->table_metas['add_custom_js'] = $arr['add_custom_js'];
         $this->table_metas['edit_custom_js'] = $arr['edit_custom_js'];
         $this->table_metas['delete_custom_js'] = $arr['delete_custom_js'];
@@ -257,18 +266,40 @@ class Mcrud_tablemeta extends CI_Model
                    continue;
                 }
 
+                //if it is virtual, disallow filter and search
+                if ($col['type'] == 'virtual') {
+                    $row['foreign_key'] = 0;
+                    $row['allow_filter'] = 0;
+                    $row['allow_search'] = 0;
+                    $col['options'] = null;
+                    $row['options_data_url'] = null;
+                }
+
                 $col['display_format_js'] = $row['display_format_js'];
 
                 $col['foreign_key'] = ($row['foreign_key'] == 1);
                 $col['allow_insert'] = ($row['allow_insert'] == 1);
                 $col['allow_edit'] = ($row['allow_edit'] == 1);
                 $col['allow_filter'] = ($row['allow_filter'] == 1);
+                $col['allow_search'] = (isset($row['allow_search']) && $row['allow_search'] == 1);
                 
                 //default: no bubble edit
                 $col['edit_bubble'] = false;
 
                 if (!empty($row['options_array'])) {
-                    $col['options'] = json_decode($row['options_array']);
+                    $col['options'] = json_decode($row['options_array'], true);
+                    if ($col['options'] != null) {
+                        $options = array();
+                        foreach($col['options'] as $idx => $value) {
+                            $options[] = array (
+                                'label' => $value,
+                                'value' => $idx
+                            );
+                        }
+                        $col['options'] = $options;
+                    }
+                    // var_dump($row['options_array']);
+                    // var_dump($col['options']);
                 }
                 else if (!empty($row['options_data_model'])) {
                     $model = null;
@@ -345,7 +376,6 @@ class Mcrud_tablemeta extends CI_Model
                 // }
 
                 //search column
-                $col['allow_search'] = (isset($row['allow_search']) && $row['allow_search'] == 1);
                 if ($this->table_metas['search'] && $col['allow_search']) {
                     $this->search_columns[] = $this->table_name. "." .$col['name'];
                 }
@@ -410,7 +440,7 @@ class Mcrud_tablemeta extends CI_Model
                     // }
                 }
 
-                if ($this->table_metas['edit'] && $col['allow_edit']) {
+                if ($this->table_metas['edit'] && $col['allow_insert']) {
                     $editor = Mtablemeta::$EDITOR;
                     $editor['name'] = $row['name'];
                     $editor['allow_insert'] = $col['allow_insert'];
@@ -426,7 +456,9 @@ class Mcrud_tablemeta extends CI_Model
                     $editor['edit_compulsory'] = ($row['edit_compulsory'] == 1);
                     $editor['edit_info'] = $row['edit_info'];
                     $editor['edit_onchange_js'] = $row['edit_onchange_js'];
+                    $editor['edit_validation_js'] = $row['edit_validation_js'];
                     $editor['edit_bubble'] = ($row['edit_bubble'] == 1);
+                    $editor['edit_readonly'] = !$col['allow_edit'];
 
                     //store in column metas
                     $col['edit_bubble'] = $editor['edit_bubble'];
@@ -447,8 +479,11 @@ class Mcrud_tablemeta extends CI_Model
                         //echo ($row['edit_attr_array']);
                         //$row['edit_attr_array'] = '{"a": true,"b":2,"c":3,"d":4,"e":5}';
                         //echo ($row['edit_attr_array']);
-                        $editor['edit_attr'] = json_decode($row['edit_attr_array']);
+                        $editor['edit_attr'] = json_decode($row['edit_attr_array'], true);
                         //TODO: append base url for ajax parameter
+                    }
+                    else {
+                        $editor['edit_attr'] = array();
                     }
 
                     //force select2
@@ -466,7 +501,32 @@ class Mcrud_tablemeta extends CI_Model
                         $editor['options_data_url_params'] = $col['options_data_url_params'];
                     }
 
-                    //var_dump($editor);
+                    if ($editor['edit_type'] == 'tcg_table' && !empty($row['subtable_id'])) {
+                        $editor['subtable_id'] = $row['subtable_id'];
+                        $editor['subtable_name'] = $this->get_subtable_name($row['subtable_id']);
+                        $editor['subtable_key_column'] = $row['subtable_key_column'];
+                        $editor['subtable_fkey_column'] = $row['subtable_fkey_column'];
+                        $editor['subtable_order'] = $row['subtable_order'];
+                        // if (!empty($editor['subtable_order'])) {
+                        //     $editor['edit_attr']['rowOrder'] = json_decode($editor['subtable_order'], true);
+                        // }
+                        $editor['subtable_row_reorder_column'] = $row['subtable_row_reorder_column'];
+                        if (!empty($editor['subtable_row_reorder_column'])) {
+                            $editor['edit_attr']['rowReorderColumn'] = $editor['subtable_row_reorder_column'];
+                        }
+
+                        
+                        $editor['subtable_columns'] = $this->get_subtable_columns($editor['subtable_id']);
+                    }
+
+                    foreach($editor['edit_field'] as $idx => $f) {
+                        if (empty($f))  continue;
+
+                        $col_name = $this->table_name. "." .$f;
+                        if ($col_name != $col['column_name']) {
+                            $this->select_columns[] = $col_name." as ".$f;
+                        }
+                    }
 
                     $this->editor_metas[] = $editor;
                     $this->edit_columns[] = $col['name'];
@@ -524,7 +584,12 @@ class Mcrud_tablemeta extends CI_Model
                 $col['edit_bubble'] = ($row['edit_bubble'] == 1);;
 
                 $this->column_metas[] = $col;
-                $this->select_columns[] = $col['column_name']." as ".$col['name'];
+                if ($col['type'] == 'virtual') {
+                    $this->select_columns[] = "'' as ".$col['name'];
+                }
+                else {
+                    $this->select_columns[] = $col['column_name']." as ".$col['name'];
+                }
                 $this->columns[] = $col['name'];
 
                 //if type=upload, add related columns
@@ -580,12 +645,11 @@ class Mcrud_tablemeta extends CI_Model
                     $this->select_columns[] = $col['column_name']." as ".$col['name'];
                     $this->columns[] = $col['name'];
                 }
-                
             }
 
         } while (false);
 
-        //var_dump( $this->join_tables );
+        //var_dump( $this->select_columns );
 
         //var_dump($this->table_metas['columns']);
 
@@ -614,6 +678,8 @@ class Mcrud_tablemeta extends CI_Model
             //add to beginning
             array_unshift($this->column_metas, $col);
             array_unshift($this->select_columns, $key_column_name);
+
+            //editable? -> need to add to var editor
         }
 
         //always add key-column
@@ -739,6 +805,8 @@ class Mcrud_tablemeta extends CI_Model
 
         $this->initialized = true;
 
+        //var_dump($this->select_columns);
+
         //initialized the distinct filter options
         //must be performed after initialization is completed
         foreach ($this->table_metas['filter_columns'] as $key => $row) {
@@ -761,6 +829,11 @@ class Mcrud_tablemeta extends CI_Model
     function tablename() {
         if (!$this->initialized)   return null;
         return $this->table_name;   
+    }
+
+    function editable_table() {
+        if (!$this->initialized)   return null;
+        return $this->table_metas['editable_table_name'];   
     }
 
     function key_column() {
@@ -962,6 +1035,11 @@ class Mcrud_tablemeta extends CI_Model
 
         if ($filter == null) $filter = array();
 
+        $offset = 0;
+        if (empty($limit) && $this->table_metas['search_max_result'] > 0) {
+            $limit = $this->table_metas['search_max_result'];
+        }
+        
         //use dynamic crud
         //use view if specified
         $table_name = $this->table_metas['table_name'];
@@ -1113,7 +1191,7 @@ class Mcrud_tablemeta extends CI_Model
         
         if (!$this->initialized)   return 0;
 
-        if (!$this->table_actions['edit'])    return 0;
+        if ($enforce_edit_columns && !$this->table_actions['edit'])    return 0;
 
         if ($filter == null) $filter = array();
 
@@ -1130,7 +1208,7 @@ class Mcrud_tablemeta extends CI_Model
                 }
             }
         }
-
+        
         if (count($valuepair) == 0)     return 0;
 
         //special transformation
@@ -1250,7 +1328,7 @@ class Mcrud_tablemeta extends CI_Model
         
         if (!$this->initialized)   return 0;
 
-        if (!$this->table_actions['add'])    return 0;
+        if ($enforce_edit_columns && !$this->table_actions['add'])    return 0;
 
         //use dynamic crud
         //clean up non existing columns
@@ -1326,7 +1404,7 @@ class Mcrud_tablemeta extends CI_Model
 
         if (!$this->table_actions['import'])    return 0;
 
-        $this->error['message'] = "";
+        // $this->error['message'] = "";
         
         $table_id = $this->table_id;
         $table_name = $this->table_name;
@@ -1348,7 +1426,7 @@ class Mcrud_tablemeta extends CI_Model
         $temp_table_name = "temp_" .$table_name;
         $data = $this->__create_temp_table($temp_table_name, $columns);
         if ($data == null) {
-            $sql = "update dbo_imports set status='" .$this->error['message']. "' where id=?";
+            $sql = "update dbo_imports set status='" .$this->error_message. "' where id=?";
             $this->db->query($sql, array($import_id));
             return 0;
         }
@@ -1374,7 +1452,7 @@ class Mcrud_tablemeta extends CI_Model
         //import xls
         $status = $this->__import_xls($filepath, $temp_table_name, $export_columns, $column_types);
         if($status == 0) {
-            $sql = "update dbo_imports set status='" .$this->error['message']. "' where id=?";
+            $sql = "update dbo_imports set status='" .$this->error_message. "' where id=?";
             $this->db->query($sql, array($import_id));
             return 0;
         }
@@ -1397,7 +1475,7 @@ class Mcrud_tablemeta extends CI_Model
     }
 
     private function __upload_xls($file, $table_id, $table_name) {
-        $this->error['message'] = "";
+        $this->reset_error();
 
         $ci	=& get_instance();
         $ci->load->helper("uploader");
@@ -1407,7 +1485,7 @@ class Mcrud_tablemeta extends CI_Model
         $upload = $uploader->upload($file, "dbo_imports");
         if ($upload == null || !empty($upload["error"])) {
             //error uploading
-            $this->error['message'] = "Gagal mengunggah fail.";
+            $this->set_error(-1, "Gagal mengunggah fail.");
             return null;
         }
 
@@ -1416,7 +1494,7 @@ class Mcrud_tablemeta extends CI_Model
         $sql = "select * from dbo_uploads where id=? and is_deleted=0";
         $upload = $this->db->query($sql, array($upload_id))->row_array();
         if ($upload == null) {
-            $this->error['message'] = "Gagal mengunggah fail.";
+            $this->set_error(-1, "Gagal mengunggah fail.");
             return null;
         }
 
@@ -1431,7 +1509,7 @@ class Mcrud_tablemeta extends CI_Model
 
         if ($import_id == 0) {
             //error copying
-            $this->error['message'] = "Gagal mengunggah fail.";
+            $this->set_error(-1, "Gagal mengunggah fail.");
             return null;
         }
 
@@ -1447,7 +1525,7 @@ class Mcrud_tablemeta extends CI_Model
     }
 
     private function __create_temp_table($temp_table_name, $columns) {
-        $this->error['message'] = "";
+        $this->reset_error();
 
         //Note: Ideally, all editable columns (regardless visible or not) should be exported and can be imported.
         //      But since, we are using internal datatable export function, we can only export visible columns.
@@ -1461,7 +1539,7 @@ class Mcrud_tablemeta extends CI_Model
         $column_type = array();
         
         //id column
-        $column_def[] = "id int(11) NOT NULL AUTO_INCREMENT";
+        $column_def[] = "__id__ int(11) NOT NULL AUTO_INCREMENT";
 
         foreach($columns as $key => $col) {
             if ($col['visible'] == 0)    continue;
@@ -1522,7 +1600,7 @@ class Mcrud_tablemeta extends CI_Model
         }
 
         if (count($import_columns) == 0) {
-            $this->error['message'] = "Tidak ada kolom untuk diimpor";
+            $this->set_error(-1, "Tidak ada kolom untuk diimpor");
             return null;
         }
 
@@ -1544,10 +1622,10 @@ class Mcrud_tablemeta extends CI_Model
         //var_dump($column_def); exit();
 
         //create the table
-        $sql = "create temporary table " .$temp_table_name. "(" .implode(',', $column_def). ", PRIMARY KEY (`id`))";
+        $sql = "create temporary table " .$temp_table_name. "(" .implode(',', $column_def). ", PRIMARY KEY (`__id__`))";
         $query = $this->db->query($sql);
         if (!$query) {
-            $this->error['message'] = "Gagal membuat temporary table";
+            $this->set_error(-1, "Gagal membuat temporary table");
             return null;
         }
 
@@ -1562,12 +1640,12 @@ class Mcrud_tablemeta extends CI_Model
 
     private function __import_xls($file, $temp_table_name, $export_columns, $column_types) {
 
-        $this->error['message'] = "";
+        $this->reset_error();
 		$reader = null;
 
         $path_parts = pathinfo($file);
         if (!isset($path_parts['extension'])) {
-            $this->error['message'] = "Tipe file tidak diketahui.";
+            $this->set_error(-1, "Tipe file tidak diketahui.");
             return 0;
         }
 
@@ -1582,19 +1660,19 @@ class Mcrud_tablemeta extends CI_Model
             $reader->setReadDataOnly(true);
         }
         else {
-            $this->error['message'] = "Tipe file ." .$path_parts['extension']. " tidak bisa diimpor." ;
+            $this->set_error(-1, "Tipe file ." .$path_parts['extension']. " tidak bisa diimpor.");
             return 0;
         }
 
         $spreadsheet = $reader->load($file);
         if ($spreadsheet == null) {
-            $this->error['message'] = 'File tidak ditemukan.';
+            $this->set_error(-1, 'File tidak ditemukan.');
             return 0;
         }
 
         $sheet = $spreadsheet->getSheetByName('Sheet1');
         if ($sheet == null) {
-            $this->error['message'] = 'Lembar Sheet1 tidak ditemukan.';
+            $this->set_error(-1, 'Lembar Sheet1 tidak ditemukan.');
             return 0;
         }
 
@@ -1606,7 +1684,7 @@ class Mcrud_tablemeta extends CI_Model
         $col_labels = array_filter($rows[1]);     //row 2 is column label
 
         if (count($col_labels) != count($export_columns)) {
-            $this->error['message'] = 'Jumlah kolom tidak sesuai.';
+            $this->set_error(-1, 'Jumlah kolom tidak sesuai.');
             return 0;
         }
 
@@ -1713,8 +1791,7 @@ class Mcrud_tablemeta extends CI_Model
         //batch insert
         if(!$this->db->insert_batch($temp_table_name, $import_values)) {
             //error message
-            $this->error['message'] = $this->db->error()['message'];
-            $this->error['error'] = $this->db->error();
+            $this->set_error(-1, $this->db->error()['message']);
             return 0;
         }
 
@@ -1722,6 +1799,18 @@ class Mcrud_tablemeta extends CI_Model
 
     }
 
+    /**
+     * Update upload column
+     * 
+     * One upload column definition must be implemented as 4 separate column in the database table:
+     * - <column_name>              : the main upload column. contains list of upload_id in table tcg_uploads.
+     *                                The informastion related individual uploaded file is stored in table tcg_uploads
+     * - <column_name>_filename     : contains list of file names of uploaded file
+     * - <column_name>_web_path     : contains list of url to access the uploaded file
+     * - <column_name>_thumbnail_path   : contains list of url to access thumbnail of uploaded file
+     * 
+     * The informastion related individual uploaded file is stored in table tcg_uploads  
+     */
     private function __update_upload_columns($table_name, $upload_columns) {
         //create secondary temp table for subquery because we cannot open temporary table > 1 in the same query
         //this issue should be fixed in MariaDb 10.2
@@ -1731,14 +1820,14 @@ class Mcrud_tablemeta extends CI_Model
         //always drop first
         $this->db->query("DROP TEMPORARY TABLE IF EXISTS $temp_table_name;");
 
-        $sql = "create temporary table " .$temp_table_name. " (id int, col_name varchar(1000), upload_id varchar(1000), filename longtext, web_path longtext, thumbnail_path longtext)";
+        $sql = "create temporary table " .$temp_table_name. " (__id__ int, col_name varchar(1000), upload_id varchar(1000), filename longtext, web_path longtext, thumbnail_path longtext)";
         $this->db->query($sql);
 
         foreach($upload_columns as $col_name) {
             $this->db->query("truncate table " .$temp_table_name);
 
             $sql = "
-            insert into ".$temp_table_name." (id, col_name, upload_id, filename, web_path, thumbnail_path)
+            insert into ".$temp_table_name." (__id__, col_name, upload_id, filename, web_path, thumbnail_path)
             select
                 c.id,
                 c." .$col_name. ",
@@ -1757,7 +1846,7 @@ class Mcrud_tablemeta extends CI_Model
 
             $sql = "
             update " .$table_name. " a 
-            join " .$temp_table_name. " b on b.id=a.id
+            join " .$temp_table_name. " b on b.__id__=a.id
             set
                 a." .$col_name. " = b.upload_id,
                 a." .$col_name. "_filename = b.filename,
@@ -2022,6 +2111,166 @@ class Mcrud_tablemeta extends CI_Model
     protected function set_error($code, $message) {
         $this->error_code = $code;
         $this->error_message = $message;
+    }
+
+    protected function get_subtable_name($subtable_id) {
+        $this->db->select('*');
+        $arr = $this->db->get_where('dbo_crud_tables', array('id'=>$subtable_id, 'is_deleted'=>0))->row_array();
+        if ($arr == null) {
+            return false;
+        }
+       
+        return $arr['name'];
+    }
+
+    protected function get_subtable_columns($subtable_id) {
+        $this->db->select('*');
+        $this->db->order_by('order_no asc');
+        $arr = $this->db->get_where('dbo_crud_columns', array('table_id'=>$subtable_id, 'is_deleted'=>0))->result_array();
+        if ($arr == null) {
+            return null;
+        }
+
+        $columns = array();
+        foreach($arr as $row) {
+            if ($row['visible'] != 1) continue;
+                             
+            $col = Mtablemeta::$COLUMN;
+            $col['name'] = $row['name'];
+            $col['label'] = __($row['label']);
+            $col['visible'] = ($row['visible'] == 1);
+            $col['css'] = $row['css'];
+            $col['type'] = $row['column_type'];
+            $col['data_priority'] = $row['data_priority'];
+            $col['column_name'] = $row['column_name'];
+            if (empty($col['column_name'])) {
+                $col['column_name'] = $this->table_name. "." .$col['name'];
+            }
+
+            //if already exist, ignore. prevent duplicate
+            if (true === array_search($col['column_name'], $this->select_columns)) {
+               continue;
+            }
+
+            $col['display_format_js'] = $row['display_format_js'];
+
+            $col['foreign_key'] = ($row['foreign_key'] == 1);
+            $col['allow_insert'] = ($row['allow_insert'] == 1);
+            $col['allow_edit'] = ($row['allow_edit'] == 1);
+            $col['allow_filter'] = ($row['allow_filter'] == 1);
+            
+            //default: no bubble edit
+            $col['edit_bubble'] = false;
+            
+            $col['edit_field'] = $row['edit_field'];
+            if (empty($col['edit_field'])) {
+                $col['edit_field'] = $col['name'];
+            }
+
+            //split as array
+            $col['edit_field'] = array_map('trim', explode(',', $col['edit_field']));
+
+            $ref = array();
+            if ($col['foreign_key']) {
+                $ref = Mtablemeta::$TABLE_JOIN;
+                $ref['name'] = $col['name'];
+                $ref['column_name'] = $col['column_name'];
+                $ref['reference_table_name'] = $row['reference_table_name'];
+                $ref['reference_key_column'] = $row['reference_key_column'];
+                $ref['reference_lookup_column'] = $row['reference_lookup_column'];
+                if (empty($ref['reference_lookup_column'])) {
+                    $ref['reference_lookup_column'] = $ref['reference_key_column'];
+                }
+                $ref['reference_soft_delete'] = ($row['reference_soft_delete'] == 1);
+
+                $ref['reference_where_clause'] = $row['reference_where_clause'];
+                if (!empty($ref['reference_where_clause'])) {
+                    $ref['reference_where_clause'] = replace_userdata($ref['reference_where_clause']);
+                }
+
+                //get lookup if not specified manually
+                if (empty($col['options']) && empty($col['options_data_url']) && ($row['edit_type'] == 'tcg_select2' || $row['filter_type'] == 'tcg_select2')) {
+                    $col['options'] = $this->get_lookup_options($ref['reference_table_name'], $ref['reference_key_column'], $ref['reference_lookup_column'], $ref['reference_soft_delete'], $ref['reference_where_clause']);
+                }
+            }
+
+            $editor = array();
+            if ($col['allow_insert']) {
+                $editor = Mtablemeta::$EDITOR;
+                $editor['name'] = $row['name'];
+                $editor['allow_insert'] = $col['allow_insert'];
+                $editor['allow_edit'] = $col['allow_edit'];
+                $editor['edit_field'] = $col['edit_field'];
+
+                $editor['edit_label'] = __($row['edit_label']);
+                if (empty($editor['edit_label'])) {
+                    $editor['edit_label'] = ucwords($col['label']);
+                }
+                               
+                $editor['edit_css'] = $row['edit_css'];
+                $editor['edit_compulsory'] = ($row['edit_compulsory'] == 1);
+                $editor['edit_info'] = $row['edit_info'];
+                $editor['edit_onchange_js'] = $row['edit_onchange_js'];
+                $editor['edit_validation_js'] = $row['edit_validation_js'];
+                $editor['edit_bubble'] = ($row['edit_bubble'] == 1);
+                $editor['edit_readonly'] = !$col['allow_edit'];
+
+                //store in column metas
+                $col['edit_bubble'] = $editor['edit_bubble'];
+
+                $editor['edit_def_value'] = $row['edit_def_value'];
+
+                if (!empty($editor['edit_def_value'])) {
+                    $editor['edit_def_value'] = replace_userdata(trim($editor['edit_def_value']));
+                }
+
+                if (!empty($row['edit_options_array'])) {
+                    $editor['edit_options'] = json_decode($row['edit_options_array']);
+                } else if (!empty($col['options'])) {
+                    $editor['edit_options'] = $col['options'];
+                }
+
+                if (!empty($row['edit_attr_array'])) {
+                    //echo ($row['edit_attr_array']);
+                    //$row['edit_attr_array'] = '{"a": true,"b":2,"c":3,"d":4,"e":5}';
+                    //echo ($row['edit_attr_array']);
+                    $editor['edit_attr'] = json_decode($row['edit_attr_array']);
+                    //TODO: append base url for ajax parameter
+                }
+
+                //force select2
+                $editor['edit_type'] = $row['edit_type'];
+                if (!empty($editor['edit_options']) && empty($editor['edit_type'])) {
+                    $editor['edit_type'] = 'tcg_select2';
+                }
+                if (empty($editor['edit_type'])) {
+                    $editor['edit_type'] = $col['type'];
+                }
+
+                //option_url
+                if ($editor['edit_type'] == 'tcg_select2' && !empty($col['options_data_url'])) {
+                    $editor['options_data_url'] = $col['options_data_url'];
+                    $editor['options_data_url_params'] = $col['options_data_url_params'];
+                }
+
+            }
+            else {
+                $editor = Mtablemeta::$EDITOR;
+                $editor['name'] = $col['name'];
+                $editor['allow_insert'] = false;
+                $editor['allow_edit'] = false;
+                $editor['edit_field'] = $col['edit_field'];
+
+                $editor['edit_label'] = $col['label'];
+                $editor['edit_type'] = "tcg_readonly";
+            }
+
+            $col = array_merge($col, $ref, $editor);
+
+            $columns[] = $col;
+        }
+
+        return $columns;
     }
 }
 

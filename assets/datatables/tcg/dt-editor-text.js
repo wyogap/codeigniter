@@ -23,10 +23,10 @@
               conf._safeId = conf.attr.editorId + "_" + conf._safeId;
             };
 
-			//force read-only (if any)
-			if (typeof conf.readonly !== 'undefined' && conf.readonly != null && conf.readonly != "") {
-				conf.attr.readonly = conf.readonly;
-			}
+            //force read-only (if any)
+            if (typeof conf.readonly !== 'undefined' && conf.readonly != null && conf.readonly != "") {
+              conf.attr.readonly = conf.readonly;
+            }
 			
             // Create the elements to use for the input
             conf._input = $(
@@ -36,10 +36,10 @@
 
             conf._input.append(conf._input_control);
       
-			//default value
-			if (typeof conf.def !== 'undefined' && conf.def != null) {
-				conf._input_control.val(conf.def);
-			}
+            //default value
+            if (typeof conf.def !== 'undefined' && conf.def != null) {
+              conf._input_control.val(conf.def);
+            }
 
             if (conf.attr.readonly == true) {
               conf._input_control.attr('readonly', true);
@@ -53,11 +53,11 @@
         },
       
         set: function ( conf, val ) {
-			if (typeof val === 'undefined' || val == null)		val = "";
-			conf._input_control.val(val).trigger("input");
+          if (typeof val === 'undefined' || val == null)		val = "";
+          conf._input_control.val(val).trigger("input");
 
-			//trigger change event
-			conf._input.trigger("change");
+          //trigger change event
+          conf._input.trigger("change");
         },
       
         enable: function ( conf ) {

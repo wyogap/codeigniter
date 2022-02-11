@@ -32,23 +32,29 @@
           conf._input = $(
               '<div id="'+conf._safeId+'"></div>');
 
-          conf._input_control = $('<input type="date" class="tcg-text-input form-control"/>');
+          conf._input_control = $('<input type="text" class="tcg-text-input form-control" autocomplete="new-password"/>');
 
           conf._input.append(conf._input_control);
     
 		  //TODO: default value
 		  if (typeof conf.def !== 'undefined' && conf.def !== null && conf.def != "") {
-			let val = moment(conf.def).format("YYYY-MM-DD");
+			let val = moment(conf.def).format(conf.attr.format.toUpperCase());
 			conf._input_control.val(val);
 		  }
 		  else {
-			let val = moment().format("YYYY-MM-DD");
+			let val = moment().format(conf.attr.format.toUpperCase());
 			conf._input_control.val(val);
 		  }
 		  
           if (conf.attr.readonly == true) {
             conf._input_control.attr('readonly', true);
           }
+
+        conf._input_control.datepicker({
+            format: conf.attr.format,
+            autoclose: true,
+            todayHighlight: true
+        });
   
           return conf._input;
       },
@@ -61,11 +67,11 @@
 		  //TODO: set value not working yet!
 			if (typeof val === 'undefined' || val == null)		val = "";
 			
-			val = moment(val).format("YYYY-MM-DD");
-        conf._input_control.val(val).trigger("input");
+			val = moment(val).format(conf.attr.format.toUpperCase());
+			conf._input_control.val(val).trigger("input");
 
-        //trigger change event
-        conf._input.trigger("change");
+			//trigger change event
+			conf._input.trigger("change");
       },
     
       enable: function ( conf ) {
@@ -92,6 +98,8 @@
     //in case more than 1 editor has the same field name, this editor id can be used to distinguish it
     editorId: "",
 
+	//default format
+	format: "yyyy-mm-dd"
   };
     
 })(jQuery, jQuery.fn.dataTable);

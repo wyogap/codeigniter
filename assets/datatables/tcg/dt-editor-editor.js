@@ -7,7 +7,7 @@
 	var Editor = DataTable.Editor;
 	var _fieldTypes = DataTable.ext.editorFields;
 
-	_fieldTypes.tcg_editor = {
+	_fieldTypes.tcg_editor4 = {
 		create: function (conf) {
 			var that = this;
 
@@ -74,7 +74,7 @@
 						// If shown in a bubble, there is a good chance we'll need to
 						// move it once CKEditor is shown, since it is large!
 						if ( conf._input.parents('div.DTE_Bubble').length ) {
-							that.bubblePosition();
+							//that.bubblePosition();
 						}
 					} );
 	
@@ -196,14 +196,105 @@
 		//whether to convert to ckeditor WYSWYG
 		ckeditor: true,
 
+		height: "140px",
+		
 		//basic ckeditor toolbar
 		toolbarGroups: [
 			{ name: 'clipboard', groups: [ 'undo' ] },
 			{ name: 'basicstyles', groups: [ 'basicstyles' ] },
 			{ name: 'paragraph', groups: [ 'list', 'indent' ] },
-			{ name: 'tools', groups: [ 'tools' ] }
+			{ name: 'links', groups: [ 'links' ] },
+			{ name: 'insert', groups: [ 'insert' ] },
+			{ name: 'tools', groups: [ 'tools' ] },
 		],
 
 	};
 
+    _fieldTypes.tcg_editor = {
+        create: function ( conf ) {
+            var that = this;
+
+			conf._enabled = true;
+
+			conf._safeId = Editor.safeId(conf.id);
+
+			//default attributes
+			conf.attr = $.extend(true, {}, tcg_editor.defaults, conf.attr);
+
+			//some time, just the field name is not safe enough!
+			if (conf.attr.editorId != "") {
+				conf._safeId = conf.attr.editorId + "_" + conf._safeId;
+			};
+
+			//force read-only (if any)
+			if (typeof conf.readonly !== 'undefined' && conf.readonly != null && conf.readonly != "") {
+				conf.attr.readonly = conf.readonly;
+			}
+			
+            conf._input = $('<div id="'+conf._safeId+'" class="tcg-editor"></div>');
+			conf._readonly = $('<div id="'+conf._safeId+'-readonly" class="tcg-editor-readonly" style="height:' +conf.attr.height+ ';"></div>');
+            conf._ck = $('<div id="'+conf._safeId+'-ck" class="tcg-editor-ck"></div>');
+			
+			conf._input.append(conf._readonly);
+			conf._input.append(conf._ck);
+			
+            window[ 'ClassicEditor' ].create( conf._ck[0], conf.attr )
+                .then( function (editor) {
+                    conf._ckeditor = editor;
+					if (typeof conf._initSetVal !== 'undefined' && conf._initSetVal != null) {
+						conf._ckeditor.setData( conf._initSetVal );
+						conf._initSetVal = null;
+					}
+                });
+ 
+            return conf._input;
+        },
+ 
+        get: function ( conf ) {
+			if (typeof conf._initSetVal !== 'undefined' && conf._initSetVal != null) {
+				return conf._initSetVal;
+			}
+            return conf._ckeditor.getData();
+        },
+ 
+        set: function ( conf, val ) {
+			if (typeof val === 'undefined' || val == null) val = "";
+			
+			if (typeof conf._ckeditor === 'undefined' || conf._ckeditor == null) {
+				conf._initSetVal = val;
+			}
+			else {
+				conf._initSetVal = null;
+				conf._ckeditor.setData( val );
+			}
+			
+			conf._readonly.html(val);
+			
+			//trigger change event
+			conf._input.trigger("change");
+        },
+ 
+        enable: function ( conf ) {
+            conf._enabled = true;
+            conf._input.removeClass( 'disabled' ).prop("disabled", false);
+        },
+      
+        disable: function ( conf ) {
+            conf._enabled = false;
+            conf._input.addClass( 'disabled' ).prop('disabled',true);
+        },
+
+        isEnabled: function (conf) {
+			return conf._enabled;
+        },
+ 
+        destroy: function ( conf ) {
+            conf._ckeditor.destroy();
+			conf._ckeditor = null;
+        },
+ 
+        inst: function ( conf ) {
+            return conf._ckeditor;
+        }
+    };
 })(jQuery, jQuery.fn.dataTable);

@@ -16,11 +16,11 @@ class Home extends CI_Controller {
 			return;
 		}
 		
-		$this->load->model(array('crud/Mpermission'));
-		if (!$this->Mpermission->is_admin()) {
-			redirect(site_url() .'/auth/notauthorized');
-			return;
-		}
+		// $this->load->model(array('crud/Mpermission'));
+		// if (!$this->Mpermission->is_admin()) {
+		// 	redirect(site_url() .'/auth/notauthorized');
+		// 	return;
+		// }
     }
 
 	/**
@@ -47,22 +47,13 @@ class Home extends CI_Controller {
 
 		$page_data['page_role']           	 = 'admin';
 
+		// $this->load->model(array('crud/Mnavigation', 'bpkad/Mdashboard'));
 		$this->load->model(array('crud/Mnavigation', 'bpkad/Mdashboard'));
 		$navigation = $this->Mnavigation->get_navigation($this->session->userdata('role_id'));
 		$page_data['navigation']	 = $navigation;
 
-		//var_dump($navigation);
-		$total = $this->Mdashboard->kendaraan_total();
-		
-		$page_data['total'] = $total['total'];
-		$page_data['terverifikasi'] = $total['terverifikasi'];
-		$page_data['perlu_verifikasi'] = $total['perlu_verifikasi'];
-
-		$page_data['per_jenis_kendaraan'] = $this->Mdashboard->kendaraan_per_jenis_kendaraan();
-		$page_data['per_peruntukan'] = $this->Mdashboard->kendaraan_per_peruntukan();
-		$page_data['per_umur_kendaraan'] = $this->Mdashboard->kendaraan_per_umur_kendaraan();
-
-		//$page_data['per_opd'] = $this->Mdashboard->kendaraan_per_opd();
+		//controller name
+		$page_data['controller'] = "crud";
 
 		$this->smarty->render_theme('admin/home.tpl', $page_data);
 	}

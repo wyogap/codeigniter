@@ -37,3 +37,7 @@ div.DTE_Field_Type_tcg_upload div.DTE_Field_Input {
     border: 1px solid rgba(200,200,200,0.8);
     background-color: rgba(255,255,255,0.8)
 }
+
+.dropzone.disabled .dz-message {
+	display: none;
+}

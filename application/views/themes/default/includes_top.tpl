@@ -5,6 +5,8 @@
 <!-- bootstrap -->
 <link href="{$base_url}assets/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
 
+<link href="{$base_url}assets/bootstrap-datepicker/css/bootstrap-datepicker.min.css" rel="stylesheet" type="text/css" />
+
 <!-- leaflet -->
 <link href="{$base_url}assets/leaflet/leaflet/leaflet.css" rel="stylesheet" />
 <link href="{$base_url}assets/leaflet/esri/esri-leaflet-geocoder.css" rel="stylesheet" />
@@ -21,8 +23,11 @@
 <link href="{$base_url}assets/datatables/Buttons-1.6.1/css/buttons.bootstrap4.css" rel="stylesheet" type="text/css" />
 <link href="{$base_url}assets/datatables/Select-1.3.1/css/select.bootstrap4.css" rel="stylesheet" type="text/css" />
 <link href="{$base_url}assets/datatables/KeyTable-2.5.1/css/keyTable.bootstrap4.css" rel="stylesheet" type="text/css" >
-<link href="{$base_url}assets/datatables/Editor-1.9.2/css/editor.bootstrap4.css" rel="stylesheet" type="text/css" >
+<link href="{$base_url}assets/datatables/Editor-2.0.4/css/editor.bootstrap4.css" rel="stylesheet" type="text/css" >
+
 <link href="{$base_url}assets/datatables/RowReorder-1.2.6/css/rowReorder.bootstrap4.min.css" rel="stylesheet" type="text/css" >
+<link href="{$base_url}assets/datatables/SearchBuilder-1.3.0/css/searchBuilder.bootstrap4.css" rel="stylesheet" type="text/css" >
+<link href="{$base_url}assets/datatables/SearchPanes-1.4.0/css/searchPanes.bootstrap4.css" rel="stylesheet" type="text/css" >
 
 <link href="{$base_url}assets/datatables/tcg/dt-editor-select2.bootstrap4.css" rel="stylesheet" />
 <link href="{$base_url}assets/datatables/tcg/dt-editor-mask.css" rel="stylesheet" />
@@ -40,9 +45,14 @@
 <link href="{$base_url}assets/datatables/tcg/dt-editor-date.css" rel="stylesheet" />
 <link href="{$base_url}assets/datatables/tcg/dt-editor-textarea.css" rel="stylesheet" />
 <link href="{$base_url}assets/datatables/tcg/dt-editor-editor.css" rel="stylesheet" />
+<link href="{$base_url}assets/datatables/tcg/dt-editor-options.css" rel="stylesheet" />
 
 <link href="{$base_url}assets/dropzone/dropzone.min.css" rel="stylesheet" />
 <link href="{$base_url}assets/datatables/tcg/dt-editor-upload.bootstrap4.css" rel="stylesheet" />
+
+<!--
+<link href="{$base_url}assets/datatables/tcg/dt-editor-table-select.css" rel="stylesheet" />
+-->
 
 <!-- WYSIWYG editor -->
 <!-- <link href="{$base_url}assets/backend/css/vendor/summernote-bs4.css" rel="stylesheet" type="text/css" /> -->
