@@ -3,7 +3,7 @@
 <!-- ========== Left Sidebar Start ========== -->
 <div class="left-side-menu left-side-menu-detached">
 	<div class="leftbar-user">
-		<a href="{site_url()}user/profile">
+		<a href="{site_url()}/user/profile">
 			<img src="{$userdata.profile_img}" alt="user-image" height="42" class="rounded-circle shadow-sm">
 			<span class="leftbar-user-name">{$userdata.nama}</span>
 		</a>
@@ -22,7 +22,7 @@
 			{else if $nav.nav_type == 'item'}
 				{if $nav.action_type == 'page'}
 				<li class="side-nav-item {if $page_name==$nav.page_name}active{/if}">
-					<a href="{site_url()}{$controller}/{$nav.page_name}{if !empty($nav.page_param)}{$nav.page_param}{/if}" class="side-nav-link">
+					<a href="{site_url()}/{$controller}/{$nav.page_name}{if !empty($nav.page_param)}{$nav.page_param}{/if}" class="side-nav-link">
 						<i class="{$nav.icon}"></i>
 						<span>{__($nav.label)}</span>
 					</a>
@@ -36,7 +36,7 @@
 				</li>
 				{else if $nav.action_type == 'param_url'}
 				<li class="side-nav-item">
-					<a href="{site_url()}{$nav.url}" class="side-nav-link">
+					<a href="{site_url()}/{$nav.url}" class="side-nav-link">
 						<i class="{$nav.icon}"></i>
 						<span>{__($nav.label)}</span>
 					</a>
@@ -59,7 +59,7 @@
 						{foreach $nav.subitems as $subitem}
 						{if $subitem.action_type == 'page'}
 						<li class="{if $page_name=='{$subitem.page_name}'}active{/if}">
-							<a href="{site_url()}{$controller}/{$subitem.page_name}{if !empty($nav.page_param)}{$nav.page_param}{/if}">{__($subitem.label)}</a>
+							<a href="{site_url()}/{$controller}/{$subitem.page_name}{if !empty($nav.page_param)}{$nav.page_param}{/if}">{__($subitem.label)}</a>
 						</li>
 						{else if $subitem.action_type == 'url'}
 						<li class="">
@@ -67,7 +67,7 @@
 						</li>
 						{else if $subitem.action_type == 'param_url'}
 						<li class="">
-							<a href="{site_url()}{$subitem.url}">{__($subitem.label)}</a>
+							<a href="{site_url()}/{$subitem.url}">{__($subitem.label)}</a>
 						</li>
 						{/if}
 						{/foreach}
