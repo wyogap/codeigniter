@@ -13,4 +13,4 @@ $config['app_theme'] = 'adminlte';
 
 $config['app_captcha_key'] = "6LfUN-oUAAAAAAEiaEPyE-S-d3NRbzXZVoNo51-x";
 
-require_once BASEPATH.'../vendor/autoload.php';
+#require_once BASEPATH.'../vendor/autoload.php';
