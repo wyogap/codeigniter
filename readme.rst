@@ -11,6 +11,6 @@ HOWTO Configure
 Default User
 *******************
 
-User: superadmin, Paswd: ******
-User: admin, Passwd: ******
-User: user, Passwd: ******
+* User: superadmin, Paswd: ******
+* User: admin, Passwd: ******
+* User: user, Passwd: ******
