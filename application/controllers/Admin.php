@@ -1,42 +1,10 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-require_once(APPPATH.'core/MY_Crud_Controller.php');
+require_once(APPPATH.'controllers/system/Base_Crud.php');
 
-class Admin extends MY_Crud_Controller {
-	protected static $PAGE_GROUP = 'admin';
-
-    /**
-     * This is default constructor of the class
-     */
-    public function __construct()
-    {
-        parent::__construct();
-
-		$isLoggedIn = $this->session->userdata('is_logged_in');
-		if(!isset($isLoggedIn) || $isLoggedIn != TRUE) {
-			redirect(site_url() .'auth');
-		}
-    }
-
-    public function index($params = array())
-	{
-		$page_data['page_name']              = 'home';
-		$page_data['page_title']             = 'Home';
-		$page_data['page_icon']              = "mdi-view-dashboard-outline";
-		$page_data['query_params']           = null;
-
-		$page_data['page_role']           	 = 'user';
-
-		$this->load->model(array('crud/Mnavigation'));
-		$navigation = $this->Mnavigation->get_navigation($this->session->userdata('role_id'));
-		$page_data['navigation']	 = $navigation;
-
-		$this->smarty->render_theme('user/home.tpl', $page_data);
-
-        // //TODO: dashboard
-        // redirect(site_url() .$this->router->class .'/schools');
-    }
+class Admin extends Base_Crud {
+	//protected static $PAGE_GROUP = 'admin';
 
     public function api() {
         $action = $this->input->post("action");

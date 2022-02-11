@@ -8,18 +8,18 @@ class Base_Crud extends MY_Crud_Controller {
     /**
      * This is default constructor of the class
      */
-    // public function __construct()
-    // {
-    //     parent::__construct();
+    public function __construct()
+    {
+        parent::__construct();
 
-	// 	$isLoggedIn = $this->session->userdata('is_logged_in');
-	// 	if(!isset($isLoggedIn) || $isLoggedIn != TRUE) {
-	// 		redirect(site_url() .'/auth');
-	// 	}
-    // }
+		$isLoggedIn = $this->session->userdata('is_logged_in');
+		if(!isset($isLoggedIn) || $isLoggedIn != TRUE) {
+			redirect(site_url() .'/auth');
+		}		
+    }
 
     function get_ajax_url($page) {
-        return site_url('/crud/' .$page);
+        return site_url('/' .$this->router->class .$page);
     }
 
     public function index($params = array())
@@ -36,9 +36,6 @@ class Base_Crud extends MY_Crud_Controller {
 		$page_data['navigation']	 = $navigation;
 
 		$this->smarty->render_theme('user/home.tpl', $page_data);
-
-        // //TODO: dashboard
-        // redirect(site_url() .$this->router->class .'/schools');
     }
 
     // public function index($params = array())

@@ -86,7 +86,8 @@ class Mtablemeta extends CI_Model
         'filter_options' => array(),
         'filter_onchange_js' => '',
         'filter_attr' => array(),
-        'filter_invalid_value'  => false
+        'filter_invalid_value'  => false,
+        'is_required' => false
     );
     
     public static $TABLE_ACTION = array (

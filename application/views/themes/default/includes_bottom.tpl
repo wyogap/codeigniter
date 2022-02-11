@@ -65,10 +65,11 @@
 <script src="{$base_url}assets/datatables/tcg/dt-editor-readonly.js" defer></script>
 <script src="{$base_url}assets/datatables/tcg/dt-editor-date.js" defer></script>
 <script src="{$base_url}assets/datatables/tcg/dt-editor-textarea.js" defer></script>
-<script src="{$base_url}assets/datatables/tcg/dt-editor-editor.js" defer></script>
 <script src="{$base_url}assets/datatables/tcg/dt-editor-options.js" defer></script>
 
 <script src="{$base_url}assets/datatables/tcg/dt-editor-table-select.js" defer></script>
+
+<script src="{$base_url}assets/datatables/tcg/dt-editor-editor.js" defer></script>
 
 <script src="{$base_url}assets/dropzone/dropzone.min.js"></script>
 <script src="{$base_url}assets/datatables/tcg/dt-editor-upload.js" defer></script>
@@ -81,9 +82,6 @@
 
 <!-- full calendar -->
 <script src="{$base_url}assets/fullcalendar/core/main.min.js" defer></script>
-
-<!-- dropzone file upload -->
-<script src="{$base_url}assets/dropzone/dropzone.min.js" defer></script>
 
 <!-- dragula drag-n-drop component -->
 <script src="{$base_url}assets/dragula/dragula.min.js" defer></script>

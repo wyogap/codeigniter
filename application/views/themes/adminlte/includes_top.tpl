@@ -5,6 +5,8 @@
 <!-- bootstrap -->
 <link href="{$base_url}assets/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
 
+<link href="{$base_url}assets/bootstrap-datepicker/css/bootstrap-datepicker.min.css" rel="stylesheet" type="text/css" />
+
 <!-- leaflet -->
 <link href="{$base_url}assets/leaflet/leaflet/leaflet.css" rel="stylesheet" />
 <link href="{$base_url}assets/leaflet/esri/esri-leaflet-geocoder.css" rel="stylesheet" />
@@ -223,5 +225,12 @@ table.dataTable.nowrap th, table.dataTable.nowrap td {
         white-space: normal;
     }
 }
+
+</style>
+
+<style>
+    .os-theme-light>.os-scrollbar>.os-scrollbar-track>.os-scrollbar-handle {
+        background-color: rgba(0, 0, 0, 0.15) !important;
+    }
 
 </style>

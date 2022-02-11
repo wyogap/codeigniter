@@ -139,7 +139,7 @@ class Base_Auth extends CI_Controller
         }
 
         //theme
-        $result['theme'] = 'default';
+        //$result['theme'] = 'default';
         //$result['page_role'] = 'user';
 
         $this->session->set_userdata($result);

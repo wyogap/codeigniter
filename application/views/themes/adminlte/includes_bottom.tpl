@@ -2,6 +2,8 @@
 <!-- bootstrap. bundle includes popper.js -->
 <script src="{$base_url}assets/bootstrap/js/bootstrap.bundle.min.js"></script>
 
+<script src="{$base_url}assets/bootstrap-datepicker/js/bootstrap-datepicker.min.js" defer></script>
+
 <!-- leaflet -->
 <script src="{$base_url}assets/leaflet/leaflet/leaflet.js" defer></script>
 <script src="{$base_url}assets/leaflet/esri/esri-leaflet.js" defer></script>
