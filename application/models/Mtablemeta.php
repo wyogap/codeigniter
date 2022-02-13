@@ -34,6 +34,8 @@ class Mtablemeta extends CI_Model
         'on_add_custom_js' => null,
         'on_edit_custom_js' => null,
         'on_delete_custom_js' => null,
+        'column_groupings' => [],
+        'column_grouping_map' => []
     );
     
     public static $COLUMN = array (
@@ -51,6 +53,15 @@ class Mtablemeta extends CI_Model
         'width' => '',
         'foreign_key' => false,
         'display_format_js' => ''
+    );
+
+    public static $COLUMN_GROUPING = array (
+        'label' => '',
+        'order_no' => 100,
+        'icon' => '',
+        'icon_only' => false,
+        'css' => '',
+        'columns' => [],
     );
     
     public static $EDITOR = array (

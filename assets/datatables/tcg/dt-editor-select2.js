@@ -280,6 +280,12 @@
 		//ajax url to retrieve the options
 		ajax: null,
 		
+		//mapping to fields
+		columns: [{
+			data: 'value',
+			title: 'label'
+		}],
+
 		//whether value is compulsory
 		compulsory: false,
 	};

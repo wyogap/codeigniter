@@ -210,6 +210,9 @@ class Mcrud_tablemeta extends CI_Model
         $this->select_columns = array();
         $this->filter_columns = array();
         $this->search_columns = array();
+
+        $this->column_groupings = array();
+        $this->column_grouping_map = array();
         
         //inline edit row
         if ($this->table_actions['edit_row_action'] && $this->table_actions['edit']) {
@@ -232,6 +235,34 @@ class Mcrud_tablemeta extends CI_Model
             $row_action['onclick_js'] = "dt_tdata_".$this->table_id."_delete_row";
             $this->row_actions[] = $row_action;
         }
+
+        //columns grouping
+        do {
+            $this->db->select('*');
+            $this->db->order_by('order_no asc');
+            $arr = $this->db->get_where('dbo_crud_column_groupings', array('table_id'=>$this->table_id, 'is_deleted'=>0))->result_array();
+            if ($arr == null) {
+                break;
+            }
+
+            $idx = 0;
+            foreach($arr as $row) {
+                $grp = Mtablemeta::$COLUMN_GROUPING;
+
+                $grp['id'] = $row['id'];
+                $grp['label'] = $row['label'];
+                $grp['icon'] = $row['icon'];
+                $grp['icon_only'] = ($row['icon_only'] == 1);
+                $grp['css'] = $row['css'];
+                $grp['columns'] = array();
+                $grp['idx'] = $idx++;
+
+                //add into list
+                $this->column_groupings[] = $grp;
+                $this->column_grouping_map[ $grp['id'] ] = $grp;
+            }
+
+        } while(0);
 
         //lookup alias
         $lookup_idx = 1;
@@ -455,6 +486,11 @@ class Mcrud_tablemeta extends CI_Model
                     $editor['edit_css'] = $row['edit_css'];
                     $editor['edit_compulsory'] = ($row['edit_compulsory'] == 1);
                     $editor['edit_info'] = $row['edit_info'];
+                    if (!empty($editor['edit_info'])) {
+                        $editor['edit_info'] = str_replace('"', '\"', $editor['edit_info']);
+                        $editor['edit_info'] = str_replace("'", "\'", $editor['edit_info']);
+                        $editor['edit_info'] = htmlspecialchars($editor['edit_info']);
+                    }
                     $editor['edit_onchange_js'] = $row['edit_onchange_js'];
                     $editor['edit_validation_js'] = $row['edit_validation_js'];
                     $editor['edit_bubble'] = ($row['edit_bubble'] == 1);
@@ -530,6 +566,26 @@ class Mcrud_tablemeta extends CI_Model
 
                     $this->editor_metas[] = $editor;
                     $this->edit_columns[] = $col['name'];
+
+                    //column grouping
+                    if (count($this->column_groupings) > 1) {
+                        $grp_id = $row['edit_column_grouping'];
+
+                        if (empty($grp_id)) {
+                            $grp = $this->column_groupings[0];
+                        } else {
+                            $grp = $this->column_grouping_map[$grp_id];
+                        }
+                        
+                        if (empty($grp)) {
+                            $grp = $this->column_groupings[0];
+                        }
+
+                        //update column list in grouping
+                        $this->column_groupings[ $grp['idx'] ]['columns'][] = $editor;
+                        $this->column_grouping_map[ $grp['id'] ]['columns'][] = $editor;
+                    }
+
                 }
 
                 if ($this->table_metas['filter'] && $col['allow_filter']) {
@@ -645,11 +701,11 @@ class Mcrud_tablemeta extends CI_Model
                     $this->select_columns[] = $col['column_name']." as ".$col['name'];
                     $this->columns[] = $col['name'];
                 }
+
             }
 
-        } while (false);
 
-        //var_dump( $this->select_columns );
+        } while (false);
 
         //var_dump($this->table_metas['columns']);
 
@@ -780,6 +836,10 @@ class Mcrud_tablemeta extends CI_Model
         else {
             $this->table_metas['search'] = false;
         }
+
+        //column groupings
+        $this->table_metas['column_groupings'] = $this->column_groupings;
+        $this->table_metas['column_grouping_map'] = $this->column_grouping_map;
 
         //var_dump( $this->filter_metas);
 

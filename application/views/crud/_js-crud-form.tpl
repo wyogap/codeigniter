@@ -132,7 +132,8 @@
             let dom = $(render_template('#crud-form-row', {
                 'name'      : conf.name,
                 'type'      : conf.type,
-                'fieldInfo' : conf.info
+                'fieldInfo' : conf.info,
+                'className' : conf.className
             }));
 
             //show info if necessary
@@ -158,7 +159,12 @@
             let input_container = dom.find("#" +conf.name+ "_input_control");
             input_container.prepend(input_field);
 
+            {if count($tbl.column_groupings) > 1}
+            let field_container = $("[data-editor-template='" +conf.name+ "']", form_container);
+            field_container.append(dom);
+            {else}
             form_container.append(dom);
+            {/if}
 
             //set the value if necessary
             if (detail != null) {

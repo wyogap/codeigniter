@@ -40,6 +40,9 @@ $(document).ready(function() {
             ajax: "{$tbl.ajax}",
             table: "#{$tbl.table_id}",
             idSrc: "{$tbl.key_column}",
+            {if count($tbl.column_groupings) > 1}
+            template: '#{$tbl.table_id}-editor-layout',
+            {/if}
             fields: [
                 {if !empty($level1_column)}
                 {
@@ -50,8 +53,10 @@ $(document).ready(function() {
                 {foreach $tbl.editor_columns as $col}
                 {
                     label: "{$col.edit_label} {if $col.edit_label && $col.edit_compulsory}<span class='text-danger font-weight-bold'>*</span>{/if}",
+                    {if count($tbl.column_groupings) <= 1}
                     className: "{$col.edit_css}",
-
+                    {/if}
+                    
                     {if $col.edit_compulsory}
                     compulsory: true,
                     {/if}
@@ -90,8 +95,9 @@ $(document).ready(function() {
                     {/if}
 
                     {if !empty($col.options_data_url) && $col.edit_type=='tcg_select2'}
+                    {* If no parameters in ajax url, just pass it as-is *}
                     {if $col.options_data_url_params|@count==0}
-                    ajax: "{$site_url}{$col.options_data_url}",
+                    ajax: "{$site_url}/{$col.options_data_url}",
                     {/if}
                     {/if}
 
@@ -260,7 +266,7 @@ $(document).ready(function() {
 
                 {if !empty($col.options_data_url) && $col.edit_type=='tcg_select2'}
                 {if $col.options_data_url_params|@count>0}
-                url = "{$site_url}{$col.options_data_url}";
+                url = "{$site_url}/{$col.options_data_url}";
 
                 {foreach $col.options_data_url_params as $param}
                 col = "{$param}";
@@ -396,16 +402,21 @@ $(document).ready(function() {
             });
         {/foreach}
 
-        {* Subtable editor *}
-        {assign var=cnt value=0}
-        {foreach $tbl.editor_columns as $col}
-            {if $col.edit_type=='tcg_table'}
-            {assign var=cnt value=$cnt+1}
-            {/if}
-        {/foreach}
+        var initType = "";
 
-        {if $cnt>0}
         editor_{$tbl.table_id}.on( 'initEdit', function (e, node, data, items, type) {
+            //move tab-list to header
+            initType = 'edit';
+
+            {* Subtable editor *}
+            {assign var=cnt value=0}
+            {foreach $tbl.editor_columns as $col}
+                {if $col.edit_type=='tcg_table'}
+                {assign var=cnt value=$cnt+1}
+                {/if}
+            {/foreach}
+
+            {if $cnt>0}
             {foreach $tbl.editor_columns as $col}
                 {if $col.edit_type!=='tcg_table'}
                     {continue}
@@ -426,49 +437,13 @@ $(document).ready(function() {
                     }
                 });
             {/foreach}
-
-            // return Promise.all([
-            //     {foreach $tbl.editor_columns as $col}
-            //     {if $col.edit_type!=='tcg_table'}
-            //         {continue}
-            //     {/if}
-            //     $.ajax( {
-            //         url: '{$tbl.ajax}',
-            //         data: {
-            //             action: 'subtable',
-            //             column_name: '{$col.name}',
-            //             f_{$col.subtable_fkey_column}: data['{$col.subtable_key_column}']
-            //         },
-            //         done: function (json, textStatus, jqXHR) {
-            //             editor_{$tbl.table_id}.field('{$col.edit_field[0]}').set(json.data);
-            //             resolve();
-            //         },
-            //         fail: function (jqXHR, textStatus, errorThrown) {
-            //             resolve();
-            //         }
-            //     });
-
-                // new Promise ( function (resolve, reject) {
-                //     $.ajax( {
-                //         url: '{$tbl.ajax}',
-                //         data: {
-                //             action: 'subtable',
-                //             column_name: '{$col.name}',
-                //             f_{$col.subtable_fkey_column}: data['{$col.subtable_key_column}']
-                //         },
-                //         done: function (json, textStatus, jqXHR) {
-                //             editor_{$tbl.table_id}.field('{$col.edit_field[0]}').set(json.data);
-                //             resolve();
-                //         },
-                //         fail: function (jqXHR, textStatus, errorThrown) {
-                //             resolve();
-                //         }
-                //     });
-                // }),
-            //     {/foreach}
-            // ]);
+            {/if}
         });  
-        {/if}
+
+        editor_{$tbl.table_id}.on( 'initCreate', function (e, node, data, items, type) {
+            //move tab-list to header
+            initType = 'create';
+        }); 
 
         {foreach $tbl.columns as $col}
             {if isset($col.edit_event_js)}
@@ -547,11 +522,28 @@ $(document).ready(function() {
             }
         });
 
-        //hack: somehow the footer is nested inside the body.
-        //TODO: find the real reason why it happens (note: in most cases, it does not happen)
-        //NOTE: in localhost/sngine, which uses older version of this code, this does not happen!
         editor_{$tbl.table_id}.on('open', function () {
+            //hack: somehow the footer is nested inside the body.
+            //TODO: find the real reason why it happens (note: in most cases, it does not happen)
+            //NOTE: in localhost/sngine, which uses older version of this code, this does not happen!
             $('div.DTE_Body').after( $('div.DTE_Footer') );
+
+            //move tab-list to header
+            {if count($tbl.column_groupings) > 1}
+            if (initType=='create' || initType=='edit') {
+                $('#{$tbl.table_id}-editor-tabs').show();
+                $('div.DTE_Header').after( $('#{$tbl.table_id}-editor-tabs') );
+                $('div.DTE_Header').css('border-bottom-width', '0px');
+            }
+            else {
+                $('#{$tbl.table_id}-editor-tabs').hide();
+                $('div.DTE_Header').css('border-bottom-width', '1px');
+            }
+            {/if}
+        });
+
+        editor_{$tbl.table_id}.on('open', function () {
+            initType = '';
         });
 
     {/if}
