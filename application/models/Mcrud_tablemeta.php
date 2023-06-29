@@ -1,5 +1,7 @@
 <?php if(!defined('BASEPATH')) exit('No direct script access allowed');
 
+require_once BASEPATH.'../vendor/autoload.php';
+
 /**
  * Mcrud_tablemeta
  * 
@@ -156,6 +158,8 @@ class Mcrud_tablemeta extends CI_Model
         $this->table_metas['custom_js'] = $arr['custom_js'];
 
         $this->table_metas['filter'] = ($arr['filter'] == 1);
+        $this->table_metas['column_filter'] = ($arr['column_filter'] == 1);
+
         $this->table_metas['edit'] = ($arr['allow_add'] == 1 || $arr['allow_edit'] == 1 || $arr['allow_delete'] == 1);
 
         $this->table_metas['title'] = empty($arr['title']) ? $this->name : $arr['title'];
@@ -313,6 +317,7 @@ class Mcrud_tablemeta extends CI_Model
                 $col['allow_edit'] = ($row['allow_edit'] == 1);
                 $col['allow_filter'] = ($row['allow_filter'] == 1);
                 $col['allow_search'] = (isset($row['allow_search']) && $row['allow_search'] == 1);
+                $col['column_filter'] = ($row['column_filter'] == 1);
                 
                 //default: no bubble edit
                 $col['edit_bubble'] = false;

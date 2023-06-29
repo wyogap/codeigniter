@@ -1768,7 +1768,7 @@ UNLOCK TABLES;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = '' */ ;
 DELIMITER ;;
-CREATE DEFINER=`lms`@`localhost` FUNCTION `fn_camel_case`(str varchar(256)) RETURNS varchar(256) CHARSET utf8mb4
+CREATE DEFINER=`lms`@`localhost` FUNCTION `fn_camel_case`(str varchar(256)) RETURNS varchar(256) CHARSET utf8mb4 deterministic
 BEGIN
 DECLARE n, pos INT DEFAULT 1;
 DECLARE sub, proper VARCHAR(256) DEFAULT '';

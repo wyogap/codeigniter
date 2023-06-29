@@ -10,6 +10,7 @@ class Mtablemeta extends CI_Model
         'initial_load' => false,
         'editor' => false,
         'filter' => false,
+        'column_filter' => false,
         'columns' => [],
         'editor_columns' => [],
         'filter_columns' => [],
@@ -50,6 +51,8 @@ class Mtablemeta extends CI_Model
         'allow_insert' => true,
         'allow_edit' => true,
         'allow_filter' => false,
+        'column_filter' => false,
+        'allow_search' => false,
         'width' => '',
         'foreign_key' => false,
         'display_format_js' => ''

@@ -1,7 +1,8 @@
 <?php 
 if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
-//require_once BASEPATH.'../vendor/autoload.php';
+require_once BASEPATH.'../vendor/autoload.php';
+//require_once BASEPATH.'helpers/database_helper.php';
 
 if ( ! function_exists('audittrail_trail'))
 {
@@ -36,8 +37,15 @@ if ( ! function_exists('audittrail_trail'))
             if (is_array($keys)) {
                 $str_keys = implode(',', array_values($keys));
             }
+            else {
+                $str_keys = $keys;
+            }
+
             if (is_array($values)) {
                 $str_values = implode(',', array_values($values));
+            }
+            else {
+                $str_values = $values;
             }
         }
 

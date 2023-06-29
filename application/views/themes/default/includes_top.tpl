@@ -7,11 +7,13 @@
 
 <link href="{$base_url}assets/bootstrap-datepicker/css/bootstrap-datepicker.min.css" rel="stylesheet" type="text/css" />
 
+{if !empty($use_geo)}
 <!-- leaflet -->
 <link href="{$base_url}assets/leaflet/leaflet/leaflet.css" rel="stylesheet" />
 <link href="{$base_url}assets/leaflet/esri/esri-leaflet-geocoder.css" rel="stylesheet" />
 <link href="{$base_url}assets/leaflet/fullscreen/leaflet.fullscreen.css" rel="stylesheet" />
 <link href="{$base_url}assets/leaflet/easybutton/easy-button.css" rel="stylesheet" />
+{/if} 
 
 <!-- select2 -->
 <link href="{$base_url}assets/select2/css/select2.min.css" rel="stylesheet" type="text/css" />
@@ -34,37 +36,50 @@
 <link href="{$base_url}assets/datatables/tcg/dt-editor-toggle.bootstrap4.css" rel="stylesheet" />
 <link href="{$base_url}assets/datatables/tcg/dt-editor-checkbox.css" rel="stylesheet" />
 <link href="{$base_url}assets/datatables/tcg/dt-editor-cascade.bootstrap4.css" rel="stylesheet" />
-<link href="{$base_url}assets/datatables/tcg/dt-editor-geolocation.bootstrap4.css" rel="stylesheet" />
 <link href="{$base_url}assets/datatables/tcg/dt-editor-unitprice.css" rel="stylesheet" />
-<link href="{$base_url}assets/datatables/tcg/dt-editor-table.bootstrap4.css" rel="stylesheet" />
-<link href="{$base_url}assets/datatables/tcg/dt-plugin-rowgroup.css" rel="stylesheet" />
 
 <link href="{$base_url}assets/datatables/tcg/dt-editor-text.css" rel="stylesheet" />
 <link href="{$base_url}assets/datatables/tcg/dt-editor-number.css" rel="stylesheet" />
 <link href="{$base_url}assets/datatables/tcg/dt-editor-readonly.css" rel="stylesheet" />
 <link href="{$base_url}assets/datatables/tcg/dt-editor-date.css" rel="stylesheet" />
 <link href="{$base_url}assets/datatables/tcg/dt-editor-textarea.css" rel="stylesheet" />
-<link href="{$base_url}assets/datatables/tcg/dt-editor-editor.css" rel="stylesheet" />
 <link href="{$base_url}assets/datatables/tcg/dt-editor-options.css" rel="stylesheet" />
 
-<link href="{$base_url}assets/dropzone/dropzone.min.css" rel="stylesheet" />
+{if !empty($use_editor_table)}
+<link href="{$base_url}assets/datatables/tcg/dt-editor-table.bootstrap4.css" rel="stylesheet" />
+{/if} 
+
+{if !empty($use_editor_rowgroup)}
+<link href="{$base_url}assets/datatables/tcg/dt-plugin-rowgroup.css" rel="stylesheet" />
+{/if} 
+
+{if !empty($use_upload)}
+<!-- dropzone file upload -->
+<link href="{$base_url}assets/dropzone/dropzone.min.css" rel="stylesheet" type="text/css" />
 <link href="{$base_url}assets/datatables/tcg/dt-editor-upload.bootstrap4.css" rel="stylesheet" />
+
+<!-- dragula drag-n-drop component -->
+<link href="{$base_url}assets/dragula/dragula.min.css" rel="stylesheet" type="text/css" />
+{/if} 
 
 <!--
 <link href="{$base_url}assets/datatables/tcg/dt-editor-table-select.css" rel="stylesheet" />
 -->
 
+{if !empty($use_geo)}
+<link href="{$base_url}assets/datatables/tcg/dt-editor-geolocation.bootstrap4.css" rel="stylesheet" />
+{/if} 
+
+{if !empty($use_wysiwyg)}
 <!-- WYSIWYG editor -->
 <!-- <link href="{$base_url}assets/backend/css/vendor/summernote-bs4.css" rel="stylesheet" type="text/css" /> -->
+<link href="{$base_url}assets/datatables/tcg/dt-editor-editor.css" rel="stylesheet" />
+{/if} 
 
+{if !empty($use_calendar)}
 <!-- full calendar -->
 <link href="{$base_url}assets/fullcalendar/core/main.min.css" rel="stylesheet" type="text/css" />
-
-<!-- dropzone file upload -->
-<link href="{$base_url}assets/dropzone/dropzone.min.css" rel="stylesheet" type="text/css" />
-
-<!-- dragula drag-n-drop component -->
-<link href="{$base_url}assets/dragula/dragula.min.css" rel="stylesheet" type="text/css" />
+{/if} 
 
 <!-- toastr toast popup -->
 <link href="{$base_url}assets/jquery-confirm/jquery-confirm.min.css" rel="stylesheet" type="text/css" />

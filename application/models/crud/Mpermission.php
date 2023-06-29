@@ -39,7 +39,7 @@ class Mpermission extends CI_Model
             //         where a.is_deleted=0 and a.role_id=? and b.name=?";
 
             $sql = "select a.*, b.is_public, b.page_type, c.id as table_id, c.name as table_name from dbo_crud_pages b 
-                    join dbo_crud_permissions a on a.table_id=b.crud_table_id and a.is_deleted=0 
+                    join dbo_crud_permissions a on a.page_id=b.id and a.is_deleted=0 
                     join dbo_crud_tables c on c.id=b.crud_table_id and c.is_deleted=0 
                     where b.is_deleted=0 and b.name=? and a.role_id=?";
 

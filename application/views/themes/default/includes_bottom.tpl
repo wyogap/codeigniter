@@ -5,7 +5,7 @@
 <script src="{$base_url}assets/bootstrap-datepicker/js/bootstrap-datepicker.min.js" defer></script>
 
 <!-- leaflet -->
-{if !empty($flag_geolocation)}
+{if !empty($use_geo)}
 <script src="{$base_url}assets/leaflet/leaflet/leaflet.js"></script>
 <script src="{$base_url}assets/leaflet/esri/esri-leaflet.js"></script>
 <script src="{$base_url}assets/leaflet/esri/esri-leaflet-geocoder.js"></script>
@@ -15,8 +15,6 @@
 
 <script src="{$base_url}assets/select2/js/select2.min.js"></script>
 <script src="{$base_url}assets/jquery-mask/jquery.mask.min.js"></script>
-
-<script src="{$base_url}assets/ckeditor5/ckeditor.js"></script>
 
 <!-- datatables -->
 <script src="{$base_url}assets/datatables/DataTables-1.10.20/js/jquery.dataTables.js"></script>
@@ -55,10 +53,7 @@
 <script src="{$base_url}assets/datatables/tcg/dt-editor-toggle.js" defer></script>
 <script src="{$base_url}assets/datatables/tcg/dt-editor-checkbox.js" defer></script>
 <script src="{$base_url}assets/datatables/tcg/dt-editor-cascade.js" defer></script>
-<script src="{$base_url}assets/datatables/tcg/dt-editor-geolocation.js" defer></script>
 <script src="{$base_url}assets/datatables/tcg/dt-editor-unitprice.js" defer></script>
-<script src="{$base_url}assets/datatables/tcg/dt-editor-table.js" defer></script>
-<script src="{$base_url}assets/datatables/tcg/dt-plugin-rowgroup.js" defer></script>
 
 <script src="{$base_url}assets/datatables/tcg/dt-editor-text.js" defer></script>
 <script src="{$base_url}assets/datatables/tcg/dt-editor-number.js" defer></script>
@@ -67,24 +62,39 @@
 <script src="{$base_url}assets/datatables/tcg/dt-editor-textarea.js" defer></script>
 <script src="{$base_url}assets/datatables/tcg/dt-editor-options.js" defer></script>
 
+{if !empty($use_editor_table)}
+<script src="{$base_url}assets/datatables/tcg/dt-editor-table.js" defer></script>
 <script src="{$base_url}assets/datatables/tcg/dt-editor-table-select.js" defer></script>
+{/if} 
 
-<script src="{$base_url}assets/datatables/tcg/dt-editor-editor.js" defer></script>
+{if !empty($use_editor_rowgroup)}
+<script src="{$base_url}assets/datatables/tcg/dt-plugin-rowgroup.js" defer></script>
+{/if}
 
+{if !empty($use_geo)}
+<script src="{$base_url}assets/datatables/tcg/dt-editor-geolocation.js" defer></script>
+{/if} 
+
+{if !empty($use_upload)}
 <script src="{$base_url}assets/dropzone/dropzone.min.js"></script>
 <script src="{$base_url}assets/datatables/tcg/dt-editor-upload.js" defer></script>
 
-<!-- WYSIWYG editor -->
-<!-- <script src="{$base_url}assets/ckeditor/ckeditor.js"></script>
-<script src="{$base_url}assets/ckeditor/adapters/jquery.js"></script> -->
-<!-- <script src="{$base_url}assets/backend/js/vendor/summernote-bs4.min.js"></script>
-<script src="{$base_url}assets/backend/js/pages/demo.summernote.js"></script> -->
-
-<!-- full calendar -->
-<script src="{$base_url}assets/fullcalendar/core/main.min.js" defer></script>
-
 <!-- dragula drag-n-drop component -->
 <script src="{$base_url}assets/dragula/dragula.min.js" defer></script>
+{/if} 
+
+{if !empty($use_wysiwyg)}
+<!-- WYSIWYG editor -->
+<script src="{$base_url}assets/ckeditor5/ckeditor.js"></script>
+<!-- <script src="{$base_url}assets/backend/js/vendor/summernote-bs4.min.js"></script>
+<script src="{$base_url}assets/backend/js/pages/demo.summernote.js"></script> -->
+<script src="{$base_url}assets/datatables/tcg/dt-editor-editor.js" defer></script>
+{/if} 
+
+{if !empty($use_calendar)}
+<!-- full calendar -->
+<script src="{$base_url}assets/fullcalendar/core/main.min.js" defer></script>
+{/if}
 
 <!-- mustache templating -->
 <script src="{$base_url}assets/mustache/mustache.min.js" defer></script>
@@ -113,8 +123,11 @@
 
 <!-- app -->
 <script src="{$base_url}{$theme_prefix}/js/app.min.js" defer></script>
+
+{if !empty($use_upload)}
 <script src="{$base_url}{$theme_prefix}/js/ui/component.fileupload.js" defer charset="utf-8"></script>
 <script src="{$base_url}{$theme_prefix}/js/ui/component.dragula.js" defer></script>
+{/if}
 
 <script src="{$base_url}{$theme_prefix}/js/custom.js" defer></script>
 <script src="{$base_url}{$theme_prefix}/app.js" defer></script>
@@ -136,76 +149,7 @@
     });
 </script>
 
-<!-- Toastr and alert notifications scripts -->
-<script type="text/javascript">
 
-    //select2 default theme
-    //$.fn.select2.defaults.set( "theme", "bootstrap" );
-
-    $(function () {
-        $('a[data-toggle="tab"]').on('shown.bs.tab', function(e) {
-            $.fn.dataTable.tables({
-                visible: true,
-                api: true
-            }).columns.adjust().responsive.recalc();
-        });
-
-        $('[data-toggle="tooltip"]').tooltip();
-    });
-
-    //Dropzone.autoDiscover = false;
-
-    $(document).ready(function() {
-
-        //default toastr options
-        toastr.options = {
-            "closeButton": false,
-            "debug": false,
-            "newestOnTop": false,
-            "progressBar": true,
-            "positionClass": "toast-top-right",
-            "preventDuplicates": false,
-            "onclick": null,
-            "showDuration": "300",
-            "hideDuration": "1000",
-            "timeOut": "5000",
-            "extendedTimeOut": "1000",
-            "showEasing": "swing",
-            "hideEasing": "linear",
-            "showMethod": "fadeIn",
-            "hideMethod": "fadeOut"
-        }
-
-        {if isset($flashdata) && !empty($flashdata['info_message'])}
-        toastr.info("{__('Success')}!", '{$flashdata["info_message"]}');
-        {/if}
-
-        {if isset($flashdata) && !empty($flashdata['error_message'])}
-        toastr.error("{__('Oh Snap')}!", '{$flashdata["error_message"]}');
-        {/if}
-
-        {if isset($flashdata) && !empty($flashdata['flash_message'])}
-        toastr.success("{__('Congratulations')}!", '{$flashdata["flash_message"]}');
-        {/if}    
-    });
-
-    function notify(message) {
-        toastr.info(message, "{__('Heads Up')}!");
-    }
-
-    function success_notify(message) {
-        toastr.success(message, "{__('Congratulations')}!");
-    }
-
-    function error_notify(message) {
-        toastr.error(message, "{__('Oh Snap')}!");
-    }
-
-    function error_required_field() {
-        toastr.error("{__('Please fill all the required fields')}", "{__('Oh Snap')}!");
-    }
-
-</script>
 
 
 

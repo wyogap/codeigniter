@@ -360,7 +360,7 @@
 			
 			if (_options != null && Array.isArray(_options)) {
 				//add options one by one
-				_options.forEach(function (item, index, arr) {
+				for (item of _options) {
 					if (typeof item === "undefined" || item == null ||
 						typeof item.value === "undefined" || item.value == null ||
 						typeof item.label === "undefined" || item.label == null) {
@@ -405,7 +405,7 @@
 					
 					_select.append(_option);
 
-				});
+				};
 			}
 
 			//re-set the value
@@ -593,7 +593,7 @@
 
 			if (_options != null && Array.isArray(_options)) {
 				//add options one by one
-				_options.forEach(function (item, index, arr) {
+				for (item of _options) {
 					if (typeof item === "undefined" || item == null ||
 						typeof item.value === "undefined" || item.value == null ||
 						typeof item.label === "undefined" || item.label == null) {
@@ -633,7 +633,7 @@
 
 					_select.append(_option);
 
-				});
+				};
 			}
 
 			//re-set the value

@@ -45,6 +45,10 @@
     .editor-layout div.tab-pane > .form-group {
         flex: 0 0 100%;
     }
+
+    thead input {
+        width: 100%;
+    }
 </style>
 
 <div class="table-responsive-sm">
@@ -69,7 +73,7 @@
                     {if $col.type=="virtual" || $col.type=="tcg_table"}
                         {continue}
                     {/if}
-                    <th class="{if $col.data_priority < 0}none {else if $col.css}{$col.css} {/if}text-center" data-priority="{$col.data_priority}" style="word-break: normal!important;">
+                    <th {if !empty($col.column_filter)}tcg-column-filter=1{/if} class="{if $col.data_priority < 0}none {else if $col.css}{$col.css} {/if}text-center" data-priority="{$col.data_priority}" style="word-break: normal!important;">
                     {if isset($col.edit_bubble) && $col.edit_bubble}<i class="dripicons-document-edit"></i> {/if}{$col.label}
                     </th>
                 {/foreach}

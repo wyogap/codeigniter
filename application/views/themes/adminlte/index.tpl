@@ -28,16 +28,20 @@
 
         {include "$theme_prefix/navigation.tpl"}
         <div class="content-wrapper" style="min-height: 644px;">
-                        <!-- BEGIN PlACE PAGE CONTENT HERE -->
-                        {include $inner_template}
-                        <!-- END PLACE PAGE CONTENT HERE -->
+            <!-- BEGIN PlACE PAGE CONTENT HERE -->
+            {include $inner_template}
+            <!-- END PLACE PAGE CONTENT HERE -->
         </div>
     </div>
 
     <!-- all the js files -->
     {include "$theme_prefix/includes_bottom.tpl"}
-    {include "$theme_prefix/modal.tpl"}
     {include "$theme_prefix/common_scripts.tpl"}
+
+    <!--
+    {include "$theme_prefix/modal.tpl"}
+    {include "$theme_prefix/modal2.tpl"}
+    -->
 
     <!-- page footer -->
     {if !empty($footer_view)}

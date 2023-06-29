@@ -547,12 +547,23 @@ $(document).ready(function() {
         });
 
     {/if}
+ 
+    {if !empty($tbl.column_filter)}
+    // Setup - add a text input to each footer cell
+    $('#{$tbl.table_id} thead tr')
+        .clone(true)
+        .addClass('filters')
+        .addClass('d-none')
+        .appendTo('#{$tbl.table_id} thead');
+    {/if}
 
     dt_{$tbl.table_id} = $('#{$tbl.table_id}').DataTable({
         "processing": true,
         "responsive": true,
         "serverSide": false,
         "scrollX": false,
+        orderCellsTop: true,
+        fixedHeader: true,
         {if !empty($tbl.page_size)}
         "pageLength": {$tbl.page_size},
         {else}
@@ -906,6 +917,81 @@ $(document).ready(function() {
             }
         ],
         initComplete: function() {
+            {if !empty($tbl.column_filter)}
+            var api = this.api();
+ 
+            // For each column
+            api
+                .columns()
+                .eq(0)
+                .each   (function (colIdx) {
+                    // Set the header cell to contain the input element
+                    var cell = $('#{$tbl.table_id} .filters th').eq(
+                        $(api.column(colIdx).header()).index()
+                    );
+
+                    var title = $(cell).text().trim();
+                    var col_filter = cell.attr('tcg-column-filter');
+                    if ($(api.column(colIdx).header()).index() >= 0 && col_filter == 1) {
+                        $(cell).html('<input type="text" placeholder="' + title + '"/>');
+                    } else {
+                        $(cell).html('');
+                    }                   
+
+                    {literal}
+                    // On every keypress in this input
+                    $(
+                        'input', cell
+                    )
+                        .off('keyup change')
+                        .on('change', function (e) {
+                            // Get the search value
+                            $(this).attr('title', $(this).val());
+                            var regexr = '({search})'; //$(this).parents('th').find('select').val();
+ 
+                            var cursorPosition = this.selectionStart;
+                            // Search the column for that value
+                            api
+                                .column(colIdx)
+                                .search(
+                                    this.value != ''
+                                        ? regexr.replace('{search}', '(((' + this.value + ')))')
+                                        : '',
+                                    this.value != '',
+                                    this.value == ''
+                                )
+                                .draw();
+
+                            //api.columns.adjust().responsive.recalc();
+                        })
+                        .on('keyup', function (e) {
+                            e.stopPropagation();
+ 
+                            var cursorPosition = this.selectionStart;
+
+                            $(this).trigger('change');
+                            $(this)
+                                .focus()[0]
+                                .setSelectionRange(cursorPosition, cursorPosition);
+                        });
+                    {/literal}
+
+                    //show/hide cell based on col's responsive status
+                    var col = api.column(colIdx);
+                    if (col.responsiveHidden()) {
+                        cell.show();
+                    }
+                    else {
+                        cell.hide();
+                    }
+ 
+
+                });
+
+            //show the filter row
+            $('#{$tbl.table_id} thead tr').removeClass("d-none");
+            {/if}
+
             dt_{$tbl.table_id}_initialized = true;
         },
         "createdRow": function ( row, data, index ) {
@@ -924,9 +1010,56 @@ $(document).ready(function() {
         // "drawCallback": function( settings ) {
         //     let that = this;
         //     var api = this.api();
-        //     api.columns.adjust().responsive.recalc();
+
+        //     //api.columns.adjust().responsive.recalc();
         // }
     });
+
+    dt_{$tbl.table_id}.on( 'responsive-resize', function ( e, api, columns ) {
+        {if !empty($tbl.column_filter)}
+        {literal}
+        api
+            .columns()
+            .eq(0)
+            .each(function (colIdx) {
+                var cell = $('.filters th').eq(
+                        $(api.column(colIdx).header()).index()
+                    );
+
+                var col = api.column(colIdx);
+                if (col.responsiveHidden()) {
+                    cell.show();
+                }
+                else {
+                    cell.hide();
+                }
+            });
+        {/literal}
+        {/if}
+    } );
+
+    var {$tbl.table_id}_refresh = debounce(function (e, settings) {
+        var api = new $.fn.dataTable.Api( settings );
+        console.log('>> ' + now());
+        api.columns.adjust().responsive.recalc();
+    }, 3000);
+
+    dt_{$tbl.table_id}.on( 'page.dt', function (e, settings) {
+        {$tbl.table_id}_refresh(e, settings);
+    });
+
+    dt_{$tbl.table_id}.on('order.dt search.dt', function(e, settings) {
+        {if $tbl.row_id_column}
+        dt_{$tbl.table_id}.column(0, {
+            search: 'applied',
+            order: 'applied'
+        }).nodes().each(function(cell, i) {
+            cell.innerHTML = i + 1;
+        });
+        {/if}
+        //refresh responsive table
+        {$tbl.table_id}_refresh(e, settings);
+    }).draw();
 
     dt_{$tbl.table_id}.buttons( 0, null ).container().addClass("mr-md-2 mb-1");
 
@@ -1061,17 +1194,6 @@ $(document).ready(function() {
         dt_{$tbl.table_id}.buttons( 2, null ).container().after(
             dt_{$tbl.table_id}.buttons( 3, null ).container()
         );
-    {/if}
-
-    {if $tbl.row_id_column}
-    dt_{$tbl.table_id}.on('order.dt search.dt', function() {
-        dt_{$tbl.table_id}.column(0, {
-            search: 'applied',
-            order: 'applied'
-        }).nodes().each(function(cell, i) {
-            cell.innerHTML = i + 1;
-        });
-    }).draw();
     {/if}
 
     dt_{$tbl.table_id}.on("user-select.dt", function (e, dt, type, cell, originalEvent) {
@@ -1331,3 +1453,109 @@ function toColumnName(num) {
     {$tbl.custom_js}
 </script>
 {/if}
+
+<script type="text/javascript" defer>
+    function throttle(func, wait, options) {
+        var timeout, context, args, result;
+        var previous = 0;
+        if (!options) options = {};
+
+        var later = function() {
+            previous = options.leading === false ? 0 : now();
+            timeout = null;
+            result = func.apply(context, args);
+            if (!timeout) context = args = null;
+        };
+
+        var throttled = function() {
+            var _now = now();
+            if (!previous && options.leading === false) previous = _now;
+            var remaining = wait - (_now - previous);
+            context = this;
+            args = arguments;
+            if (remaining <= 0 || remaining > wait) {
+            if (timeout) {
+                clearTimeout(timeout);
+                timeout = null;
+            }
+            previous = _now;
+            result = func.apply(context, args);
+            if (!timeout) context = args = null;
+            } else if (!timeout && options.trailing !== false) {
+            timeout = setTimeout(later, remaining);
+            }
+            return result;
+        };
+
+        throttled.cancel = function() {
+            clearTimeout(timeout);
+            previous = 0;
+            timeout = context = args = null;
+        };
+
+        return throttled;
+    }
+
+    function restArguments(func, startIndex) {
+        startIndex = startIndex == null ? func.length - 1 : +startIndex;
+
+        return function() {
+            var length = Math.max(arguments.length - startIndex, 0),
+                rest = Array(length),
+                index = 0;
+            for (; index < length; index++) {
+                rest[index] = arguments[index + startIndex];
+            }
+            switch (startIndex) {
+                case 0: return func.call(this, rest);
+                case 1: return func.call(this, arguments[0], rest);
+                case 2: return func.call(this, arguments[0], arguments[1], rest);
+            }
+            var args = Array(startIndex + 1);
+                for (index = 0; index < startIndex; index++) {
+                args[index] = arguments[index];
+            }
+            args[startIndex] = rest;
+            return func.apply(this, args);
+        };
+    };
+
+    function now() {
+        return new Date().getTime();
+    };
+
+    function debounce(func, wait, immediate) {
+        var timeout, previous, args, result, context;
+
+        var later = function() {
+            var passed = now() - previous;
+            if (wait > passed) {
+                // new call while the existing call is executing -> schedule for latter
+                timeout = setTimeout(later, wait - passed);
+            } else {
+                timeout = null;
+                if (!immediate) result = func.apply(context, args);
+                if (!timeout) args = context = null;
+            }
+        };
+
+        var debounced = restArguments(function(_args) {
+            context = this;
+            args = _args;
+            previous = now();
+            if (!timeout) {
+                timeout = setTimeout(later, wait);
+                if (immediate) result = func.apply(context, args);
+            }
+            return result;
+        });
+
+        debounced.cancel = function() {
+            clearTimeout(timeout);
+            timeout = args = context = null;
+        };
+
+        return debounced;
+    }
+
+</script>

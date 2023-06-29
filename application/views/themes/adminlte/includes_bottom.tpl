@@ -4,17 +4,17 @@
 
 <script src="{$base_url}assets/bootstrap-datepicker/js/bootstrap-datepicker.min.js" defer></script>
 
+{if !empty($use_geo)}
 <!-- leaflet -->
 <script src="{$base_url}assets/leaflet/leaflet/leaflet.js" defer></script>
 <script src="{$base_url}assets/leaflet/esri/esri-leaflet.js" defer></script>
 <script src="{$base_url}assets/leaflet/esri/esri-leaflet-geocoder.js" defer></script>
 <script src="{$base_url}assets/leaflet/fullscreen/Leaflet.fullscreen.min.js" defer></script>
 <script src="{$base_url}assets/leaflet/easybutton/easy-button.js" defer></script>
+{/if} 
 
 <!-- select2 -->
 <script src="{$base_url}assets/select2/js/select2.min.js"></script>
-
-<script src="{$base_url}assets/ckeditor5/ckeditor.js"></script>
 
 <!-- datatables -->
 <script src="{$base_url}assets/datatables/DataTables-1.10.20/js/jquery.dataTables.min.js" defer></script>
@@ -54,36 +54,48 @@
 <script src="{$base_url}assets/datatables/tcg/dt-editor-toggle.js" defer></script>
 <script src="{$base_url}assets/datatables/tcg/dt-editor-checkbox.js" defer></script>
 <script src="{$base_url}assets/datatables/tcg/dt-editor-cascade.js" defer></script>
-<script src="{$base_url}assets/datatables/tcg/dt-editor-geolocation.js" defer></script>
 <script src="{$base_url}assets/datatables/tcg/dt-editor-unitprice.js" defer></script>
-<script src="{$base_url}assets/datatables/tcg/dt-editor-table.js" defer></script>
-<script src="{$base_url}assets/datatables/tcg/dt-plugin-rowgroup.js" defer></script>
 
 <script src="{$base_url}assets/datatables/tcg/dt-editor-text.js" defer></script>
 <script src="{$base_url}assets/datatables/tcg/dt-editor-number.js" defer></script>
 <script src="{$base_url}assets/datatables/tcg/dt-editor-readonly.js" defer></script>
 <script src="{$base_url}assets/datatables/tcg/dt-editor-date.js" defer></script>
 <script src="{$base_url}assets/datatables/tcg/dt-editor-textarea.js" defer></script>
-<script src="{$base_url}assets/datatables/tcg/dt-editor-editor.js" defer></script>
 
-<script src="{$base_url}assets/dropzone/dropzone.min.js"></script>
-<script src="{$base_url}assets/datatables/tcg/dt-editor-upload.js" defer></script>
+{if !empty($use_editor_table)}
+<script src="{$base_url}assets/datatables/tcg/dt-editor-table.js" defer></script>
+{/if}
 
-<!-- WYSIWYG editor -->
-<!-- <script src="{$base_url}assets/ckeditor/ckeditor.js" defer></script>
-<script src="{$base_url}assets/ckeditor/adapters/jquery.js" defer></script> -->
-<!-- <script src="{$base_url}assets/backend/js/vendor/summernote-bs4.min.js"></script>
-<script src="{$base_url}assets/backend/js/pages/demo.summernote.js"></script> -->
+{if !empty($use_editor_rowgroup)}
+<script src="{$base_url}assets/datatables/tcg/dt-plugin-rowgroup.js" defer></script>
+{/if}
 
+{if !empty($use_geo)}
+<script src="{$base_url}assets/datatables/tcg/dt-editor-geolocation.js" defer></script>
+{/if}
 
-<!-- full calendar -->
-<script src="{$base_url}assets/fullcalendar/core/main.min.js" defer></script>
-
+{if !empty($use_upload)}
 <!-- dropzone file upload -->
 <script src="{$base_url}assets/dropzone/dropzone.min.js" defer></script>
+<script src="{$base_url}assets/datatables/tcg/dt-editor-upload.js" defer></script>
 
 <!-- dragula drag-n-drop component -->
-<script src="{$base_url}assets/dragula/dragula.min.js" defer></script>
+<!-- <script src="{$base_url}assets/dragula/dragula.min.js" defer></script> -->
+{/if} 
+
+{if !empty($use_wysiwyg)}
+<!-- WYSIWYG editor -->
+<script src="{$base_url}assets/ckeditor5/ckeditor.js"></script>
+<!-- <script src="{$base_url}assets/ckeditor/adapters/jquery.js" defer></script> -->
+<!-- <script src="{$base_url}assets/backend/js/vendor/summernote-bs4.min.js"></script>
+<script src="{$base_url}assets/backend/js/pages/demo.summernote.js"></script> -->
+<script src="{$base_url}assets/datatables/tcg/dt-editor-editor.js" defer></script>
+{/if} 
+
+{if !empty($use_calendar)}
+<!-- full calendar -->
+<script src="{$base_url}assets/fullcalendar/core/main.min.js" defer></script>
+{/if} 
 
 <!-- mustache templating -->
 <script src="{$base_url}assets/mustache/mustache.min.js" defer></script>
