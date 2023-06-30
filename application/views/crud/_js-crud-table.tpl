@@ -1017,12 +1017,11 @@ $(document).ready(function() {
 
     dt_{$tbl.table_id}.on( 'responsive-resize', function ( e, api, columns ) {
         {if !empty($tbl.column_filter)}
-        {literal}
         api
             .columns()
             .eq(0)
             .each(function (colIdx) {
-                var cell = $('.filters th').eq(
+                var cell = $('#{$tbl.table_id} .filters th').eq(
                         $(api.column(colIdx).header()).index()
                     );
 
@@ -1034,13 +1033,11 @@ $(document).ready(function() {
                     cell.hide();
                 }
             });
-        {/literal}
         {/if}
     } );
 
     var {$tbl.table_id}_refresh = debounce(function (e, settings) {
         var api = new $.fn.dataTable.Api( settings );
-        console.log('>> ' + now());
         api.columns.adjust().responsive.recalc();
     }, 3000);
 

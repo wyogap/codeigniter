@@ -404,6 +404,46 @@ class Mcrud extends CI_Model
         }
     }
 
+    /**
+     * Whether the user can list down the table
+     */
+    public function can_view($user_id) {
+        //not implemented
+        return false;
+    }
+
+    /**
+     * Whether the user can view the detail of particular entry
+     */
+    public function can_view_detail($user_id, $id) {
+        //not implemented
+        return false;
+    }
+
+    /**
+     * Whether the user can add new entry
+     */
+    public function can_add($user_id) {
+        //not implemented
+        return false;
+    }
+
+    /**
+     * Whether the user can edit a particular entry
+     */
+    public function can_edit($user_id, $id) {
+        //not implemented
+        return false;
+    }
+
+    /**
+     * Whether the user can delete a particular entry
+     */
+    public function can_delete($user_id, $id) {
+        //not implemented
+        return false;
+    }
+    
 }
 
   
