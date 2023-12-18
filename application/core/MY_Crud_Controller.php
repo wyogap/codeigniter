@@ -58,6 +58,11 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		
 		$page = $this->Mpages->get_page($name, static::$PAGE_GROUP);
 		if ($page == null) {
+			if (isset($params) && count($params) > 0 && ($params[0] == 'lookup' || $params[0] == 'json')) {
+				$json['error'] = "invalid-page";
+				echo json_encode($json, JSON_INVALID_UTF8_IGNORE);		
+				return;			
+			}
 			theme_404_with_navigation($navigation);
 			return;
 		}
@@ -79,6 +84,20 @@ abstract class MY_Crud_Controller extends CI_Controller {
 			
 			return;
 		}
+				
+		if (isset($params) && count($params) > 0 && $params[0] == 'lookup') {
+			unset($params[0]);
+
+			$model = $this->get_model_for_lookup($page['crud_table_id']);
+			if ($model == null) {
+				$json['error'] = "invalid-page";
+				echo json_encode($json, JSON_INVALID_UTF8_IGNORE);		
+				return;			
+			}
+
+			$this->table_lookup($model, $params);
+			return;
+		}
 
 		//crud pages
 		$model = $this->get_model($page['crud_table_id']);
@@ -96,12 +115,6 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		if (isset($params) && count($params) > 0 && $params[0] == 'json') {
 			unset($params[0]);
 			$this->table_json($page['name'], $model, $params);
-			return;
-		}
-
-		if (isset($params) && count($params) > 0 && $params[0] == 'lookup') {
-			unset($params[0]);
-			$this->table_lookup($model, $params);
 			return;
 		}
 
@@ -199,18 +212,6 @@ abstract class MY_Crud_Controller extends CI_Controller {
 			$tablemeta['page_size'] = $page['page_size'];
 		}
 
-		//get subtables if necessary
-		$subtables = $this->Mpages->subtables($page['id'], true);
-		foreach($subtables as $key => $val) {
-			$subtables[$key]['crud']['ajax'] = $base_ajax_url .'/subtable/'. $val['subtable_id'];
-			//override paging size if necessary
-			if (!empty($val['page_size'])) {
-				$subtables[$key]['crud']['page_size'] = $val['page_size'];
-			}
-			//override always autoload
-			$subtables[$key]['crud']['initial_load'] = false;
-		}
-
 		if ($page_type == 'table') {
 			$template = '/crud/table.tpl';
 		}
@@ -239,6 +240,22 @@ abstract class MY_Crud_Controller extends CI_Controller {
 
 		//easy access for everything
 		$page_data['crud']			 = $tablemeta; 
+
+		//get subtables if necessary
+		//IMPORTANT: since Mpage instance is shared, the following function will modify the tablename inside Mpages
+		$subtables = $this->Mpages->subtables($page['id'], true);
+
+		foreach($subtables as $key => $val) {
+			$subtables[$key]['crud']['ajax'] = $base_ajax_url .'/subtable/'. $val['subtable_id'];
+			//override paging size if necessary
+			if (!empty($val['page_size'])) {
+				$subtables[$key]['crud']['page_size'] = $val['page_size'];
+			}
+			//override always autoload
+			$subtables[$key]['crud']['initial_load'] = false;
+		}
+
+		//easy access
 		$page_data['subtables']		 = $subtables;
 
 		//permission
@@ -828,7 +845,7 @@ abstract class MY_Crud_Controller extends CI_Controller {
 			if (substr($key, 0, 2) != "f_") continue;
 			$filters[substr($key, 2)] = $val;
 		}
-
+		
 		$json['data'] = $model->lookup($filters);
 
 		echo json_encode($json, JSON_INVALID_UTF8_IGNORE);	
@@ -998,6 +1015,16 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		$this->load->model('crud/Mtable');
 
 		if (!$this->Mtable->init($table_id, true)) {
+			return null;
+		}
+
+		return $this->Mtable;
+	}
+
+	protected function get_model_for_lookup($table_id) {
+		$this->load->model('crud/Mtable');
+
+		if (!$this->Mtable->init_for_lookup($table_id, true)) {
 			return null;
 		}
 

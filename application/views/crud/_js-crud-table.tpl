@@ -692,6 +692,7 @@ $(document).ready(function() {
                     {/if}
                 {/if}
                 className: "col_{$x.type} {$x.css} {if !empty($x.edit_bubble)}editable{/if}",
+                orderable: {if !empty($x.allow_sort)}true{else}false{/if},
                 {if isset($x.type) && $x.type=="tcg_select2"}
                 render: function ( data, type, row ) {
                     // if (type == "export") {
@@ -911,10 +912,16 @@ $(document).ready(function() {
             //     ],
             //     visible: false
             // },
-            {
-                targets: [0],
-                orderable: false
-            }
+
+            // why do we need to disable ordering for first column?
+            // {
+            //     targets: [0],
+            //     orderable: false
+            // }
+        ],
+        //testing-sort
+        order: [
+            {foreach $tbl.sorting_columns as $x}[{$x.column_no}, {if $x.sort_asc}'asc'{else}'desc'{/if}], {/foreach}
         ],
         initComplete: function() {
             {if !empty($tbl.column_filter)}

@@ -104,6 +104,13 @@ class Mtablemeta extends CI_Model
         'is_required' => false
     );
     
+    public static $SORTING = array (
+        'name' => '',
+        'column_no' => 0,
+        'sort_no' => 0,
+        'sort_asc' => 1
+    );
+
     public static $TABLE_ACTION = array (
         'add' => true,
         'add_custom_js' => '',

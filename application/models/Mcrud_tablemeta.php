@@ -27,6 +27,7 @@ class Mcrud_tablemeta extends CI_Model
     protected $column_metas = null;
     protected $editor_metas = null;
     protected $filter_metas = null;
+    protected $sorting_metas = null;
 
     protected $join_tables = null;
 
@@ -39,6 +40,7 @@ class Mcrud_tablemeta extends CI_Model
     protected $select_columns = null;
     protected $filter_columns = null;
     protected $search_columns = null;
+    protected $sorting_columns = null;
 
     protected $lookup_columns = null;
 
@@ -47,6 +49,9 @@ class Mcrud_tablemeta extends CI_Model
     protected $error_code = 0;
     protected $error_message = null;
 
+    protected $column_groupings = null;
+    protected $column_grouping_map = null;
+
     //public $error = array();
 
     public static $XLSX_FILE_TYPE = "Xlsx";
@@ -54,12 +59,55 @@ class Mcrud_tablemeta extends CI_Model
 
     function __construct($name_or_id = null, $is_table_id = false, $level1_column = null, $level1_value = null) {
         //dynamically load the table
-        if (!empty($name_or_id)) {
-            $this->init($name_or_id, $is_table_id, $level1_column, $level1_value);
+        if (empty($name_or_id)) {
+            $name_or_id = static::$DEF_TABLE_ID;
+            $is_table_id = true;
         }
-        else if (static::$DEF_TABLE_ID>0) {
-            $this->init(static::$DEF_TABLE_ID, true);
+
+        //$this->init_for_lookup($name_or_id, $is_table_id);
+
+        // if ($for_lookup) {
+        //     $this->init_for_lookup($name_or_id, $is_table_id);
+        // } 
+        // else {
+        //     $this->init($name_or_id, $is_table_id, $level1_column, $level1_value);
+        // }
+    }
+
+    function init_for_lookup($name_or_id, $is_table_id = false) {
+        $this->reset_error();
+
+        if ($this->initialized && 
+            (($is_table_id && $this->table_id == $name_or_id) 
+                || (!$is_table_id && $this->table_name == $name_or_id))
+            ) {
+            return true;
         }
+
+        $this->initialized = false;
+                
+        //table metas
+        $filter = null;
+        if ($is_table_id) {
+            $filter = array('id'=>$name_or_id, 'is_deleted'=>0);
+        }
+        else {
+            $filter = array('name'=>$name_or_id, 'is_deleted'=>0);
+        }
+
+        $this->db->select('*');
+        $arr = $this->db->get_where('dbo_crud_tables', $filter)->row_array();
+        if ($arr == null) {
+            return false;
+        }
+
+        if (!$this->init_with_tablemeta_for_lookup($arr)) {
+            return false;
+        }
+
+        $this->initialized = true;
+
+        return true;
     }
 
     function init($name_or_id, $is_table_id = false, $level1_column = null, $level1_value = null) {
@@ -92,6 +140,126 @@ class Mcrud_tablemeta extends CI_Model
         if (!$this->init_with_tablemeta($arr, $level1_column, $level1_value)) {
             return false;
         }
+
+        $this->initialized = true;
+
+        return true;
+    }
+
+    function init_with_tablemeta_for_lookup($arr) {
+        $this->reset_error();
+        
+        if ($this->initialized && $this->table_id == $arr['id']) {
+            return true;
+        }
+        
+        $this->initialized = false;
+        
+        //table name
+        $this->table_id = $arr['id'];
+        $this->name = $arr['name'];
+        $this->table_name = $arr['table_name'];
+
+        //table info
+        $this->table_metas = Mtablemeta::$TABLE;
+        $this->table_metas['name'] = $this->name;
+        $this->table_metas['id'] = $arr['id'];
+        $this->table_metas['table_id'] = 'tdata_'.$arr['id'];
+        $this->table_metas['key_column'] = $arr['key_column'];
+
+        $this->table_metas['lookup_column'] = $arr['lookup_column'];
+        if (empty($this->table_metas['lookup_column'])) {
+            $this->table_metas['lookup_column'] = $this->table_metas['key_column'];
+        }
+
+        $this->table_metas['table_name'] = $arr['table_name'];
+        $this->table_metas['editable_table_name'] = $arr['editable_table_name'];
+        if (empty($this->table_metas['editable_table_name'])) {
+            $this->table_metas['editable_table_name'] = $this->table_metas['table_name'];
+        }
+
+        $this->table_metas['where_clause'] = "";
+        if (!empty($arr['where_clause'])) {
+            $this->table_metas['where_clause'] = replace_userdata($arr['where_clause']);
+        }
+
+        $this->table_metas['orderby_clause'] = $arr['orderby_clause'];
+        $this->table_metas['limit_selection'] = $arr['limit_selection'];
+        $this->table_metas['soft_delete'] = ($arr['soft_delete'] == 1);
+
+        $this->table_metas['page_size'] = $arr['page_size'];
+        if (empty($this->table_metas['page_size'])) {
+            $this->table_metas['page_size'] = static::$DEF_PAGE_SIZE;
+        }
+
+        $this->column_metas = array();
+        $this->columns = array();
+
+        //columns metas
+        do {
+            $this->db->select('*');
+            $this->db->order_by('order_no asc');
+            $arr = $this->db->get_where('dbo_crud_columns', array('table_id'=>$this->table_id, 'is_deleted'=>0))->result_array();
+            if ($arr == null) {
+                break;
+            }
+    
+            foreach($arr as $row) {
+                $col = Mtablemeta::$COLUMN;
+                $col['name'] = trim($row['name']);
+                $col['ci_name'] = strtoupper($col['name']);     //case-insensitive name => all capital
+                $col['label'] = __($row['label']);
+                $col['column_name'] = $row['column_name'];
+                if (empty($col['column_name'])) {
+                    $col['column_name'] = $this->table_name. "." .$col['name'];
+                }
+
+                //if already exist, ignore. prevent duplicate
+                if (false !== array_search($col['ci_name'], $this->columns)) {
+                   continue;
+                }
+
+                $this->column_metas[] = $col;
+                $this->columns[] = $col['ci_name'];
+            }                    
+        } 
+        while (false);
+
+        if (empty($this->table_metas['key_column']) && count($this->column_metas)>0) {
+            $this->table_metas['key_column'] = $this->column_metas[0]['name'];
+        }
+
+        if (empty($this->table_metas['lookup_column']) && count($this->column_metas)>0) {
+            $this->table_metas['lookup_column'] = $this->column_metas[0]['name'];
+        }
+        
+        //always add lookup-column
+        $ci_name = strtoupper($this->table_metas['lookup_column']);
+        if (false === array_search($ci_name, $this->columns)) {
+            $col = Mtablemeta::$COLUMN;
+            $col['name'] = $this->table_metas['lookup_column'];
+            $col['ci_name'] = $ci_name;
+            $col['label'] = __('Lookup');
+
+            //add to beginning
+            array_unshift($this->column_metas, $col);
+            array_unshift($this->columns, $ci_name);
+        }
+
+        //always add key-column
+        $ci_name = strtoupper($this->table_metas['key_column']);
+        if (false === array_search(strtoupper($this->table_metas['key_column']), $this->columns)) {
+            $col = Mtablemeta::$COLUMN;
+            $col['name'] = $this->table_metas['key_column'];
+            $col['ci_name'] = $ci_name;
+            $col['label'] = __('Key');
+
+            //add to beginning
+            array_unshift($this->column_metas, $col);
+            array_unshift($this->columns, $ci_name);
+        }
+
+        $this->table_metas['columns'] = $this->column_metas;
 
         $this->initialized = true;
 
@@ -170,6 +338,9 @@ class Mcrud_tablemeta extends CI_Model
         $this->table_metas['search'] = ($arr['search'] == 1);
         $this->table_metas['search_max_result'] = empty($arr['search_max_result']) ? 0 : $arr['search_max_result'];
 
+        $this->table_metas['orderby_clause'] = empty($arr['orderby_clause']) ? null : $arr['orderby_clause'];
+        $this->table_metas['limit_selection'] = empty($arr['limit_selection']) ? null : $arr['limit_selection'];
+
         $this->table_metas['row_reorder'] = ($arr['row_reorder'] == 1);
         $this->table_metas['row_reorder_column'] = empty($arr['row_reorder_column']) ? $arr['key_column'] : $arr['row_reorder_column'];
 
@@ -205,6 +376,7 @@ class Mcrud_tablemeta extends CI_Model
         $this->column_metas = array();
         $this->editor_metas = array();
         $this->filter_metas = array();
+        $this->sorting_metas = array();
         $this->join_tables = array();
         $this->row_actions = array();
         $this->custom_actions = array();
@@ -214,6 +386,7 @@ class Mcrud_tablemeta extends CI_Model
         $this->select_columns = array();
         $this->filter_columns = array();
         $this->search_columns = array();
+        $this->sorting_columns = array();
 
         $this->column_groupings = array();
         $this->column_grouping_map = array();
@@ -268,6 +441,9 @@ class Mcrud_tablemeta extends CI_Model
 
         } while(0);
 
+        //column idx
+        $column_idx = 0;
+
         //lookup alias
         $lookup_idx = 1;
 
@@ -285,7 +461,8 @@ class Mcrud_tablemeta extends CI_Model
                 if ($level1_column == $row['name']) continue;
                 
                 $col = Mtablemeta::$COLUMN;
-                $col['name'] = $row['name'];
+                $col['name'] = trim($row['name']);
+                $col['ci_name'] = strtoupper($col['name']);     //case-insensitive name => all capital
                 $col['label'] = __($row['label']);
                 $col['visible'] = ($row['visible'] == 1);
                 $col['css'] = $row['css'];
@@ -297,7 +474,12 @@ class Mcrud_tablemeta extends CI_Model
                 }
 
                 //if already exist, ignore. prevent duplicate
-                if (true === array_search($col['column_name'], $this->select_columns)) {
+                if (false !== array_search($col['ci_name'], $this->columns)) {
+                    continue;
+                 }
+ 
+                //if already exist, ignore. prevent duplicate
+                if (false !== array_search($col['column_name'], $this->select_columns)) {
                    continue;
                 }
 
@@ -318,6 +500,10 @@ class Mcrud_tablemeta extends CI_Model
                 $col['allow_filter'] = ($row['allow_filter'] == 1);
                 $col['allow_search'] = (isset($row['allow_search']) && $row['allow_search'] == 1);
                 $col['column_filter'] = ($row['column_filter'] == 1);
+
+                //hack for backward compatibility
+                if (!isset($row['allow_sort'])) $col['allow_sort'] = true;
+                else $col['allow_sort'] = ($row['allow_sort'] == 1);
                 
                 //default: no bubble edit
                 $col['edit_bubble'] = false;
@@ -434,7 +620,10 @@ class Mcrud_tablemeta extends CI_Model
                     }
             
                     //use alias in case multiple reference of the same table (ie. lookup table)
-                    $ref['reference_alias'] = 'lookup_' .$lookup_idx++;
+                    $ref['reference_alias'] = $row['reference_alias'];
+                    if (empty($ref['reference_alias'])) {
+                        $ref['reference_alias'] = 'lookup_' .$lookup_idx++;
+                    }
 
                     if ($col['type'] == 'tcg_multi_select') {
                         $subquery = "select group_concat(" .$ref['reference_lookup_column']. " separator ', ') from " .$ref['reference_table_name']. " where find_in_set(" .$ref['reference_key_column']. ", " .$ref['column_name']. ") > 0";
@@ -462,7 +651,8 @@ class Mcrud_tablemeta extends CI_Model
 
                     //get lookup if not specified manually
                     if (empty($col['options']) && empty($col['options_data_url']) && ($row['edit_type'] == 'tcg_select2' || $row['filter_type'] == 'tcg_select2')) {
-                        $col['options'] = $this->get_lookup_options($ref['reference_table_name'], $ref['reference_key_column'], $ref['reference_lookup_column'], $ref['reference_soft_delete'], $ref['reference_where_clause']);
+                        $col['options'] = $this->get_lookup_options($ref['reference_table_name'], $ref['reference_key_column'], $ref['reference_lookup_column']
+                                                                    , $ref['reference_soft_delete'], $ref['reference_where_clause'], $ref['reference_alias']);
                     }
 
                     //search column -> search lookup
@@ -555,7 +745,6 @@ class Mcrud_tablemeta extends CI_Model
                         if (!empty($editor['subtable_row_reorder_column'])) {
                             $editor['edit_attr']['rowReorderColumn'] = $editor['subtable_row_reorder_column'];
                         }
-
                         
                         $editor['subtable_columns'] = $this->get_subtable_columns($editor['subtable_id']);
                     }
@@ -590,7 +779,6 @@ class Mcrud_tablemeta extends CI_Model
                         $this->column_groupings[ $grp['idx'] ]['columns'][] = $editor;
                         $this->column_grouping_map[ $grp['id'] ]['columns'][] = $editor;
                     }
-
                 }
 
                 if ($this->table_metas['filter'] && $col['allow_filter']) {
@@ -642,8 +830,10 @@ class Mcrud_tablemeta extends CI_Model
                 }
     
                 //bubble editor 
-                $col['edit_bubble'] = ($row['edit_bubble'] == 1);;
+                $col['edit_bubble'] = ($row['edit_bubble'] == 1);
+                $col['column_no'] = $column_idx;
 
+                //add into the collection
                 $this->column_metas[] = $col;
                 if ($col['type'] == 'virtual') {
                     $this->select_columns[] = "'' as ".$col['name'];
@@ -651,7 +841,7 @@ class Mcrud_tablemeta extends CI_Model
                 else {
                     $this->select_columns[] = $col['column_name']." as ".$col['name'];
                 }
-                $this->columns[] = $col['name'];
+                $this->columns[] = $col['ci_name'];
 
                 //if type=upload, add related columns
                 if ($col['type'] == "tcg_upload") {
@@ -661,6 +851,7 @@ class Mcrud_tablemeta extends CI_Model
                     //filenames
                     $col = Mtablemeta::$COLUMN;
                     $col['name'] = $col_name .'_filename';
+                    $col['ci_name'] = strtoupper($col['name']);
                     $col['label'] = $col_label .' (File Name)';
                     $col['column_name'] = $this->table_name. "." .$col['name'];
                     $col['visible'] = false;
@@ -669,14 +860,16 @@ class Mcrud_tablemeta extends CI_Model
                     $col['allow_insert'] = false;
                     $col['allow_edit'] = false;
                     $col['allow_filter'] = false;
+                    $col['allow_sort'] = false;
 
                     $this->column_metas[] = $col;
                     $this->select_columns[] = $col['column_name']." as ".$col['name'];
-                    $this->columns[] = $col['name'];
+                    $this->columns[] = $col['ci_name'];
 
                     //path
                     $col = Mtablemeta::$COLUMN;
                     $col['name'] = $col_name .'_path';
+                    $col['ci_name'] = strtoupper($col['name']);
                     $col['label'] = $col_label .' (Path)';
                     $col['column_name'] = $this->table_name. "." .$col['name'];
                     $col['visible'] = false;
@@ -685,14 +878,16 @@ class Mcrud_tablemeta extends CI_Model
                     $col['allow_insert'] = false;
                     $col['allow_edit'] = false;
                     $col['allow_filter'] = false;
+                    $col['allow_sort'] = false;
 
                     $this->column_metas[] = $col;
                     $this->select_columns[] = $col['column_name']." as ".$col['name'];
-                    $this->columns[] = $col['name'];
+                    $this->columns[] = $col['ci_name'];
 
                     //thumbnail
                     $col = Mtablemeta::$COLUMN;
                     $col['name'] = $col_name .'_thumbnail';
+                    $col['ci_name'] = strtoupper($col['name']);
                     $col['label'] = $col_label .' (Thumbnail)';
                     $col['column_name'] = $this->table_name. "." .$col['name'];
                     $col['visible'] = false;
@@ -701,19 +896,30 @@ class Mcrud_tablemeta extends CI_Model
                     $col['allow_insert'] = false;
                     $col['allow_edit'] = false;
                     $col['allow_filter'] = false;
+                    $col['allow_sort'] = false;
 
                     $this->column_metas[] = $col;
                     $this->select_columns[] = $col['column_name']." as ".$col['name'];
-                    $this->columns[] = $col['name'];
+                    $this->columns[] = $col['ci_name'];
+                }
+            
+                //default column sorting
+                if ($col['allow_sort'] && !empty($row['default_sort_no'])) {
+                    $sort = Mtablemeta::$SORTING;
+                    $sort['name'] = $col['ci_name'];
+                    $sort['column_no'] = $column_idx;
+                    $sort['sort_no'] = $row['default_sort_no'];
+                    $sort['sort_asc'] = $row['default_sort_asc'];
+
+                    $this->sorting_metas[] = $sort;
+                    $this->sorting_columns[] = $col['ci_name'];
                 }
 
-            }
-
-
-        } while (false);
-
-        //var_dump($this->table_metas['columns']);
-
+                $column_idx++;
+            }         
+        } 
+        while (false);
+        
         if (empty($this->table_metas['key_column']) && count($this->column_metas)>0) {
             $this->table_metas['key_column'] = $this->column_metas[0]['name'];
         }
@@ -846,6 +1052,89 @@ class Mcrud_tablemeta extends CI_Model
         $this->table_metas['column_groupings'] = $this->column_groupings;
         $this->table_metas['column_grouping_map'] = $this->column_grouping_map;
 
+        //always add default sort from table definition
+        $ci_name = null;
+        if (!empty($this->table_metas['orderby_clause'])) {
+            $sort_idx = 1;
+
+            $arr1 = explode(',', $this->table_metas['orderby_clause']);
+            foreach($arr1 as $col) {
+                $arr2 = explode(' ', trim($col));
+
+                $ci_name = strtoupper(trim($arr2[0]));
+                if (empty($ci_name))   continue;
+
+                //already in sort-columns
+                if (false !== array_search($ci_name, $this->sorting_columns))   continue;
+
+                //search in select columns
+                $col_idx = array_search($ci_name, $this->columns);
+                if (false === $col_idx) continue;
+                
+                //asc or desc
+                $col_asc = true;
+                if (count($arr2)>1) {
+                    $txt = substr(trim($arr2[1]), 0, 4);
+                    if (strtoupper($txt) == 'DESC') {
+                        $col_asc = false;
+                    }
+                }
+
+                //add to sorting column
+                $sort = Mtablemeta::$SORTING;
+                $sort['name'] = $ci_name;
+                $sort['column_no'] = $col_idx;
+                $sort['sort_no'] = $sort_idx;
+                $sort['sort_asc'] = $col_asc;
+
+                $this->sorting_metas[] = $sort;
+                $this->sorting_columns[] = $ci_name;
+
+                $sort_idx++;
+            }
+        }
+
+        //sort sorting columns
+        if (count($this->sorting_metas) > 0) {
+            $arr1 = array();
+            $arr2 = array();
+            foreach($this->sorting_metas as $col) {
+                $arr1[ $col['name'] ] = $col;
+                $arr2[ $col['name'] ] = $col['sort_no'];
+            }
+
+            //sort
+            asort($arr2);
+
+            //copy back
+            $this->sorting_metas = array();
+            foreach($arr2 as $key => $val) {
+                $col = $arr1[$key];
+                $this->sorting_metas[] = $col;
+            }
+        }
+
+        //if no sorting defined, sort based on key column
+        if (count($this->sorting_metas) == 0) {
+            $ci_name = strtoupper($this->table_metas['key_column']);
+
+            $col_idx = array_search($ci_name, $this->columns);
+            if (false !== $col_idx) {
+                //add to sorting column
+                $sort = Mtablemeta::$SORTING;
+                $sort['name'] = $ci_name;
+                $sort['column_no'] = $col_idx;
+                $sort['sort_no'] = 1;
+                $sort['sort_asc'] = true;
+
+                $this->sorting_metas[] = $sort;
+                $this->sorting_columns[] = $ci_name;                
+            }
+        }
+
+        //table default sorting
+        $this->table_metas['sorting_columns'] = $this->sorting_metas;
+
         //var_dump( $this->filter_metas);
 
         // //always include key-column in column search
@@ -921,9 +1210,11 @@ class Mcrud_tablemeta extends CI_Model
         $table_name = $this->table_metas['table_name'];
 
         //clean up non existing filter columns
+        $ci_name = null;
         foreach($filter as $key => $val) {
             //TODO: use columnmeta[$key] and use $column_name
-            if (false !== array_search($key, $this->columns)) {
+            $ci_name = strtoupper($key);
+            if (false !== array_search($ci_name, $this->columns)) {
                 $this->db->where("$table_name.$key", $val);
             }
         }
@@ -966,9 +1257,11 @@ class Mcrud_tablemeta extends CI_Model
         $table_name = $this->table_metas['table_name'];
 
         //clean up non existing filter columns
+        $ci_name = null;
         foreach($filter as $key => $val) {
             //TODO: use columnmeta[$key] and use $column_name
-            if (false !== array_search($key, $this->columns)) {
+            $ci_name = strtoupper($key);
+            if (false !== array_search($ci_name, $this->columns)) {
                 $this->db->where("$table_name.$key", $val);
             }
         }
@@ -1011,10 +1304,12 @@ class Mcrud_tablemeta extends CI_Model
         }
 
         //add filter
+        $ci_name = null;
         if ($filter != null && count($filter) > 0) {
             foreach($filter as $key => $val) {
                 //TODO: use columnmeta[$key] and use $column_name
-                if (false !== array_search($key, $this->columns)) {
+                $ci_name = strtoupper($key);
+                if (false !== array_search($ci_name, $this->columns)) {
                     if ($val == Mcrud_tablemeta::INVALID_VALUE) {
                         $fkey = isset($this->join_tables[$key]) ? $this->join_tables[$key] : null;
                         if ($fkey != null) {
@@ -1110,9 +1405,11 @@ class Mcrud_tablemeta extends CI_Model
         $table_name = $this->table_metas['table_name'];
 
         //clean up non existing filter columns
+        $ci_name = null;
         foreach($filter as $key => $val) {
             //TODO: use columnmeta[$key] and use $column_name
-            if (false !== array_search($key, $this->columns)) {
+            $ci_name = strtoupper($key);
+            if (false !== array_search($ci_name, $this->columns)) {
                 if ($val == Mcrud_tablemeta::INVALID_VALUE) {
                     $fkey = isset($this->join_tables[$key]) ? $this->join_tables[$key] : null;
                     if ($fkey != null) {
@@ -2027,11 +2324,20 @@ class Mcrud_tablemeta extends CI_Model
 		return $ci->$name;
 	}
 
-    private function get_lookup_options($table_name, $key_column, $lookup_column, $soft_delete = true, $where_clause = null) {
+    private function get_lookup_options($table_name, $key_column, $lookup_column, $soft_delete = true, $where_clause = null, $alias_name = '') {
+        if (!empty($alias_name)) {
+            //legacy. some old configuration is wrong
+            $where_clause = str_replace($table_name .".", $alias_name .".", $where_clause);
+            $where_clause = str_replace("`$table_name`" .".", $alias_name .".", $where_clause);
+            //use alias
+            $table_name = $table_name ." as ". $alias_name;
+        }
+
         if ($soft_delete)           $this->db->where('is_deleted', 0);
         if (!empty($where_clause))  $this->db->where($where_clause);
 
         $this->db->select($lookup_column .' as label, '. $key_column .' as value');
+
         return $this->db->get($table_name)->result_array();
 	}
 

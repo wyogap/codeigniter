@@ -25,6 +25,52 @@ class Mtable extends CI_Model
         //TODO
     }
 
+    public function init_for_lookup($name_or_id, $is_table_id = false) {
+        $this->initialized = false;
+        
+        //table metas
+        $filter = null;
+        if ($is_table_id) {
+            $filter = array('id'=>$name_or_id, 'is_deleted'=>0);
+        }
+        else {
+            $filter = array('name'=>$name_or_id, 'is_deleted'=>0);
+        }
+
+        $this->db->select('*');
+        $arr = $this->db->get_where('dbo_crud_tables', $filter)->row_array();
+        if ($arr == null) {
+            return false;
+        }
+
+        $this->data_model = null;
+
+        //data model
+        if (!empty($arr['data_model'])) {
+            try {
+                $this->data_model = $this->get_model($arr['data_model']);
+                if (!$this->data_model->init_with_tablemeta_for_lookup($arr)) {
+                    $this->data_model = null;
+                }
+            }
+            catch (exception $e) {
+                $this->data_model = null;
+            }
+        }     
+
+        if ($this->data_model == null) {
+            $this->data_model = new Mcrud_tablemeta();
+            $this->data_model->init_for_lookup($arr['id'], true);
+        }
+
+        if($this->data_model != null) {
+            $this->initialized = true;
+            return true;
+        }
+
+        return false;
+    }
+
     public function init($name_or_id, $is_table_id = false, $level1_column = null, $level1_value = null) {
         $this->initialized = false;
         
@@ -59,7 +105,8 @@ class Mtable extends CI_Model
         }     
 
         if ($this->data_model == null) {
-            $this->data_model = new Mcrud_tablemeta($arr['id'], true, $level1_column, $level1_value);
+            $this->data_model = new Mcrud_tablemeta();
+            $this->data_model->init($arr['id'], true, $level1_column, $level1_value);
         }
 
         if($this->data_model != null) {
@@ -112,7 +159,12 @@ class Mtable extends CI_Model
     public function list($filter = null, $limit = null, $offset = null, $orderby = null) {
         if (!$this->initialized)   return null;
 
+        $tablemeta = $this->data_model->tablemeta();
+
         if ($filter == null) $filter = array();
+
+        if ($orderby == null && $tablemeta != null) $orderby = $tablemeta['orderby_clause'];
+        if ($limit == null && $tablemeta != null) $limit = $tablemeta['limit_selection'];
 
         //use data model
         if ($this->data_model != null) {

@@ -56,10 +56,7 @@
                 <div class="card widget-inline">
                     <div class="card-body">
                         {include file='crud/crud-form.tpl' tbl=$crud}
-                        {if !empty($subtables) && count($subtables)}
                         <div class=" my-3"></div>
-                        {include file='crud/crud-subtables.tpl'}
-                        {/if}
                     </div>
                 </div>
                 <!-- </form> -->
@@ -68,6 +65,25 @@
 
     </div>
 </div>
+
+{if !empty($subtables) && count($subtables)}
+<div class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <!-- <form class="crud-form" data-url="{$crud.ajax}" action="{$crud.ajax}" role="form" enctype="multipart/form-data" method="post" id="{$crud.table_id}_form" data-table-id="{$crud.table_id}" {if $detail}data-id="{$detail[$crud.key_column]}"{/if}> -->
+                <div class="card widget-inline">
+                    <div class="card-body">
+                        {include file='crud/crud-subtables.tpl'}
+                    </div>
+                </div>
+                <!-- </form> -->
+            </div> <!-- end col -->
+        </div>
+
+    </div>
+</div>
+{/if}
 
 {include file="crud/_js-crud-form.tpl" tbl=$crud}
 
