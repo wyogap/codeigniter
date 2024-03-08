@@ -48,6 +48,7 @@ abstract class MY_Crud_Controller extends CI_Controller {
 
 		//navigation
 		$navigation = $this->get_navigation();
+		$session = $this->get_session();
 
 		//check for permission
 		$this->load->model(array('crud/Mpages', 'crud/Mpermission'));
@@ -67,70 +68,81 @@ abstract class MY_Crud_Controller extends CI_Controller {
 			return;
 		}
 
-		if (isset($params) && count($params) > 0 && $params[0] == 'add') {
-			unset($params[0]);
-			$this->table_add($page, $navigation);
-			return;
-		}
-
-		if (isset($params) && count($params) > 0 && $params[0] == 'edit') {
-			unset($params[0]);
-
-			//var_dump($params);
-
-			$id = array_shift($params);
-			if ($id != null)		$this->table_edit($page, $navigation, $id);
-			else					$this->table_add($page, $navigation);
-			
-			return;
-		}
-				
-		if (isset($params) && count($params) > 0 && $params[0] == 'lookup') {
-			unset($params[0]);
-
-			$model = $this->get_model_for_lookup($page['crud_table_id']);
-			if ($model == null) {
-				$json['error'] = "invalid-page";
-				echo json_encode($json, JSON_INVALID_UTF8_IGNORE);		
-				return;			
+		if ($page['page_type']!='custom' && !empty($page['crud_table_id'])) {
+			//CRUD page
+			if (isset($params) && count($params) > 0 && $params[0] == 'add') {
+				unset($params[0]);
+				$this->table_add($page, $navigation);
+				return;
 			}
-
-			$this->table_lookup($model, $params);
-			return;
-		}
-
-		//crud pages
-		$model = $this->get_model($page['crud_table_id']);
-		if ($model == null) {
-			theme_404_with_navigation($navigation);
-			return;
-		}
-
-		if (isset($params) && count($params) > 0 && $params[0] == 'detail') {
-			unset($params[0]);
-			$this->table_detail($page['name'], $model, $navigation, $params);
-			return;
-		}
-
-		if (isset($params) && count($params) > 0 && $params[0] == 'json') {
-			unset($params[0]);
-			$this->table_json($page['name'], $model, $params);
-			return;
-		}
-
-		if (isset($params) && count($params) > 1 && $params[0] == 'subtable') {
-			unset($params[0]);
-			$subtable_id = array_shift($params);
-			$this->table_subtable($page['id'], $subtable_id, $params);
-			return;
+	
+			if (isset($params) && count($params) > 0 && $params[0] == 'edit') {
+				unset($params[0]);
+	
+				//var_dump($params);
+	
+				$id = array_shift($params);
+				if ($id != null)		$this->table_edit($page, $navigation, $id);
+				else					$this->table_add($page, $navigation);
+				
+				return;
+			}
+										
+			if (isset($params) && count($params) > 0 && $params[0] == 'lookup') {
+				unset($params[0]);
+	
+				$model = $this->get_model_for_lookup($page['crud_table_id']);
+				if ($model == null) {
+					$json['error'] = "invalid-page";
+					echo json_encode($json, JSON_INVALID_UTF8_IGNORE);		
+					return;			
+				}
+	
+				$this->table_lookup($model, $params);
+				return;
+			}
+	
+			//crud pages
+			$model = $this->get_model($page['crud_table_id']);
+			if ($model == null) {
+				theme_404_with_navigation($navigation);
+				return;
+			}
+	
+			if (isset($params) && count($params) > 0 && $params[0] == 'detail') {
+				unset($params[0]);
+				$this->table_detail($page, $model, $navigation, $params);
+				return;
+			}
+	
+			if (isset($params) && count($params) > 0 && $params[0] == 'json') {
+				unset($params[0]);
+				$this->table_json($page['name'], $model, $params);
+				return;
+			}
+	
+			if (isset($params) && count($params) > 1 && $params[0] == 'subtable') {
+				unset($params[0]);
+				$subtable_id = array_shift($params);
+				$this->table_subtable($page['id'], $subtable_id, $params);
+				return;
+			}	
 		}
 
 		//controller name
-		$page_data['controller'] = $this->router->class;
+		if (!empty($this->session->userdata('page_role'))) {
+			$controller = $this->session->userdata('page_role');
+		}
+		else {
+			$controller = $this->router->class;
+		}
+		$page_data['controller'] = $controller;
 
 		$page_data['page_name']              = $page['name'];
 		$page_data['page_title']             = $page['page_title'];
 		$page_data['page_icon']              = $page['page_icon'];
+		$page_data['page_description']       = $page['page_description'];
+		$page_data['page_tag']       		 = $page['page_tag'];
 		$page_data['query_params']           = $params;
 
 		$page_data['page_role']           	 = $this->session->userdata('page_role');
@@ -144,6 +156,16 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		//easy access
 		$page_data['page']			 = $page; 
 		$page_data['navigation']	 = $navigation;
+		$page_data['session']		 = $session;
+
+		//dynamic loading
+		if ($page['use_datatable'])			$page_data['use_datatable'] = 1;
+		if ($page['use_editor'])			$page_data['use_editor'] = 1;
+		if ($page['use_geo'])				$page_data['use_geo'] = 1;
+		if ($page['use_upload'])			$page_data['use_upload'] = 1;
+		if ($page['use_wysiwyg'])			$page_data['use_wysiwyg'] = 1;
+		if ($page['use_calendar'])			$page_data['use_calendar'] = 1;
+		if ($page['use_select2'])			$page_data['use_select2'] = 1;
 
 		$page_type = $page['page_type'];
 		if ($page_type == 'custom') {
@@ -179,7 +201,7 @@ abstract class MY_Crud_Controller extends CI_Controller {
 
 		//ajax url for data loading
 		//Important: we only provide the base path! ie. /crud/page-name
-		$base_ajax_url = site_url() .'/'. $this->router->class .'/'. $name;
+		$base_ajax_url = site_url() .'/'. $controller .'/'. $name;
 
 		$tablemeta['ajax'] = $base_ajax_url .'/json';
 		if (!empty($page_data['get_params'])) {
@@ -214,6 +236,10 @@ abstract class MY_Crud_Controller extends CI_Controller {
 
 		if ($page_type == 'table') {
 			$template = '/crud/table.tpl';
+			//if it is crud page, always enable datatable
+			$page_data['use_datatable'] = 1;
+			$page_data['use_editor'] = 1;
+			$page_data['use_select2'] = 1;
 		}
 		else if ($page_type == 'form') {
 			$template = '/crud/form.tpl';
@@ -233,6 +259,10 @@ abstract class MY_Crud_Controller extends CI_Controller {
 				$detail = array();
 			}
 			$page_data['detail'] = $detail; 
+			//if it is crud page, always enable datatable
+			$page_data['use_datatable'] = 1;
+			$page_data['use_editor'] = 1;
+			$page_data['use_select2'] = 1;
 		}
 		else {
 			$template = '/crud/table.tpl';
@@ -240,6 +270,8 @@ abstract class MY_Crud_Controller extends CI_Controller {
 
 		//easy access for everything
 		$page_data['crud']			 = $tablemeta; 
+
+		//var_dump($tablemeta); exit;
 
 		//get subtables if necessary
 		//IMPORTANT: since Mpage instance is shared, the following function will modify the tablename inside Mpages
@@ -258,6 +290,10 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		//easy access
 		$page_data['subtables']		 = $subtables;
 
+		//get page navigation
+		$page_navigations = $this->Mpages->page_navigations($page['id']);
+		$page_data['page_navigations'] = $page_navigations;
+		
 		//permission
 		$permissions = array (
 			'allow_edit'	=> $this->Mpermission->can_edit($name)
@@ -282,7 +318,13 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		}
 
 		//controller name
-		$page_data['controller'] = $this->router->class;
+		if (!empty($this->session->userdata('page_role'))) {
+			$controller = $this->session->userdata('page_role');
+		}
+		else {
+			$controller = $this->router->class;
+		}
+		$page_data['controller'] = $controller;
 
 		$page_data['page_name']              = $page['name'];
 		//$page_data['page_title']             = $page['page_title'];
@@ -314,7 +356,7 @@ abstract class MY_Crud_Controller extends CI_Controller {
 
 		//ajax url for data loading
 		//Important: we only provide the base path! ie. /crud/page-name
-		$base_ajax_url = site_url() .'/'. $this->router->class .'/'. $page['name'];
+		$base_ajax_url = site_url() .'/'. $controller .'/'. $page['name'];
 
 		$tablemeta['ajax'] = $base_ajax_url .'/json';
 		$tablemeta['crud_url'] = $base_ajax_url;
@@ -359,6 +401,11 @@ abstract class MY_Crud_Controller extends CI_Controller {
 
 		$page_data['detail'] = null; 
 
+		//if it is crud page, always enable datatable
+		$page_data['use_datatable'] = 1;
+		$page_data['use_editor'] = 1;
+		$page_data['use_select2'] = 1;
+
 		$template = '/crud/form.tpl';
 		$this->smarty->render_theme($template, $page_data);
 	}
@@ -377,10 +424,16 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		}
 
 		//controller name
-		$page_data['controller'] = $this->router->class;
+		if (!empty($this->session->userdata('page_role'))) {
+			$controller = $this->session->userdata('page_role');
+		}
+		else {
+			$controller = $this->router->class;
+		}
+		$page_data['controller'] = $controller;
 
 		$page_data['page_name']              = $page['name'];
-
+		
 		$page_data['page_role']           	 = $this->session->userdata('page_role');
 
 		$page_data['page_header'] 			 = $page['page_header'];
@@ -407,7 +460,7 @@ abstract class MY_Crud_Controller extends CI_Controller {
 
 		//ajax url for data loading
 		//Important: we only provide the base path! ie. /crud/page-name
-		$base_ajax_url = site_url() .'/'. $this->router->class .'/'. $page['name'];
+		$base_ajax_url = site_url() .'/'. $controller .'/'. $page['name'];
 
 		$tablemeta['ajax'] = $base_ajax_url .'/json';
 		$tablemeta['crud_url'] = $base_ajax_url;
@@ -475,17 +528,22 @@ abstract class MY_Crud_Controller extends CI_Controller {
 			$page_data['subtables']		 = $subtables;
 		}
 
-		//var_dump($page_data);
+		//if it is crud page, always enable datatable
+		$page_data['use_datatable'] = 1;
+		$page_data['use_editor'] = 1;
+		$page_data['use_select2'] = 1;
 
 		$template = '/crud/form.tpl';
 		$this->smarty->render_theme($template, $page_data);
 	}
 
-	protected function table_detail($page_name, $model, $navigation, $params = null) {
+	protected function table_detail($page, $model, $navigation, $params = null) {
 		if ($params == null || count($params) == 0) {
 			theme_404_with_navigation($navigation);
 			return;
 		}
+
+		$page_name = $page['name'];
 
 		$this->load->model(array('crud/Mpermission'));
 		if (!$this->Mpermission->can_view($page_name)) {
@@ -494,18 +552,29 @@ abstract class MY_Crud_Controller extends CI_Controller {
 			return;
 		}
 
-		$id = $params[0];
+		//$id = $params[0];
+		$id = array_shift($params);
 		$page_data['detail'] = $model->detail($id);
 
 		//controller name
-		$page_data['controller'] = $this->router->class;
+		if (!empty($this->session->userdata('page_role'))) {
+			$controller = $this->session->userdata('page_role');
+		}
+		else {
+			$controller = $this->router->class;
+		}
+		$page_data['controller'] = $controller;
 
-		$page_data['page_name']              = $model->page_name();
-		$page_data['page_title']             = $model->page_title();
-		$page_data['page_icon']              = $model->page_title();
+		$page_data['page_name']              = $page['name'];
 		$page_data['query_params']           = $params;
-
+		
 		$page_data['page_role']           	 = $this->session->userdata('page_role');
+
+		$page_data['page_header'] 			 = $page['page_header'];
+		$page_data['page_footer'] 			 = $page['page_footer'];
+
+		if (!empty($page['header_view'])) 		$page_data['header_view'] = $page['header_view'];
+		if (!empty($page['footer_view'])) 		$page_data['footer_view'] = $page['footer_view'];
 
 		$tablemeta = $model->tablemeta();
 
@@ -514,17 +583,24 @@ abstract class MY_Crud_Controller extends CI_Controller {
 
 		//ajax url for data loading
 		//Important: we only provide the base path! ie. /crud/page-name
-		$base_ajax_url = site_url() .'/'. $this->router->class .'/'. $page_name;
+		$base_ajax_url = site_url() .'/'. $controller .'/'. $page_name;
 
 		$tablemeta['ajax'] = $base_ajax_url .'/json';
 		$tablemeta['crud_url'] = $base_ajax_url;
 
+		//easy access
 		$page_data['table_meta']			 = $tablemeta; 
+		$page_data['page']			 		 = $page; 
+		$page_data['navigation']	 		 = $navigation;
 
-		$custom_view = $model->custom_view();
-		if (empty($custom_view)) {
-			$custom_view = 'crud/form.tpl';
-		}
+		$page_data['crud']			 = $tablemeta; 
+		
+		// $custom_view = $model->custom_view();
+		// if (empty($custom_view)) {
+		// 	$custom_view = 'crud/form.tpl';
+		// }
+
+		$custom_view = '/crud/form.tpl';
 
 		//permission
 		$permissions = array (
@@ -532,6 +608,11 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		);
 		$page_data['permissions']	= $permissions;
 		
+		//if it is crud page, always enable datatable
+		$page_data['use_datatable'] = 1;
+		$page_data['use_editor'] = 1;
+		$page_data['use_select2'] = 1;
+
 		//echo json_encode($page_data);
 		$this->smarty->render_theme($custom_view, $page_data);
 	}
@@ -873,6 +954,7 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		$filters = array();
 
 		$action = $this->input->post("action");
+
 		if (empty($action) || $action=='view') {
 
 			$this->load->model(array('crud/Mpermission'));
@@ -887,7 +969,7 @@ abstract class MY_Crud_Controller extends CI_Controller {
 				$filter_value = $params[0];
 			}
 			$filters[ $subtable['subtable_fkey_column'] ] = $filter_value;
-
+			
 			$json['data'] = $model->list($filters);
 
             echo json_encode($json, JSON_INVALID_UTF8_IGNORE);	
@@ -1003,6 +1085,26 @@ abstract class MY_Crud_Controller extends CI_Controller {
             echo json_encode($data, JSON_INVALID_UTF8_IGNORE);
             return;
         }   
+        else if ($action == "import") {
+
+			$this->load->model(array('crud/Mpermission'));
+			if (!$this->Mpermission->can_add_table_id($subtable_id) || !$this->Mpermission->can_edit_table_id($subtable_id)) {
+				$data['error'] = 'not-authorized';
+				echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
+				return;
+			}
+
+			$status = $model->import($_FILES['upload']);
+
+            if($status == 0) {
+                $data['error'] = $model->get_error_message();
+            } else {
+                $data['status'] = $status;
+            }
+
+            echo json_encode($data, JSON_INVALID_UTF8_IGNORE);
+            return;
+        }   
         else {
             $data['error'] = __('not-implemented');
             echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
@@ -1034,5 +1136,37 @@ abstract class MY_Crud_Controller extends CI_Controller {
 	protected function get_navigation() {
 		$this->load->model('crud/Mnavigation');
 		return $this->Mnavigation->get_navigation($this->session->userdata('role_id'), static::$PAGE_GROUP);
+	}
+
+	protected function get_session() {
+		$this->load->model('crud/Msession');
+		$sessions = $this->Msession->get_session();
+
+		for($i=0; $i<count($sessions); $i++) {
+			$sess = $sessions[$i];
+
+			$sess_name = $sess['name'] . '-label';
+			if (!empty($this->session->userdata($sess_name))) {
+				$sess['value'] = $this->session->userdata($sess_name);
+			}
+			else if (!empty($this->session->userdata($sess['name']))) {
+				$sess['value'] = $this->session->userdata($sess['name']);
+			}
+			else if ($sess['optional'] == 0) {
+				if (!empty($sess['label_for_none'])) {
+					$sess['value'] = $sess['label_for_none'];
+				}
+				else {
+					$sess['value'] = 'ALL';
+				}
+			}
+			else {
+				$sess['value'] = null;
+			}
+
+			$sessions[$i]['value'] = $sess['value'];
+		}
+
+		return $sessions;
 	}
 }

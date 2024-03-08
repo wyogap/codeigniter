@@ -1,3 +1,30 @@
+@media screen and (min-width: 768px) {
+    div.DTE_Body div.DTE_Body_Content div.DTE_Field {
+        padding: 5px 24px !important;
+    }
+}
+
+td .btn-sm {
+    padding: 0.2rem 0.5rem !important;
+    font-size: .875rem !important;
+    line-height: 1.5 !important;
+}
+
+div.DTE .nav {
+    padding: 0px 16px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+div.DTE .nav li {
+    margin: auto;
+}
+
+.btn-sm {
+    padding: 0.375rem 0.75rem !important;
+    font-size: 1rem !important;
+    line-height: 1.5 !important;
+}
+
 .content-header {
     padding-bottom: 0px;
 }
@@ -79,5 +106,13 @@
         margin: 12px 0;
         white-space: nowrap;
         justify-content: center;
+    }
+
+    .DTE_Header {
+        border-bottom: 2px solid #dee2e6 !important;
+    }
+
+    .DTE_Footer {
+        border-top: 2px solid #dee2e6 !important;
     }
 }

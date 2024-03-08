@@ -68,7 +68,12 @@ abstract class MY_Level1_Json_Controller extends MY_Level1_Crud_Controller {
 
     //override default handle only to serve json
     public function handle($level1_name, $navigation, $name = '', $params = array()) {
-		$controller = $this->router->class .'/'. $level1_name;
+		if (!empty($this->session->userdata('page_role'))) {
+			$controller = $this->session->userdata('page_role') .'/'. $level1_name;
+		}
+		else {
+			$controller = $this->router->class .'/'. $level1_name;
+		}
 
 		if (empty($level1_name) || empty($name)) {
 			json_not_authorized();

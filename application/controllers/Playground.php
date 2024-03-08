@@ -24,6 +24,20 @@ class Playground extends CI_Controller {
 		$this->load->view('playground/selecttable');
 	}
 
+    public function usersession() {
+        $user_id = $this->session->userdata('user_id');
+
+        $this->load->model('crud/Msession');
+		$sessions = $this->Msession->get_user_session($user_id);
+
+		for($i=0; $i<count($sessions); $i++) {
+			$sess = $sessions[$i];
+            $this->session->set_userdata($sess['session_name'], $sess['session_value']);
+        }
+
+        var_dump($this->session->userdata());
+    }
+
     public function store()
     {  
   
@@ -55,5 +69,25 @@ class Playground extends CI_Controller {
 
            echo 'File has been uploaded';
   
-    }	
+    }
+    
+    public function periode() {
+        $periode = $this->input->get('periode');
+        if (empty($periode))    $periode='0';
+        $offset = $this->input->get('offset');
+        if (empty($offset))     $offset=0;
+
+        $periode = strtoupper($periode);
+        $offset = strtoupper($offset);
+        $datestr = null;
+        if ($periode == 'YTD') {
+            $datestr=date('Y-m-d', strtotime('-' .$offset. ' year'));
+        } else if ($periode == 'MTD') {
+            $datestr=date('Y-m-d', strtotime('-' .$offset. ' month'));
+        } else {
+            $datestr=date('Y-m-d', strtotime('-' .$offset. ' day'));
+        }
+
+        echo $datestr;
+    }
 }

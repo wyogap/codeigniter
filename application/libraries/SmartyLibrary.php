@@ -17,7 +17,7 @@ class SmartyLibrary extends Smarty {
 
         //base url
         $this->assign('base_url', base_url());
-        $this->assign('site_url', site_url() ."/");
+        $this->assign('site_url', site_url());
 
         //general setting
         // $this->assign('app_name', config_item('app_name'));

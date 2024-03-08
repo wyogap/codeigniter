@@ -153,6 +153,22 @@ class Mpages extends Mcrud
         return $arr;
 
     }
+
+    function page_navigations($id) {
+
+        $this->db->select('a.*, b.name as page_name');
+        $this->db->order_by('order_no asc');
+        $this->db->join('dbo_crud_pages b', 'b.id=a.nav_page_id and b.is_deleted=0', 'LEFT OUTER');
+
+        $this->db->where('a.page_id', $id);
+        $this->db->where('a.is_deleted', 0);
+
+        $arr = $this->db->get('dbo_crud_page_navigations a')->result_array();
+
+        return $arr;
+    }
+
+
 }
 
   

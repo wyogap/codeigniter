@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>{$page_title} | {$app_name}</title>
+    <title>{$page_title} - {$app_name}</title>
     <!-- all the meta tags -->
     {include "$theme_prefix/metas.tpl"}
     <!-- all the css files -->
@@ -37,11 +37,6 @@
     <!-- all the js files -->
     {include "$theme_prefix/includes_bottom.tpl"}
     {include "$theme_prefix/common_scripts.tpl"}
-
-    <!--
-    {include "$theme_prefix/modal.tpl"}
-    {include "$theme_prefix/modal2.tpl"}
-    -->
 
     <!-- page footer -->
     {if !empty($footer_view)}

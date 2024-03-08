@@ -13,9 +13,13 @@
 <script src="{$base_url}assets/leaflet/easybutton/easy-button.js"></script>
 {/if}
 
+{if !empty($use_select2)}
 <script src="{$base_url}assets/select2/js/select2.min.js"></script>
+{/if} 
+
 <script src="{$base_url}assets/jquery-mask/jquery.mask.min.js"></script>
 
+{if !empty($use_datatable)}
 <!-- datatables -->
 <script src="{$base_url}assets/datatables/DataTables-1.10.20/js/jquery.dataTables.js"></script>
 <script src="{$base_url}assets/datatables/DataTables-1.10.20/js/dataTables.bootstrap4.min.js" defer></script>
@@ -36,9 +40,6 @@
 <script src="{$base_url}assets/datatables/KeyTable-2.5.1/js/dataTables.keyTable.min.js" defer></script>
 <script src="{$base_url}assets/datatables/KeyTable-2.5.1/js/keyTable.bootstrap4.min.js" defer></script>
 
-<script src="{$base_url}assets/datatables/Editor-2.0.4/js/dataTables.editor.min.js"></script>
-<script src="{$base_url}assets/datatables/Editor-2.0.4/js/editor.bootstrap4.min.js" defer></script>
-
 <script src="{$base_url}assets/datatables/RowReorder-1.2.6/js/dataTables.rowReorder.js" defer></script>
 <script src="{$base_url}assets/datatables/RowReorder-1.2.6/js/rowReorder.bootstrap4.min.js" defer></script>
 
@@ -48,7 +49,14 @@
 <script src="{$base_url}assets/datatables/SearchPanes-1.4.0/js/dataTables.searchPanes.min.js" defer></script>
 <script src="{$base_url}assets/datatables/SearchPanes-1.4.0/js/searchPanes.bootstrap4.min.js" defer></script>
 
+{if !empty($use_editor)}
+<script src="{$base_url}assets/datatables/Editor-2.0.4/js/dataTables.editor.min.js"></script>
+<script src="{$base_url}assets/datatables/Editor-2.0.4/js/editor.bootstrap4.min.js" defer></script>
+
+{if !empty($use_select2)}
 <script src="{$base_url}assets/datatables/tcg/dt-editor-select2.js" defer></script>
+(/if)
+
 <script src="{$base_url}assets/datatables/tcg/dt-editor-mask.js" defer></script>
 <script src="{$base_url}assets/datatables/tcg/dt-editor-toggle.js" defer></script>
 <script src="{$base_url}assets/datatables/tcg/dt-editor-checkbox.js" defer></script>
@@ -89,6 +97,8 @@
 <!-- <script src="{$base_url}assets/backend/js/vendor/summernote-bs4.min.js"></script>
 <script src="{$base_url}assets/backend/js/pages/demo.summernote.js"></script> -->
 <script src="{$base_url}assets/datatables/tcg/dt-editor-editor.js" defer></script>
+{/if} 
+{/if} 
 {/if} 
 
 {if !empty($use_calendar)}

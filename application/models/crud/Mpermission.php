@@ -13,16 +13,24 @@ class Mpermission extends CI_Model
 
     public function init($page) {
         if ($page == $this->page_name)      return true;
+        if ($this->is_admin())      return true;
 
         $this->initialized = false;
         
         $this->page_name = $page;
         $this->permissions = array(
+            'is_admin'      => 0,
             'no_access'     => 0,
             'allow_view'    => 0,
             'allow_add'     => 0,
             'allow_edit'    => 0,
-            'allow_delete'  => 0
+            'allow_delete'  => 0,
+            'allow_custom1' => 0,
+            'allow_custom2' => 0,
+            'allow_custom3' => 0,
+            'allow_custom4' => 0,
+            'allow_custom5' => 0,
+            'is_public'     => 0
         );
 
         //not table
@@ -38,7 +46,8 @@ class Mpermission extends CI_Model
             //         join dbo_crud_pages b on b.id=a.page_id and b.is_deleted=0 
             //         where a.is_deleted=0 and a.role_id=? and b.name=?";
 
-            $sql = "select a.*, b.is_public, b.page_type, c.id as table_id, c.name as table_name from dbo_crud_pages b 
+            $sql = "select a.*, b.is_public, b.page_type, c.id as table_id, c.name as table_name 
+                    from dbo_crud_pages b 
                     join dbo_crud_permissions a on a.page_id=b.id and a.is_deleted=0 
                     join dbo_crud_tables c on c.id=b.crud_table_id and c.is_deleted=0 
                     where b.is_deleted=0 and b.name=? and a.role_id=?";
@@ -70,6 +79,22 @@ class Mpermission extends CI_Model
         return true;
     }
     
+    public function get_page_permission($page) {
+        //admin pass-through
+        if ($this->is_admin()) {
+            return array(
+                'is_admin'      => 1
+            );
+        }     
+
+        if ($page !== $this->page_name) {
+            //reinit
+            $this->init($page);
+        }
+
+        return $this->permissions;
+    }
+
     public function can_view($page) {
         //admin pass-through
         if ($this->is_admin())      return true;
@@ -150,6 +175,101 @@ class Mpermission extends CI_Model
             return false;
 
         if (isset($this->permissions['allow_delete']) && $this->permissions['allow_delete'] == 1)
+            return true;
+
+        return false;
+    }
+
+    public function can_custom1($page) {
+        //admin pass-through
+        if ($this->is_admin())      return true;
+
+        if ($page !== $this->page_name) {
+            //reinit
+            $this->init($page);
+        }
+
+        //blocked access
+        if (isset($this->permissions['no_access']) && $this->permissions['no_access'] == 1)
+            return false;
+
+        if (isset($this->permissions['allow_custom1']) && $this->permissions['allow_custom1'] == 1)
+            return true;
+
+        return false;
+    }
+
+    public function can_custom2($page) {
+        //admin pass-through
+        if ($this->is_admin())      return true;
+
+        if ($page !== $this->page_name) {
+            //reinit
+            $this->init($page);
+        }
+
+        //blocked access
+        if (isset($this->permissions['no_access']) && $this->permissions['no_access'] == 1)
+            return false;
+
+        if (isset($this->permissions['allow_custom2']) && $this->permissions['allow_custom2'] == 1)
+            return true;
+
+        return false;
+    }
+
+    public function can_custom3($page) {
+        //admin pass-through
+        if ($this->is_admin())      return true;
+
+        if ($page !== $this->page_name) {
+            //reinit
+            $this->init($page);
+        }
+
+        //blocked access
+        if (isset($this->permissions['no_access']) && $this->permissions['no_access'] == 1)
+            return false;
+
+        if (isset($this->permissions['allow_custom3']) && $this->permissions['allow_custom3'] == 1)
+            return true;
+
+        return false;
+    }
+
+    public function can_custom4($page) {
+        //admin pass-through
+        if ($this->is_admin())      return true;
+
+        if ($page !== $this->page_name) {
+            //reinit
+            $this->init($page);
+        }
+
+        //blocked access
+        if (isset($this->permissions['no_access']) && $this->permissions['no_access'] == 1)
+            return false;
+
+        if (isset($this->permissions['allow_custom4']) && $this->permissions['allow_custom4'] == 1)
+            return true;
+
+        return false;
+    }
+
+    public function can_custom5($page) {
+        //admin pass-through
+        if ($this->is_admin())      return true;
+
+        if ($page !== $this->page_name) {
+            //reinit
+            $this->init($page);
+        }
+
+        //blocked access
+        if (isset($this->permissions['no_access']) && $this->permissions['no_access'] == 1)
+            return false;
+
+        if (isset($this->permissions['allow_custom5']) && $this->permissions['allow_custom5'] == 1)
             return true;
 
         return false;

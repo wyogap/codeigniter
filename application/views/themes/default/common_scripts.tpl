@@ -207,6 +207,7 @@
         return select;
     }
 
+    {if !empty($use_select2)}
     function select2_build(select, deflabel, defvalue, value, options, attr, parent = null) {
 
         //build the select
@@ -273,5 +274,6 @@
 
         return select;
     }
-
+    {/if} 
+    
 </script>

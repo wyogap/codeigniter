@@ -180,7 +180,7 @@ class Mcrud_tablemeta extends CI_Model
 
         $this->table_metas['where_clause'] = "";
         if (!empty($arr['where_clause'])) {
-            $this->table_metas['where_clause'] = replace_userdata($arr['where_clause']);
+            $this->table_metas['where_clause'] = $this->replace_parameters($arr['where_clause']);
         }
 
         $this->table_metas['orderby_clause'] = $arr['orderby_clause'];
@@ -248,7 +248,7 @@ class Mcrud_tablemeta extends CI_Model
 
         //always add key-column
         $ci_name = strtoupper($this->table_metas['key_column']);
-        if (false === array_search(strtoupper($this->table_metas['key_column']), $this->columns)) {
+        if (false === array_search($ci_name, $this->columns)) {
             $col = Mtablemeta::$COLUMN;
             $col['name'] = $this->table_metas['key_column'];
             $col['ci_name'] = $ci_name;
@@ -310,7 +310,7 @@ class Mcrud_tablemeta extends CI_Model
 
         $this->table_metas['where_clause'] = "";
         if (!empty($arr['where_clause'])) {
-            $this->table_metas['where_clause'] = replace_userdata($arr['where_clause']);
+            $this->table_metas['where_clause'] = $this->replace_parameters($arr['where_clause']);
         }
 
         $this->table_metas['orderby_clause'] = $arr['orderby_clause'];
@@ -343,6 +343,7 @@ class Mcrud_tablemeta extends CI_Model
 
         $this->table_metas['row_reorder'] = ($arr['row_reorder'] == 1);
         $this->table_metas['row_reorder_column'] = empty($arr['row_reorder_column']) ? $arr['key_column'] : $arr['row_reorder_column'];
+        $this->table_metas['multi_row_selection'] = ($arr['multi_row_selection'] == 1);
 
         $this->table_metas['client_side_query'] = ($arr['client_side_query'] == 1);
         $this->table_metas['client_side_filter'] = ($arr['client_side_filter'] == 1);
@@ -353,6 +354,7 @@ class Mcrud_tablemeta extends CI_Model
         $this->table_metas['on_add_custom_js'] = $arr['on_add_custom_js'];
         $this->table_metas['on_edit_custom_js'] = $arr['on_edit_custom_js'];
         $this->table_metas['on_delete_custom_js'] = $arr['on_delete_custom_js'];
+        $this->table_metas['on_select_custom_js'] = $arr['on_select_custom_js'];
 
         $this->table_metas['export_custom_js'] = $arr['export_custom_js'];
         $this->table_metas['import_custom_js'] = $arr['import_custom_js'];
@@ -372,6 +374,13 @@ class Mcrud_tablemeta extends CI_Model
 
         $this->table_actions['edit_row_action'] = ($arr['edit_row_action'] == 1);
         $this->table_actions['delete_row_action'] = ($arr['delete_row_action'] == 1);
+        $this->table_actions['edit_conditional_js'] = $arr['edit_conditional_js'];
+        $this->table_actions['delete_conditional_js'] = $arr['delete_conditional_js'];
+
+        $this->table_metas['edit_row_action'] = ($arr['edit_row_action'] == 1);
+        $this->table_metas['delete_row_action'] = ($arr['delete_row_action'] == 1);
+        $this->table_metas['edit_conditional_js'] = $arr['edit_conditional_js'];
+        $this->table_metas['delete_conditional_js'] = $arr['delete_conditional_js'];
 
         $this->column_metas = array();
         $this->editor_metas = array();
@@ -391,6 +400,8 @@ class Mcrud_tablemeta extends CI_Model
         $this->column_groupings = array();
         $this->column_grouping_map = array();
         
+        // var_dump($arr);
+        // var_dump($this->table_actions);
         //inline edit row
         if ($this->table_actions['edit_row_action'] && $this->table_actions['edit']) {
             $row_action = Mtablemeta::$ROW_ACTION;
@@ -399,6 +410,9 @@ class Mcrud_tablemeta extends CI_Model
             $row_action['icon_only'] = true;
             $row_action['css'] = "btn-info";
             $row_action['onclick_js'] = "dt_tdata_".$this->table_id."_edit_row";
+            if(!empty($this->table_actions['edit_conditional_js'])) {
+                $row_action['conditional_js'] = $this->table_actions['edit_conditional_js'];
+            }
             $this->row_actions[] = $row_action;
         }
 
@@ -410,6 +424,9 @@ class Mcrud_tablemeta extends CI_Model
             $row_action['icon_only'] = true;
             $row_action['css'] = "btn-danger";
             $row_action['onclick_js'] = "dt_tdata_".$this->table_id."_delete_row";
+            if(!empty($this->table_actions['delete_conditional_js'])) {
+                $row_action['conditional_js'] = $this->table_actions['delete_conditional_js'];
+            }
             $this->row_actions[] = $row_action;
         }
 
@@ -465,6 +482,11 @@ class Mcrud_tablemeta extends CI_Model
                 $col['ci_name'] = strtoupper($col['name']);     //case-insensitive name => all capital
                 $col['label'] = __($row['label']);
                 $col['visible'] = ($row['visible'] == 1);
+                $col['export'] = ($row['export'] == 1);
+                $col['total_row'] = ($row['total_row'] == 1);
+                if ($col['total_row']) {
+                    $this->table_metas['footer_row'] = true;
+                }
                 $col['css'] = $row['css'];
                 $col['type'] = $row['column_type'];
                 $col['data_priority'] = $row['data_priority'];
@@ -472,6 +494,9 @@ class Mcrud_tablemeta extends CI_Model
                 if (empty($col['column_name'])) {
                     $col['column_name'] = $this->table_name. "." .$col['name'];
                 }
+
+                // var_dump($col['column_name']);
+                // var_dump($this->select_columns);
 
                 //if already exist, ignore. prevent duplicate
                 if (false !== array_search($col['ci_name'], $this->columns)) {
@@ -558,6 +583,7 @@ class Mcrud_tablemeta extends CI_Model
                 else {
                     $url = $row['options_data_url'];
                     $params = null;
+                    $matches = null;
 
                     preg_match_all('{{{[\w]*}}}', $url, $matches);
                     if ($matches != null && count($matches) > 0) {
@@ -616,7 +642,7 @@ class Mcrud_tablemeta extends CI_Model
 
                     $ref['reference_where_clause'] = $row['reference_where_clause'];
                     if (!empty($ref['reference_where_clause'])) {
-                        $ref['reference_where_clause'] = replace_userdata($ref['reference_where_clause']);
+                        $ref['reference_where_clause'] = $this->replace_parameters($ref['reference_where_clause']);
                     }
             
                     //use alias in case multiple reference of the same table (ie. lookup table)
@@ -697,7 +723,7 @@ class Mcrud_tablemeta extends CI_Model
                     $editor['edit_def_value'] = $row['edit_def_value'];
 
                     if (!empty($editor['edit_def_value'])) {
-                        $editor['edit_def_value'] = replace_userdata(trim($editor['edit_def_value']));
+                        $editor['edit_def_value'] = $this->replace_parameters(trim($editor['edit_def_value']));
                     }
 
                     if (!empty($row['edit_options_array'])) {
@@ -712,6 +738,7 @@ class Mcrud_tablemeta extends CI_Model
                         //echo ($row['edit_attr_array']);
                         $editor['edit_attr'] = json_decode($row['edit_attr_array'], true);
                         //TODO: append base url for ajax parameter
+                        //var_dump($editor['edit_attr']);
                     }
                     else {
                         $editor['edit_attr'] = array();
@@ -1134,6 +1161,9 @@ class Mcrud_tablemeta extends CI_Model
 
         //table default sorting
         $this->table_metas['sorting_columns'] = $this->sorting_metas;
+
+        //TODO: re-calculate column-idx both in $this->column_metas and in $this->sorting_metas
+
 
         //var_dump( $this->filter_metas);
 
@@ -1774,7 +1804,8 @@ class Mcrud_tablemeta extends CI_Model
         $key_col_name = $this->table_metas['key_column'];
         $join_tables = $this->table_metas['join_tables'];
 
-        //var_dump($join_tables); exit();
+        //custom columns
+        $columns = $this->__get_custom_column($columns);
 
         //upload file
         $data = $this->__upload_xls($file, $table_id, $table_name);
@@ -1819,6 +1850,9 @@ class Mcrud_tablemeta extends CI_Model
             return 0;
         }
 
+        //custom processing
+        $this->__update_custom_column($temp_table_name);
+
         //intermediate process
         if (count($upload_columns)) {
             $this->__update_upload_columns($temp_table_name, $upload_columns);
@@ -1836,7 +1870,12 @@ class Mcrud_tablemeta extends CI_Model
         return 1;
     }
 
-    private function __upload_xls($file, $table_id, $table_name) {
+    protected function __get_custom_column($columns) {
+        //nothing to do
+        return $columns;
+    }
+
+    protected function __upload_xls($file, $table_id, $table_name) {
         $this->reset_error();
 
         $ci	=& get_instance();
@@ -1886,7 +1925,7 @@ class Mcrud_tablemeta extends CI_Model
         return $retval;
     }
 
-    private function __create_temp_table($temp_table_name, $columns) {
+    protected function __create_temp_table($temp_table_name, $columns) {
         $this->reset_error();
 
         //Note: Ideally, all editable columns (regardless visible or not) should be exported and can be imported.
@@ -1904,7 +1943,7 @@ class Mcrud_tablemeta extends CI_Model
         $column_def[] = "__id__ int(11) NOT NULL AUTO_INCREMENT";
 
         foreach($columns as $key => $col) {
-            if ($col['visible'] == 0)    continue;
+            if ($col['visible'] == 0 && $col['export'] == 0)    continue;
 
             //prevent double columm
             if (in_array($col['name'],$column_names))   continue;
@@ -1946,8 +1985,10 @@ class Mcrud_tablemeta extends CI_Model
                 $column_def[] = $col['name'] ." varchar(1000)";
             }
             //exported columns
-            $export_columns[] = $col['name'];
-            $column_type[] = $col['type'];
+            if ($col['export']) {
+                $export_columns[] = $col['name'];
+                $column_type[] = $col['type'];
+            }
             //imported columns
             if ($col['allow_insert']) {
                 $import_columns[] = $col['name'];
@@ -2000,7 +2041,7 @@ class Mcrud_tablemeta extends CI_Model
         return $retval;
     }
 
-    private function __import_xls($file, $temp_table_name, $export_columns, $column_types) {
+    protected function __import_xls($file, $temp_table_name, $export_columns, $column_types) {
 
         $this->reset_error();
 		$reader = null;
@@ -2173,7 +2214,7 @@ class Mcrud_tablemeta extends CI_Model
      * 
      * The informastion related individual uploaded file is stored in table tcg_uploads  
      */
-    private function __update_upload_columns($table_name, $upload_columns) {
+    protected function __update_upload_columns($table_name, $upload_columns) {
         //create secondary temp table for subquery because we cannot open temporary table > 1 in the same query
         //this issue should be fixed in MariaDb 10.2
 
@@ -2224,7 +2265,11 @@ class Mcrud_tablemeta extends CI_Model
         $this->db->query("DROP TEMPORARY TABLE $temp_table_name;");
     }
 
-    private function __process_import($table_name, $key_column_name, $temp_table_name, $import_columns, $join_tables) {
+    protected function __update_custom_column($table_name) {
+        //nothing to do
+    }
+
+    protected function __process_import($table_name, $key_column_name, $temp_table_name, $import_columns, $join_tables) {
         // $sql = "
         //     select * from " .$temp_table_name. " a
         //     where 
@@ -2299,7 +2344,7 @@ class Mcrud_tablemeta extends CI_Model
 
     }
 
-    private function get_model($path) {
+    protected function get_model($path) {
 		$ci	=&	get_instance();
 		$ci->load->model($path);
 
@@ -2308,7 +2353,7 @@ class Mcrud_tablemeta extends CI_Model
 		return $ci->$name;
 	}
 
-    private function get_dynamic_model($path) {
+    protected function get_dynamic_model($path) {
         $model_name = 'Mcrud_tablemeta';
         $template = str_ireplace('Mcrud_tablemeta/', '', $path);
 
@@ -2324,7 +2369,7 @@ class Mcrud_tablemeta extends CI_Model
 		return $ci->$name;
 	}
 
-    private function get_lookup_options($table_name, $key_column, $lookup_column, $soft_delete = true, $where_clause = null, $alias_name = '') {
+    protected function get_lookup_options($table_name, $key_column, $lookup_column, $soft_delete = true, $where_clause = null, $alias_name = '') {
         if (!empty($alias_name)) {
             //legacy. some old configuration is wrong
             $where_clause = str_replace($table_name .".", $alias_name .".", $where_clause);
@@ -2341,7 +2386,7 @@ class Mcrud_tablemeta extends CI_Model
         return $this->db->get($table_name)->result_array();
 	}
 
-    private function get_upload_list($values) {
+    protected function get_upload_list($values) {
         $sql = "
         select 
             group_concat(x.id separator ',') as upload_id,
@@ -2355,7 +2400,7 @@ class Mcrud_tablemeta extends CI_Model
         return $this->db->query($sql, array($values))->row_array();
     }
 
-    private function update_upload_list($values, $table_name, $ref_id, $ref_field) {
+    protected function update_upload_list($values, $table_name, $ref_id, $ref_field) {
         $sql = "
         update dbo_uploads x 
         set
@@ -2371,6 +2416,9 @@ class Mcrud_tablemeta extends CI_Model
     public function set_level1_filter($column_name, $value = null) {
         $this->reset_error();
         
+        // var_dump($column_name);
+        // var_dump($value);
+
         if ($value == null) {
             unset($this->level1_filter[$column_name]);
         }
@@ -2424,6 +2472,7 @@ class Mcrud_tablemeta extends CI_Model
                 }
             }   //foreach editor column
 
+            $matches = null;
             foreach($this->table_metas['columns'] as $key=>$val) {
                 if (empty($val['options_data_url']))   continue;
 
@@ -2556,7 +2605,7 @@ class Mcrud_tablemeta extends CI_Model
 
                 $ref['reference_where_clause'] = $row['reference_where_clause'];
                 if (!empty($ref['reference_where_clause'])) {
-                    $ref['reference_where_clause'] = replace_userdata($ref['reference_where_clause']);
+                    $ref['reference_where_clause'] = $this->replace_parameters($ref['reference_where_clause']);
                 }
 
                 //get lookup if not specified manually
@@ -2592,7 +2641,7 @@ class Mcrud_tablemeta extends CI_Model
                 $editor['edit_def_value'] = $row['edit_def_value'];
 
                 if (!empty($editor['edit_def_value'])) {
-                    $editor['edit_def_value'] = replace_userdata(trim($editor['edit_def_value']));
+                    $editor['edit_def_value'] = $this->replace_parameters(trim($editor['edit_def_value']));
                 }
 
                 if (!empty($row['edit_options_array'])) {
@@ -2642,6 +2691,26 @@ class Mcrud_tablemeta extends CI_Model
         }
 
         return $columns;
+    }
+
+    function replace_parameters($str) {
+        if(empty($str))     return $str;
+
+        if (count($this->level1_filter) > 0) {
+            $matches = null;
+            preg_match_all('{{{[\w]*}}}', $str, $matches);
+            if ($matches != null && count($matches) > 0) {
+                foreach($matches[0] as $m) {
+                    $colname = substr($m, 2, strlen($m)-4);
+                    $value = array_key_exists($colname, $this->level1_filter) ? $this->level1_filter[$colname] : null;
+                    if (!empty($value)) {
+                        $str = str_replace($m, $value, $str);
+                    }
+               }
+            }
+        }
+
+        return replace_userdata($str);
     }
 }
 

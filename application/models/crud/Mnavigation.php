@@ -34,8 +34,12 @@ class Mnavigation extends CI_Model
                 $cur_navitem = $key;
 
                 $arr[$key]['pages'] = array();
+                $arr[$key]['tags'] = array();
                 if ($row['action_type'] == 'page' && !empty($row['page_name'])) {
                     $arr[$key]['pages'][] = $row['page_name'];
+                    if (!empty($row['nav_tag'])) {
+                        $arr[$key]['tags'][] = $row['nav_tag'];
+                    }
                 }
                 $arr[$key]['subitems'] = array();
             }
@@ -44,6 +48,9 @@ class Mnavigation extends CI_Model
                 if (isset($arr[$cur_navitem])) {
                     $arr[$cur_navitem]['subitems'][] = $row;
                     $arr[$cur_navitem]['pages'][] = $row['page_name'];
+                    if (!empty($row['nav_tag'])) {
+                        $arr[$cur_navitem]['tags'][] = $row['nav_tag'];
+                    }
                 }
                 //remove
                 unset($arr[$key]);

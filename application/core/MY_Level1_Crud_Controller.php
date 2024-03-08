@@ -61,7 +61,12 @@ abstract class MY_Level1_Crud_Controller extends CI_Controller {
 
 	public function handle($level1_name, $navigation, $name = '', $params = array())
 	{
-		$controller = $this->router->class .'/'. $level1_name;
+		if (!empty($this->session->userdata('page_role'))) {
+			$controller = $this->session->userdata('page_role') .'/'. $level1_name;
+		}
+		else {
+			$controller = $this->router->class .'/'. $level1_name;
+		}
 
 		if (empty($level1_name) || empty($name)) {
 			theme_403_with_navigation($navigation, $controller);
@@ -140,7 +145,13 @@ abstract class MY_Level1_Crud_Controller extends CI_Controller {
 		$page_data['level1_column']        	 = static::$LEVEL1_COLUMN;
 
 		//controller name
-		$page_data['controller'] = $this->router->class .'/'. $level1_name;
+		if (!empty($this->session->userdata('page_role'))) {
+			$controller = $this->session->userdata('page_role') .'/'. $level1_name;
+		}
+		else {
+			$controller = $this->router->class .'/'. $level1_name;
+		}
+		$page_data['controller'] = $controller;
 
 		$page_data['page_name']              = $page['name'];
 		$page_data['page_title']             = $page['page_title'];
@@ -290,7 +301,12 @@ abstract class MY_Level1_Crud_Controller extends CI_Controller {
 	}
 
 	protected function table_add($level1_name, $page, $navigation) {
-		$controller = $this->router->class .'/'. $level1_name;
+		if (!empty($this->session->userdata('page_role'))) {
+			$controller = $this->session->userdata('page_role') .'/'. $level1_name;
+		}
+		else {
+			$controller = $this->router->class .'/'. $level1_name;
+		}
 
 		$page_type = $page['page_type'];
 		if ($page_type != 'table') {
@@ -320,7 +336,13 @@ abstract class MY_Level1_Crud_Controller extends CI_Controller {
 		//var_dump($navigation); exit;
 
 		//controller name
-		$page_data['controller'] = $this->router->class .'/'. $level1_name;
+		if (!empty($this->session->userdata('page_role'))) {
+			$controller = $this->session->userdata('page_role') .'/'. $level1_name;
+		}
+		else {
+			$controller = $this->router->class .'/'. $level1_name;
+		}
+		$page_data['controller'] = $controller;
 
 		$page_data['page_name']              = $page['name'];
 		$page_data['page_title']             = $page['page_title'];
@@ -402,7 +424,12 @@ abstract class MY_Level1_Crud_Controller extends CI_Controller {
 	}
 
 	protected function table_edit($level1_name, $page, $navigation, $id=null) {
-		$controller = $this->router->class .'/'. $level1_name;
+		if (!empty($this->session->userdata('page_role'))) {
+			$controller = $this->session->userdata('page_role') .'/'. $level1_name;
+		}
+		else {
+			$controller = $this->router->class .'/'. $level1_name;
+		}
 
 		$page_type = $page['page_type'];
 		if ($page_type != 'table') {
@@ -430,7 +457,13 @@ abstract class MY_Level1_Crud_Controller extends CI_Controller {
 		$page_data['level1_column']        	 = static::$LEVEL1_COLUMN;
 
 		//controller name
-		$page_data['controller'] = $this->router->class .'/'. $level1_name;
+		if (!empty($this->session->userdata('page_role'))) {
+			$controller = $this->session->userdata('page_role') .'/'. $level1_name;
+		}
+		else {
+			$controller = $this->router->class .'/'. $level1_name;
+		}
+		$page_data['controller'] = $controller;
 
 		$page_data['page_name']              = $page['name'];
 
@@ -550,7 +583,12 @@ abstract class MY_Level1_Crud_Controller extends CI_Controller {
 	}
 
 	protected function table_detail($level1_name, $page_name, $model, $navigation, $params = null) {
-		$controller = $this->router->class .'/'. $level1_name;
+		if (!empty($this->session->userdata('page_role'))) {
+			$controller = $this->session->userdata('page_role') .'/'. $level1_name;
+		}
+		else {
+			$controller = $this->router->class .'/'. $level1_name;
+		}
 
 		if ($params == null || count($params) == 0) {
 			theme_404_with_navigation($navigation, $controller);
@@ -590,7 +628,13 @@ abstract class MY_Level1_Crud_Controller extends CI_Controller {
 		}
 
 		//controller name
-		$page_data['controller'] = $this->router->class .'/'. $level1_name;
+		if (!empty($this->session->userdata('page_role'))) {
+			$controller = $this->session->userdata('page_role') .'/'. $level1_name;
+		}
+		else {
+			$controller = $this->router->class .'/'. $level1_name;
+		}
+		$page_data['controller'] = $controller;
 
 		$page_data['page_name']              = $model->page_name();
 		$page_data['page_title']             = $model->page_title();

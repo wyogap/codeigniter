@@ -15,28 +15,35 @@
 <link href="{$base_url}assets/leaflet/easybutton/easy-button.css" rel="stylesheet" />
 {/if}
 
+{if !empty($use_select2)}
 <!-- select2 -->
 <link href="{$base_url}assets/select2/css/select2.min.css" rel="stylesheet" type="text/css" />
 <link href="{$base_url}assets/select2/css/select2-bootstrap.min.css" rel="stylesheet" type="text/css" />
+{/if}
 
+{if !empty($use_datatable)}
 <!-- datatables -->
 <link href="{$base_url}assets/datatables/DataTables-1.10.20/css/dataTables.bootstrap4.css" rel="stylesheet" type="text/css" />
 <link href="{$base_url}assets/datatables/Responsive-2.2.3/css/responsive.bootstrap4.css" rel="stylesheet" type="text/css" />
 <link href="{$base_url}assets/datatables/Buttons-1.6.1/css/buttons.bootstrap4.css" rel="stylesheet" type="text/css" />
 <link href="{$base_url}assets/datatables/Select-1.3.1/css/select.bootstrap4.css" rel="stylesheet" type="text/css" />
 <link href="{$base_url}assets/datatables/KeyTable-2.5.1/css/keyTable.bootstrap4.css" rel="stylesheet" type="text/css" >
-<link href="{$base_url}assets/datatables/Editor-1.9.2/css/editor.bootstrap4.css" rel="stylesheet" type="text/css" >
 
 <link href="{$base_url}assets/datatables/RowReorder-1.2.6/css/rowReorder.bootstrap4.css" rel="stylesheet" type="text/css" >
 <link href="{$base_url}assets/datatables/SearchBuilder-1.3.0/css/searchBuilder.bootstrap4.css" rel="stylesheet" type="text/css" >
 <link href="{$base_url}assets/datatables/SearchPanes-1.4.0/css/searchPanes.bootstrap4.css" rel="stylesheet" type="text/css" >
 
-<link href="{$base_url}assets/datatables/tcg/dt-editor-select2.bootstrap4.css" rel="stylesheet" />
+{if !empty($use_editor)}
+<link href="{$base_url}assets/datatables/Editor-1.9.2/css/editor.bootstrap4.css" rel="stylesheet" type="text/css" >
 <link href="{$base_url}assets/datatables/tcg/dt-editor-mask.css" rel="stylesheet" />
 <link href="{$base_url}assets/datatables/tcg/dt-editor-toggle.bootstrap4.css" rel="stylesheet" />
 <link href="{$base_url}assets/datatables/tcg/dt-editor-checkbox.css" rel="stylesheet" />
 <link href="{$base_url}assets/datatables/tcg/dt-editor-cascade.bootstrap4.css" rel="stylesheet" />
 <link href="{$base_url}assets/datatables/tcg/dt-editor-unitprice.css" rel="stylesheet" />
+
+{if !empty($use_select2)}
+<link href="{$base_url}assets/datatables/tcg/dt-editor-select2.bootstrap4.css" rel="stylesheet" />
+{/if}
 
 <link href="{$base_url}assets/datatables/tcg/dt-editor-text.css" rel="stylesheet" />
 <link href="{$base_url}assets/datatables/tcg/dt-editor-number.css" rel="stylesheet" />
@@ -69,6 +76,8 @@
 <!-- WYSIWYG editor -->
 <!-- <link href="{$base_url}assets/backend/css/vendor/summernote-bs4.css" rel="stylesheet" type="text/css" /> -->
 <link href="{$base_url}assets/datatables/tcg/dt-editor-editor.css" rel="stylesheet" />
+{/if}
+{/if}
 {/if}
 
 {if !empty($use_calendar)}

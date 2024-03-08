@@ -28,7 +28,7 @@
             <div class="col-xl-12">
                 <div class="card">
                     <div class="card-body">
-                        <h4 class="box-title text-center">Masih Perlu Verifikasi: {$perlu_verifikasi} (<a href="{$site_url}/crud/kendaraan_dinas_verifikasi">Detail</a>)</h4>
+                        <h4 class="box-title text-center">Masih Perlu Verifikasi: {$perlu_verifikasi} (<a href="{$site_url}crud/kendaraan_dinas_verifikasi">Detail</a>)</h4>
                     </div>
                 </div>
             </div>

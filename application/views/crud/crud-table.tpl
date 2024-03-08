@@ -8,6 +8,30 @@
 {/if}
 
 <style>
+    .dataTable tbody tr:hover {
+        background-color: #48a4f3 !important;
+        color: white;
+    }
+
+    .dataTable tbody tr:hover > .sorting_1 {
+        background-color: #48a4f3 !important;
+        color: white;
+    }
+
+    .dataTable tbody tr.selected:hover {
+        background-color: #0275d8 !important;
+        color: white;
+    }
+
+    .dataTable tbody tr.selected:hover > .sorting_1 {
+        background-color: #0275d8 !important;
+        color: white;
+    }
+    
+    .dataTable > tbody > tr.child:hover {
+        color: black !important;
+    }
+
     {if $tbl.custom_css}
     {$tbl.custom_css}
     {/if}
@@ -62,16 +86,13 @@
                 <th class="text-center" data-priority="1">#</th>
                 {/if}
                 {foreach from=$tbl.columns key=i item=col}
-                    {if $col.visible != 1}
-                        {continue}
-                    {/if}
-                    {* Hide reference column when displaying as subtable *}
-                    {if (!empty($fkey) && $fkey == $col.name)}
-                        {continue}
-                    {/if}
                     {* Hide virtual column *}
                     {if $col.type=="virtual" || $col.type=="tcg_table"}
                         {continue}
+                    {/if}
+                    {* Hide reference column when displaying as subtable *}
+                    {if (!empty($fkey) && $fkey == $col.name) || $col.visible != 1}
+                        {$col.data_priority = -1}
                     {/if}
                     <th {if !empty($col.column_filter)}tcg-column-filter=1{/if} class="{if $col.data_priority < 0}none {else if $col.css}{$col.css} {/if}text-center" data-priority="{$col.data_priority}" style="word-break: normal!important;">
                     {if isset($col.edit_bubble) && $col.edit_bubble}<i class="dripicons-document-edit"></i> {/if}{$col.label}
@@ -85,12 +106,45 @@
                 {/if}
             </tr>
         </thead>
+        {if $tbl.footer_row}
+        <tfoot>
+            <tr>
+                {if $tbl.row_select_column}
+                <th class="text-center" data-priority="1">#</th>
+                {/if}
+                {if $tbl.row_id_column}
+                <th class="text-center" data-priority="1">#</th>
+                {/if}
+                {foreach from=$tbl.columns key=i item=col}
+                    {* Hide virtual column *}
+                    {if $col.type=="virtual" || $col.type=="tcg_table"}
+                        {continue}
+                    {/if}
+                    {* Hide reference column when displaying as subtable *}
+                    {if (!empty($fkey) && $fkey == $col.name) || $col.visible != 1}
+                        {$col.data_priority = -1}
+                    {/if}
+                    <th class="{$col.css} {if $col.name == $tbl.lookup_column}text-left{/if}" style="word-break: normal!important;">
+                    {if $col.name == $tbl.lookup_column}Total
+                    {elseif $col.total_row}-
+                    {/if}
+                    </th>
+                {/foreach}
+                {if count($tbl.row_actions) > 0}
+                <th class="text-center" data-priority="1"></th>
+                {/if}
+                {if $tbl.row_reorder}
+                <th class="text-center" data-priority="1"></th>
+                {/if}
+            </tr>
+        </tfoot>
+        {/if}
     </table>
 </div>
 
-{if count($tbl.column_groupings) > 1}
+{if !empty($tbl.editor) && count($tbl.column_groupings) > 1}
 <div id="{$tbl.table_id}-editor-layout" class="editor-layout">
-    <ul class="nav nav-tabs nav-justified" id="{$tbl.table_id}-editor-tabs">
+    <ul class="nav nav-pills nav-justified" id="{$tbl.table_id}-editor-tabs">
         {foreach from=$tbl.column_groupings key=i item=grp}
         <li class="nav-item">
             <a class="nav-link {if $i==0}active{/if}" href="#{$tbl.table_id}-{$grp.id}" data-toggle="tab">

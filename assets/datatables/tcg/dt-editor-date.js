@@ -38,12 +38,13 @@
     
 		  //TODO: default value
 		  if (typeof conf.def !== 'undefined' && conf.def !== null && conf.def != "") {
-			let val = moment(conf.def).format(conf.attr.format.toUpperCase());
-			conf._input_control.val(val);
+        let m = moment(conf.def);
+			  let val = m.isValid() ? m.format(conf.attr.format.toUpperCase()) : "";
+			  conf._input_control.val(val);
 		  }
 		  else {
-			let val = moment().format(conf.attr.format.toUpperCase());
-			conf._input_control.val(val);
+			  let val = moment().format(conf.attr.format.toUpperCase());
+			  conf._input_control.val(val);
 		  }
 		  
           if (conf.attr.readonly == true) {
@@ -64,14 +65,15 @@
       },
     
       set: function ( conf, val ) {
-		  //TODO: set value not working yet!
-			if (typeof val === 'undefined' || val == null)		val = "";
-			
-			val = moment(val).format(conf.attr.format.toUpperCase());
-			conf._input_control.val(val).trigger("input");
+        //TODO: set value not working yet!
+        if (typeof val === 'undefined' || val == null)		val = "";
+        
+        let m = moment(val);
+        val = m.isValid() ? m.format(conf.attr.format.toUpperCase()) : "";
+        conf._input_control.val(val).trigger("input");
 
-			//trigger change event
-			conf._input.trigger("change");
+        //trigger change event
+        conf._input.trigger("change");
       },
     
       enable: function ( conf ) {

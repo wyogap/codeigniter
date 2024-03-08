@@ -1,4 +1,73 @@
 <style>
+
+.dtr-data .btn {
+    margin-left: 4px;
+    margin-right: 4px;
+}
+
+.inline-actions .btn {
+    margin-left: 8px;
+}
+
+.inline-actions .btn:first-child {
+    margin-left: 0px;
+}
+
+.inline-actions .btn:not(:first-child) {
+    margin-left: 8px;
+}
+
+
+.bd-title {
+    --bs-heading-color: var(--bs-emphasis-color);
+    /* font-size: calc(1.425rem + 2.1vw); */
+}
+
+.bd-lead {
+    /* font-size: calc(1.275rem + .3vw);  */
+    font-weight: 300;
+}
+
+.btn-bd-light {
+    --btn-custom-color: #9461fb;
+    --bs-border-color: #dee2e6;
+    --bd-violet-rgb: 112.520718,44.062154,249.437846;
+    --bs-btn-color: var(--bs-gray-600);
+    --bs-btn-border-color: var(--bs-border-color);
+    --bs-btn-hover-color: var(--btn-custom-color);
+    --bs-btn-hover-border-color: var(--btn-custom-color);
+    --bs-btn-active-color: var(--btn-custom-color);
+    --bs-btn-active-bg: var(--bs-white);
+    --bs-btn-active-border-color: var(--btn-custom-color);
+    --bs-btn-focus-border-color: var(--btn-custom-color);
+    --bs-btn-focus-shadow-rgb: var(--bd-violet-rgb);
+}
+
+.btn-bd-light:hover {
+    color: #fff;
+    background-color: #4e5bf2;
+    border-color: #4250f2;
+}
+
+.py-1 {
+    padding-top: 0.25rem!important;
+    padding-bottom: 0.25rem!important;
+}
+.px-2 {
+    padding-right: 0.5rem!important;
+    padding-left: 0.5rem!important;
+}
+
+.me-2 {
+    margin-right: 0.5rem!important;
+    margin-bottom: 0.5rem!important;
+}
+
+:last-child > .me-2 {
+    margin-right: 0;
+    margin-bottom: 0.5rem!important;
+}
+
 .btn-icon-circle{
     display: inline-block;
     width: 30px;

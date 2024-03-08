@@ -27,6 +27,8 @@ class Base_Crud extends MY_Crud_Controller {
 		$page_data['page_name']              = 'home';
 		$page_data['page_title']             = 'Home';
 		$page_data['page_icon']              = "mdi-view-dashboard-outline";
+		$page_data['page_description']       = null;
+		$page_data['page_tag']       		 = null;
 		$page_data['query_params']           = null;
 
 		$page_data['page_role']           	 = $this->session->userdata('page_role');

@@ -29,6 +29,7 @@ class Mtablemeta extends CI_Model
         'search_max_result' => 0,
         'row_reorder' => false,
         'row_reorder_column' => null,
+        'multi_row_selection' => false,
         'add_custom_js' => null,
         'edit_custom_js' => null,
         'delete_custom_js' => null,
@@ -36,13 +37,15 @@ class Mtablemeta extends CI_Model
         'on_edit_custom_js' => null,
         'on_delete_custom_js' => null,
         'column_groupings' => [],
-        'column_grouping_map' => []
+        'column_grouping_map' => [],
+        'footer_row' => false
     );
     
     public static $COLUMN = array (
         'name' => '',
         'label' => '',
         'visible' => true,
+        'export' => true,
         'data_priority' => 100,
         'css' => '',
         'type' => 'text',
@@ -55,7 +58,8 @@ class Mtablemeta extends CI_Model
         'allow_search' => false,
         'width' => '',
         'foreign_key' => false,
-        'display_format_js' => ''
+        'display_format_js' => '',
+        'total_row' => 0
     );
 
     public static $COLUMN_GROUPING = array (

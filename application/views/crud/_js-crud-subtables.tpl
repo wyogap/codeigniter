@@ -2,6 +2,7 @@
 
 {foreach $subtables as $subtbl}
 var selected_key_{$subtbl.crud.table_id} = '';
+var selected_label_{$subtbl.crud.table_id} = '';
 var data_{$subtbl.crud.table_id} = null;
 {/foreach}
 
@@ -26,6 +27,7 @@ $(document).ready(function() {
                 {foreach $subtables as $subtbl}
                 //master value
                 selected_key_{$subtbl.crud.table_id} = data[0]['{$subtbl.table_key_column}'];
+                selected_label_{$subtbl.crud.table_id} = data[0]['{$subtbl.table_label_column}'];
                 data_{$subtbl.crud.table_id} = data[0];
                 dt_{$subtbl.crud.table_id}.ajax.url("{$subtbl.crud.ajax}/" +selected_key_{$subtbl.crud.table_id});
                 {if $subtbl.crud.editor}
@@ -43,5 +45,5 @@ $(document).ready(function() {
 
 
 {foreach $subtables as $subtbl}
-    {include file="crud/_js-crud-table.tpl" tbl=$subtbl.crud fsubtable='1' fkey=$subtbl.subtable_fkey_column}
+    {include file="crud/_js-crud-table.tpl" tbl=$subtbl.crud fsubtable='1' fkey=$subtbl.subtable_fkey_column flabel=$subtbl.label}
 {/foreach}

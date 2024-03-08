@@ -123,6 +123,8 @@
                 var lintang = conf._lat.val();
                 var bujur = conf._long.val();
                 new L.marker([lintang,bujur]).addTo(layerGroup).bindPopup(conf.language.popupMessage+"<br>"+lintang+", "+bujur);
+                //recenter to marker
+                conf._mapObj.setView([lintang,bujur], conf.attr.mapZoom);
             }
 
             conf._lat.on('change', onChangeCoordinate);

@@ -604,7 +604,12 @@
 			$page_data['query_params']           = null;
 
 			if ($controller == null) {
-				$controller = $ci->router->class;
+				if (!empty($ci->session->userdata('page_role'))) {
+					$controller = $ci->session->userdata('page_role');
+				}
+				else {
+					$controller = $ci->router->class;
+				}
 			}
 			$page_data['controller']           	 = $controller;
 
@@ -635,7 +640,12 @@
 			$page_data['query_params']           = null;
 
 			if ($controller == null) {
-				$controller = $ci->router->class;
+				if (!empty($ci->session->userdata('page_role'))) {
+					$controller = $ci->session->userdata('page_role');
+				}
+				else {
+					$controller = $ci->router->class;
+				}
 			}
 			$page_data['controller']           	 = $controller;
 
@@ -665,7 +675,12 @@
 			$page_data['query_params']           = null;
 
 			if ($controller == null) {
-				$controller = $ci->router->class;
+				if (!empty($ci->session->userdata('page_role'))) {
+					$controller = $ci->session->userdata('page_role');
+				}
+				else {
+					$controller = $ci->router->class;
+				}
 			}
 			$page_data['controller']           	 = $controller;
 
@@ -690,7 +705,12 @@
 			$page_data['query_params']           = null;
 
 			if ($controller == null) {
-				$controller = $ci->router->class;
+				if (!empty($ci->session->userdata('page_role'))) {
+					$controller = $ci->session->userdata('page_role');
+				}
+				else {
+					$controller = $ci->router->class;
+				}
 			}
 			$page_data['controller']           	 = $controller;
 

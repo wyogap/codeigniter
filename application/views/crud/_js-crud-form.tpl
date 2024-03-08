@@ -1,5 +1,11 @@
 
 <script type="text/javascript" defer>
+
+    var base_url = "{$base_url}";
+    var site_url = "{$site_url}";
+    var ajax_url = "{$tbl.ajax}";
+    var tbl_title = "{$tbl.title}";
+
     var field_list = [];
 
     var edit_list = null;
