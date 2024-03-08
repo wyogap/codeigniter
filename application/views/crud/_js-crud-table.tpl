@@ -36,7 +36,7 @@ $(document).ready(function() {
         }
     });
 
-    {if !empty($tbl.editor)}
+    {if !empty($tbl.editor) && (!isset($readonly) || $readonly==0)}
         editor_{$tbl.table_id} = new $.fn.dataTable.Editor({
             ajax: "{$tbl.ajax}",
             table: "#{$tbl.table_id}",
@@ -657,7 +657,7 @@ $(document).ready(function() {
         buttons: {
             buttons: 
             [
-                {if $tbl.editor}
+                {if $tbl.editor && (!isset($readonly) || $readonly==0)}
                 {if isset($tbl.table_actions) && $tbl.table_actions.add}
                 {
                     extend: "create",
@@ -1247,7 +1247,7 @@ $(document).ready(function() {
                 {/if}
             },
             {/if}
-            {if isset($tbl.table_actions) && $tbl.table_actions.import}
+            {if isset($tbl.table_actions) && $tbl.table_actions.import  && (!isset($readonly) || $readonly==0)}
             {
                 text: '{__("Impor")}',
                 className: 'btn-sm btn-danger btn-import',

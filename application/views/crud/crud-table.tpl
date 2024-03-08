@@ -157,7 +157,7 @@
     <div class="tab-content" style="margin-top: 16px;">
         {foreach from=$tbl.column_groupings key=i item=grp}
         <div class="tab-pane {if $i==0}active{/if}" id="{$tbl.table_id}-{$grp.id}">
-            {foreach from=$grp.columns key=j item=col}
+            {foreach from=$grp.editors key=j item=col}
             <div class="form-group {$col.edit_css}" data-editor-template="{$col.name}"></div>
             {/foreach}
         </div>

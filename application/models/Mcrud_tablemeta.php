@@ -400,6 +400,8 @@ class Mcrud_tablemeta extends CI_Model
         $this->column_groupings = array();
         $this->column_grouping_map = array();
         
+        $this->column_groupings = array();
+
         // var_dump($arr);
         // var_dump($this->table_actions);
         //inline edit row
@@ -803,8 +805,8 @@ class Mcrud_tablemeta extends CI_Model
                         }
 
                         //update column list in grouping
-                        $this->column_groupings[ $grp['idx'] ]['columns'][] = $editor;
-                        $this->column_grouping_map[ $grp['id'] ]['columns'][] = $editor;
+                        $this->column_groupings[ $grp['idx'] ]['editors'][] = $editor;
+                        $this->column_grouping_map[ $grp['id'] ]['editors'][] = $editor;
                     }
                 }
 
