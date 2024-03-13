@@ -23,8 +23,6 @@ class Mtablemeta extends CI_Model
         'editable_table_name' => '',
         'soft_delete' => true,
         'join_tables' => [],
-        'custom_css' => '',
-        'custom_js' => '',
         'search' => false,
         'search_max_result' => 0,
         'row_reorder' => false,
@@ -38,7 +36,12 @@ class Mtablemeta extends CI_Model
         'on_delete_custom_js' => null,
         'column_groupings' => [],
         'column_grouping_map' => [],
-        'footer_row' => false
+        'footer_row' => false,
+        'custom_css' => '',
+        'custom_js' => '',
+        'detail_template' => '',
+        'edit_template' => '',
+        'readonly' => false
     );
     
     public static $COLUMN = array (
@@ -58,6 +61,8 @@ class Mtablemeta extends CI_Model
         'allow_search' => false,
         'width' => '',
         'foreign_key' => false,
+        'reference_controller' => null,
+        'reference_show_link' => false,
         'display_format_js' => '',
         'total_row' => 0
     );
@@ -87,6 +92,8 @@ class Mtablemeta extends CI_Model
         'edit_validation_js' => '',
         'edit_bubble' => false,
         'edit_def_value' => null,
+        'edit_readonly' => false,
+        'edit_vertical' => false,
         'subtable_id' => 0,
         'subtable_key_column' => null,
         'subtable_fkey_column' => null,

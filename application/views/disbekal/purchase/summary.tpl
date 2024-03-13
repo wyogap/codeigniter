@@ -56,6 +56,31 @@
 
 @media screen and (max-width: 767px) {
 
+.wf-block {
+	font-size: small;
+}
+
+.wf-arrow img {
+    width: 48px;
+    margin: 16px 4px 0px 4px;
+}
+
+.wf-state img {
+    margin: 0px 4px 8px 4px;
+    width: 40px;
+    height: 40px;
+}
+
+.wf-endpoint img {
+    margin: 5px 4px 0px 4px;
+    height: 32px;
+    width: 32px;
+}
+
+}
+
+@media screen and (max-width: 576px) {
+
 	/* .wf {
 		display: block;
 	}
@@ -159,6 +184,7 @@
     </div>
 </div>
 
+<!-- //filtering -->
 <section class="content">
     <div class="container-fluid">
         <div class="row">
@@ -199,6 +225,7 @@
     </div>
 </section>
 
+<!--
 <section class="content">
     <div class="container-fluid">
 
@@ -228,34 +255,51 @@
 			</div>
 
 </div>	
+-->
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-xl-12">
+                <div class="card">
+                    <div class="card-body">
+                        {include file='crud/crud-table.tpl' tbl=$crud}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 
 <div id="detail" style="display: block;">
 
 <div class="row"> <div class="col-12"> <div class="wf"> 
-	<div class="wf-start"><div class="wf-endpoint"><img src="{$site_url}images/wf/pos0.png"></div></div>
+	<div class="wf-start">
+		<div class="wf-endpoint"><img id="wf-start" src="{$site_url}images/wf/pos0.png"></div>
+	</div>
 	<div class="wf-block">
-		<div class="wf-arrow"><img src="{$site_url}images/wf/arrow1.png"></div>
-		<div class="wf-state"><img src="{$site_url}images/wf/pos1.png">Perintah Pengadaan</div>
+		<div class="wf-arrow"><img id="wf-arrow1" src="{$site_url}images/wf/arrow0.png"></div>
+		<div class="wf-state"><img id="wf-pos1" src="{$site_url}images/wf/pos1b.png">Pengadaan</div>
 	</div>	
 	<div class="wf-block">
-		<div class="wf-arrow"><img src="{$site_url}images/wf/arrow0.png"></div>
-		<div class="wf-state"><img src="{$site_url}images/wf/pos2b.png">Tender</div>
+		<div class="wf-arrow"><img id="wf-arrow2" src="{$site_url}images/wf/arrow0.png"></div>
+		<div class="wf-state"><img id="wf-pos2" src="{$site_url}images/wf/pos2b.png">Tender</div>
 	</div>	
 	<div class="wf-block">
-		<div class="wf-arrow"><img src="{$site_url}images/wf/arrow0.png"></div>
-		<div class="wf-state"><img src="{$site_url}images/wf/pos3b.png">Kontrak</div>
+		<div class="wf-arrow"><img id="wf-arrow3" src="{$site_url}images/wf/arrow0.png"></div>
+		<div class="wf-state"><img id="wf-pos3" src="{$site_url}images/wf/pos3b.png">Kontrak</div>
 	</div>	
 	<div class="wf-block">
-		<div class="wf-arrow"><img src="{$site_url}images/wf/arrow0.png"></div>
-		<div class="wf-state"><img src="{$site_url}images/wf/pos4b.png">Perintah Terima</div>
+		<div class="wf-arrow"><img id="wf-arrow4" src="{$site_url}images/wf/arrow0.png"></div>
+		<div class="wf-state"><img id="wf-pos4" src="{$site_url}images/wf/pos4b.png">Perintah Terima</div>
 	</div>	
 	<div class="wf-block">
-		<div class="wf-arrow"><img src="{$site_url}images/wf/arrow0.png"></div>
-		<div class="wf-state"><img src="{$site_url}images/wf/pos5b.png">Evaluasi Pengadaan</div>
+		<div class="wf-arrow"><img id="wf-arrow5" src="{$site_url}images/wf/arrow0.png"></div>
+		<div class="wf-state"><img id="wf-pos5" src="{$site_url}images/wf/pos5b.png">Evaluasi Pengadaan</div>
 	</div>	
 	<div class="wf-end">
-		<div class="wf-arrow"><img src="{$site_url}images/wf/arrow0.png"></div>
-		<div class="wf-endpoint"><img src="{$site_url}images/wf/pos0.png"></div>
+		<div class="wf-arrow"><img id="wf-arrow-end" src="{$site_url}images/wf/arrow0.png"></div>
+		<div class="wf-endpoint"><img id="wf-end" src="{$site_url}images/wf/pos0.png"></div>
 	</div>	
 </div></div></div>
 
@@ -267,5 +311,104 @@
 
 <script type="text/javascript">
 
+function update_wf_images(status) {
+	if (status=='DRAFT') {
+		$('#wf-arrow1').src("{$site_url}images/wf/arrow1.png");
+		$('#wf-pos1').src("{$site_url}images/wf/pos1b.png");
+		$('#wf-arrow2').src("{$site_url}images/wf/arrow0.png");
+		$('#wf-pos2').src("{$site_url}images/wf/pos2b.png");
+		$('#wf-arrow3').src("{$site_url}images/wf/arrow0.png");
+		$('#wf-pos3').src("{$site_url}images/wf/pos3b.png");
+		$('#wf-arrow4').src("{$site_url}images/wf/arrow0.png");
+		$('#wf-pos4').src("{$site_url}images/wf/pos4b.png");
+		$('#wf-arrow5').src("{$site_url}images/wf/arrow0.png");
+		$('#wf-pos5').src("{$site_url}images/wf/pos5b.png");
+		$('#wf-arrow6').src("{$site_url}images/wf/arrow0.png");
+	} else if (status=='APPR') {
+		$('#wf-arrow1').src("{$site_url}images/wf/arrow1.png");
+		$('#wf-pos1').src("{$site_url}images/wf/pos1.png");
+		$('#wf-arrow2').src("{$site_url}images/wf/arrow0.png");
+		$('#wf-pos2').src("{$site_url}images/wf/pos2b.png");
+		$('#wf-arrow3').src("{$site_url}images/wf/arrow0.png");
+		$('#wf-pos3').src("{$site_url}images/wf/pos3b.png");
+		$('#wf-arrow4').src("{$site_url}images/wf/arrow0.png");
+		$('#wf-pos4').src("{$site_url}images/wf/pos4b.png");
+		$('#wf-arrow5').src("{$site_url}images/wf/arrow0.png");
+		$('#wf-pos5').src("{$site_url}images/wf/pos5b.png");
+		$('#wf-arrow6').src("{$site_url}images/wf/arrow0.png");
+	} else if (status=='TENDER') {
+		$('#wf-arrow1').src("{$site_url}images/wf/arrow1.png");
+		$('#wf-pos1').src("{$site_url}images/wf/pos1.png");
+		$('#wf-arrow2').src("{$site_url}images/wf/arrow1.png");
+		$('#wf-pos2').src("{$site_url}images/wf/pos2.png");
+		$('#wf-arrow3').src("{$site_url}images/wf/arrow0.png");
+		$('#wf-pos3').src("{$site_url}images/wf/pos3b.png");
+		$('#wf-arrow4').src("{$site_url}images/wf/arrow0.png");
+		$('#wf-pos4').src("{$site_url}images/wf/pos4b.png");
+		$('#wf-arrow5').src("{$site_url}images/wf/arrow0.png");
+		$('#wf-pos5').src("{$site_url}images/wf/pos5b.png");
+		$('#wf-arrow6').src("{$site_url}images/wf/arrow0.png");
+	} else if (status=='CONTRACT') {
+		$('#wf-arrow1').src("{$site_url}images/wf/arrow1.png");
+		$('#wf-pos1').src("{$site_url}images/wf/pos1.png");
+		$('#wf-arrow2').src("{$site_url}images/wf/arrow1.png");
+		$('#wf-pos2').src("{$site_url}images/wf/pos2.png");
+		$('#wf-arrow3').src("{$site_url}images/wf/arrow1.png");
+		$('#wf-pos3').src("{$site_url}images/wf/pos3.png");
+		$('#wf-arrow4').src("{$site_url}images/wf/arrow0.png");
+		$('#wf-pos4').src("{$site_url}images/wf/pos4b.png");
+		$('#wf-arrow5').src("{$site_url}images/wf/arrow0.png");
+		$('#wf-pos5').src("{$site_url}images/wf/pos5b.png");
+		$('#wf-arrow6').src("{$site_url}images/wf/arrow0.png");
+	} else if (status=='DELIVR') {
+		$('#wf-arrow1').src("{$site_url}images/wf/arrow1.png");
+		$('#wf-pos1').src("{$site_url}images/wf/pos1.png");
+		$('#wf-arrow2').src("{$site_url}images/wf/arrow1.png");
+		$('#wf-pos2').src("{$site_url}images/wf/pos2.png");
+		$('#wf-arrow3').src("{$site_url}images/wf/arrow1.png");
+		$('#wf-pos3').src("{$site_url}images/wf/pos3.png");
+		$('#wf-arrow4').src("{$site_url}images/wf/arrow1.png");
+		$('#wf-pos4').src("{$site_url}images/wf/pos4.png");
+		$('#wf-arrow5').src("{$site_url}images/wf/arrow0.png");
+		$('#wf-pos5').src("{$site_url}images/wf/pos5b.png");
+		$('#wf-arrow6').src("{$site_url}images/wf/arrow0.png");
+	} else if (status=='EVAL') {
+		$('#wf-arrow1').src("{$site_url}images/wf/arrow1.png");
+		$('#wf-pos1').src("{$site_url}images/wf/pos1.png");
+		$('#wf-arrow2').src("{$site_url}images/wf/arrow1.png");
+		$('#wf-pos2').src("{$site_url}images/wf/pos2.png");
+		$('#wf-arrow3').src("{$site_url}images/wf/arrow1.png");
+		$('#wf-pos3').src("{$site_url}images/wf/pos3.png");
+		$('#wf-arrow4').src("{$site_url}images/wf/arrow1.png");
+		$('#wf-pos4').src("{$site_url}images/wf/pos4.png");
+		$('#wf-arrow5').src("{$site_url}images/wf/arrow1.png");
+		$('#wf-pos5').src("{$site_url}images/wf/pos5.png");
+		$('#wf-arrow6').src("{$site_url}images/wf/arrow0.png");
+	} else if (status=='CLOSED') {
+		$('#wf-arrow1').src("{$site_url}images/wf/arrow1.png");
+		$('#wf-pos1').src("{$site_url}images/wf/pos1.png");
+		$('#wf-arrow2').src("{$site_url}images/wf/arrow1.png");
+		$('#wf-pos2').src("{$site_url}images/wf/pos2.png");
+		$('#wf-arrow3').src("{$site_url}images/wf/arrow1.png");
+		$('#wf-pos3').src("{$site_url}images/wf/pos3.png");
+		$('#wf-arrow4').src("{$site_url}images/wf/arrow1.png");
+		$('#wf-pos4').src("{$site_url}images/wf/pos4.png");
+		$('#wf-arrow5').src("{$site_url}images/wf/arrow1.png");
+		$('#wf-pos5').src("{$site_url}images/wf/pos5.png");
+		$('#wf-arrow6').src("{$site_url}images/wf/arrow1.png");
+	} else {
+		$('#wf-arrow1').src("{$site_url}images/wf/arrow0.png");
+		$('#wf-pos1').src("{$site_url}images/wf/pos1b.png");
+		$('#wf-arrow2').src("{$site_url}images/wf/arrow0.png");
+		$('#wf-pos2').src("{$site_url}images/wf/pos2b.png");
+		$('#wf-arrow3').src("{$site_url}images/wf/arrow0.png");
+		$('#wf-pos3').src("{$site_url}images/wf/pos3b.png");
+		$('#wf-arrow4').src("{$site_url}images/wf/arrow0.png");
+		$('#wf-pos4').src("{$site_url}images/wf/pos4b.png");
+		$('#wf-arrow5').src("{$site_url}images/wf/arrow0.png");
+		$('#wf-pos5').src("{$site_url}images/wf/pos5b.png");
+		$('#wf-arrow6').src("{$site_url}images/wf/arrow0.png");
+	}
+}
 
 </script>

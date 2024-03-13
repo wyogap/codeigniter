@@ -28,19 +28,17 @@
               conf._safeId = conf.attr.editorId + "_" + conf._safeId;
             };
 
-			//force read-only (if any)
-			if (typeof conf.readonly !== 'undefined' && conf.readonly != null && conf.readonly != "") {
-				conf.attr.readonly = conf.readonly;
-			}
+            //force read-only (if any)
+            if (typeof conf.readonly !== 'undefined' && conf.readonly != null && conf.readonly != "") {
+              conf.attr.readonly = conf.readonly;
+            }
 			
             // Create the elements to use for the input
             conf._input = $(
                 '<div id="'+conf._safeId+'"></div>');
 
-            conf._masked_input = $('<input type="text" class="tcg-mask-placeholder"/>');
+            conf._masked_input = $('<input type="text" class="tcg-mask-placeholder form-control"/>');
 
-            conf._input.append(conf._masked_input);
-      
             // // Use the fact that we are called in the Editor instance's scope to call
             // // the API method for setting the value when needed
             // $(conf._input).click( function () {
@@ -51,10 +49,10 @@
             //     return false;
             // } );
   
-			//default value
-			if (typeof conf.def !== 'undefined' && conf.def != null) {
-				conf._masked_input.val(conf.def);
-			}
+            //default value
+            if (typeof conf.def !== 'undefined' && conf.def != null) {
+              conf._masked_input.val(conf.def);
+            }
 
             if (conf.attr.mask != "") {
               conf._masked_input.attr("type",conf.attr.type).mask(conf.attr.mask, conf.attr);
@@ -64,6 +62,8 @@
               conf._masked_input.attr('readonly', true);
             }
     
+            conf._input.append(conf._masked_input);
+      
             return conf._input;
         },
       
@@ -78,10 +78,17 @@
         },
       
         set: function ( conf, val ) {
-			if (typeof val === 'undefined' || val == null)		val = "";
-			
+			    if (typeof val === 'undefined' || val == null)		val = "";
+
+          //parse first to avoid decimal separator confusion
+          val = parseFloat(val);
+          
           let curtotal = conf._masked_input.unmask().val();
           conf._masked_input.mask(conf.attr.mask, conf.attr);
+
+          if (conf.attr.readonly == true) {
+            conf._masked_input.attr('readonly', true);
+          }
 
           if (val == curtotal) {
             return;

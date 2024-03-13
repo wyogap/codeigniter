@@ -324,6 +324,8 @@ class Mcrud_tablemeta extends CI_Model
         
         $this->table_metas['custom_css'] = $arr['custom_css'];
         $this->table_metas['custom_js'] = $arr['custom_js'];
+        $this->table_metas['detail_template'] = $arr['detail_template'];
+        $this->table_metas['editor_template'] = $arr['editor_template'];
 
         $this->table_metas['filter'] = ($arr['filter'] == 1);
         $this->table_metas['column_filter'] = ($arr['column_filter'] == 1);
@@ -415,6 +417,7 @@ class Mcrud_tablemeta extends CI_Model
             if(!empty($this->table_actions['edit_conditional_js'])) {
                 $row_action['conditional_js'] = $this->table_actions['edit_conditional_js'];
             }
+            $row_action['tooltip'] = "Edit";
             $this->row_actions[] = $row_action;
         }
 
@@ -429,6 +432,7 @@ class Mcrud_tablemeta extends CI_Model
             if(!empty($this->table_actions['delete_conditional_js'])) {
                 $row_action['conditional_js'] = $this->table_actions['delete_conditional_js'];
             }
+            $row_action['tooltip'] = "Hapus";
             $this->row_actions[] = $row_action;
         }
 
@@ -522,6 +526,9 @@ class Mcrud_tablemeta extends CI_Model
                 $col['display_format_js'] = $row['display_format_js'];
 
                 $col['foreign_key'] = ($row['foreign_key'] == 1);
+                $col['reference_controller'] = $row['reference_controller'];
+                $col['reference_show_link'] = ($row['reference_show_link'] == 1);
+
                 $col['allow_insert'] = ($row['allow_insert'] == 1);
                 $col['allow_edit'] = ($row['allow_edit'] == 1);
                 $col['allow_filter'] = ($row['allow_filter'] == 1);
@@ -694,7 +701,7 @@ class Mcrud_tablemeta extends CI_Model
                     // }
                 }
 
-                if ($this->table_metas['edit'] && $col['allow_insert']) {
+                if ($this->table_metas['edit'] && ($col['allow_insert'] || $col['allow_edit'])) {
                     $editor = Mtablemeta::$EDITOR;
                     $editor['name'] = $row['name'];
                     $editor['allow_insert'] = $col['allow_insert'];
@@ -717,7 +724,10 @@ class Mcrud_tablemeta extends CI_Model
                     $editor['edit_onchange_js'] = $row['edit_onchange_js'];
                     $editor['edit_validation_js'] = $row['edit_validation_js'];
                     $editor['edit_bubble'] = ($row['edit_bubble'] == 1);
+                    $editor['edit_vertical'] = ($row['edit_vertical'] == 1);
+
                     $editor['edit_readonly'] = !$col['allow_edit'];
+                    //$editor['edit_readonly'] = ($row['edit_readonly'] == 1);
 
                     //store in column metas
                     $col['edit_bubble'] = $editor['edit_bubble'];
@@ -741,6 +751,11 @@ class Mcrud_tablemeta extends CI_Model
                         $editor['edit_attr'] = json_decode($row['edit_attr_array'], true);
                         //TODO: append base url for ajax parameter
                         //var_dump($editor['edit_attr']);
+ 
+                        //force readonly if necessary
+                        if (!empty($editor['edit_attr']['readonly'])) {
+                            $col["readonly"] = true;
+                        }
                     }
                     else {
                         $editor['edit_attr'] = array();
@@ -808,6 +823,9 @@ class Mcrud_tablemeta extends CI_Model
                         $this->column_groupings[ $grp['idx'] ]['editors'][] = $editor;
                         $this->column_grouping_map[ $grp['id'] ]['editors'][] = $editor;
                     }
+
+                    //stored for easy access
+                    $col["editor"] = $editor;
                 }
 
                 if ($this->table_metas['filter'] && $col['allow_filter']) {
@@ -1037,6 +1055,10 @@ class Mcrud_tablemeta extends CI_Model
                 $action['css'] = $row['css'];
                 $action['onclick_js'] = $row['onclick_js'];
                 $action['conditional_js'] = $row['conditional_js'];
+                $action['tooltip'] = $row['tooltip'];
+                if ($action['icon_only'] && empty($action['tooltip'])) {
+                    $action['tooltip'] = $action['label'];
+                }
 
                 $this->row_actions[] = $action;
             }
@@ -1046,7 +1068,7 @@ class Mcrud_tablemeta extends CI_Model
         //var_dump($this->editor_metas);
 
         $this->table_metas['columns'] = $this->column_metas;
-        $this->table_metas['editor_columns'] = $this->editor_metas;
+        //$this->table_metas['editor_columns'] = $this->editor_metas;
         $this->table_metas['filter_columns'] = $this->filter_metas;
         $this->table_metas['table_actions'] = $this->table_actions;
         $this->table_metas['custom_actions'] = $this->custom_actions;

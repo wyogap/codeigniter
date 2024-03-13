@@ -37,10 +37,11 @@ class SmartyLibrary extends Smarty {
 
         //default currency setting
         $currency_prefix = "Rp";
-        $thousand_separator = ",";
-        $decimal_separator = ".";
+        $thousand_separator = ".";
+        $decimal_separator = ",";
         $decimal_precision = 0;
         
+        //TODO: configure it in config or in configuration table
         $arr = $ci->setting->list_group('currency');
         foreach($arr as $key => $val) {
             if ($val['name'] == "currency_prefix")  $currency_prefix = $val['value'];
@@ -160,5 +161,28 @@ class SmartyLibrary extends Smarty {
 
         //display the tempalte
         parent::display($template);
+    }
+
+    function get_template_path($template, $theme = null) {
+        $ci =& get_instance();
+
+        if (empty($template))   return $template;
+        if ($theme == null) {
+            $theme = $this->theme;
+        }
+
+        $theme_prefix = "themes/$theme";
+
+        //the actual template is the inner template
+        $template_path = "";
+        if (substr( $template, 0, 1 ) == '/') {
+            //start with '/' means it is not themeable template
+            $template_path = substr( $template, 1 );
+        } 
+        else {
+            $template_path = $theme_prefix .'/'. $template;
+        }
+        
+        return $template_path;
     }
 }

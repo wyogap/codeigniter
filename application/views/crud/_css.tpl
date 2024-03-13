@@ -120,6 +120,39 @@
     padding: 0px;
 }
 
+.btn-tooltip .tooltiptext {
+  visibility: hidden;
+  width: 120px;
+  background-color: #555;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px 0px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  margin-left: -60px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.btn-tooltip .tooltiptext::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #555 transparent transparent transparent;
+}
+
+.btn-tooltip:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}
+
 /* .DTE_Body.modal-body .row.form-group {
     margin-bottom: 1rem;
 }

@@ -9,10 +9,22 @@
     }
 </style>
 
+{if !isset($form_mode)}
+    {assign var='form_mode' value='detail'}
+{/if}
+
 <div class="crud-form" id="{$tbl.table_id}_form" data-table-id="{$tbl.table_id}" {if $detail}data-id="{$detail[$tbl.key_column]}"{/if}>
 
-{if count($tbl.column_groupings) > 1}
-<div id="{$tbl.table_id}-editor-layout" class="editor-layout">
+{if $form_mode=='detail' && !empty($tbl.detail_template)}
+<div id="{$tbl.table_id}-detail-layout">
+    {$tbl.detail_template}
+</div>
+{elseif $form_mode=='edit' && !empty($tbl.edit_template)}
+<div id="{$tbl.table_id}-editor-layout">
+    {$tbl.editor_template}
+</div>
+{elseif count($tbl.column_groupings) > 1}
+<div id="{if $form_mode=='editor'}{$tbl.table_id}-editor-layout{else}{$tbl.table_id}-detail-layout{/if}" class="editor-layout">
     <ul class="nav nav-pills nav-justified" id="{$tbl.table_id}-editor-tabs">
         {foreach from=$tbl.column_groupings key=i item=grp}
         <li class="nav-item">
@@ -30,7 +42,7 @@
             <div class="card widget-inline">
                 <div class="card-body">
             {foreach from=$grp.editors key=j item=col}
-            <div class="form-group {$col.css}" data-editor-template="{$col.name}"></div>
+            <div class="form-group {$col.edit_css}" data-editor-template="{$col.name}"></div>
             {/foreach}
                 </div>
             </div>
@@ -39,9 +51,8 @@
         {/foreach}
     </div>
 </div>
-else
-{/if}
-<div class="row" style="flex-grow: 1;"><div class="col-12">
+{else}
+<div id="{if $form_mode=='editor'}{$tbl.table_id}-editor-layout{else}{$tbl.table_id}-detail-layout{/if}" class="row" style="flex-grow: 1;"><div class="col-12">
 <div class="card widget-inline">
     <div class="card-body">
     {if !empty($level1_column)}
@@ -53,5 +64,6 @@ else
     </div>
 </div>
 </div></div>
+{/if}
 
 </div>

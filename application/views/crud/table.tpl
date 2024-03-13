@@ -78,16 +78,25 @@
                 <div class="card">
                     <div class="card-body">
                         {include file='crud/crud-table.tpl' tbl=$crud}
-                        {if !empty($subtables) && count($subtables)}
-                        <div class=" my-3"></div>
-                        {include file='crud/crud-subtables.tpl'}
-                        {/if}
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </section>
+
+{if !empty($subtables) && count($subtables)}
+<div class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                        {include file='crud/crud-form-subtables.tpl'}
+            </div> <!-- end col -->
+        </div>
+
+    </div>
+</div>
+{/if}
 
 {include file="crud/_js-crud-table.tpl" tbl=$crud}
 

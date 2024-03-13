@@ -71,4 +71,11 @@ class Select extends CI_Controller {
 
     }
 
+    public function tipebekal()
+    {
+        $this->load->model('disbekal/Mselect');
+
+        $json = $this->Mselect->tipebekal();
+        echo json_encode($json, JSON_INVALID_UTF8_IGNORE);	
+    }
 }

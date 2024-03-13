@@ -73,6 +73,38 @@
     thead input {
         width: 100%;
     }
+
+    /* so that any custom css will still align properly */
+    .DTE .form-group {
+        padding-left: 0px;
+        padding-left: 0px;
+    }
+
+    .DTE .form-group.dt-vertical label {  
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    .DTE .form-group.dt-vertical div[data-dte-e="input"] {  
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    /* Hack: since the input field makes most of the top padding, when the input field is under the label the top margin needs to be compensated. */
+    .dt-vertical {
+        margin-top: -1em;
+    }
+
+    .dt-horizontal-6 {
+        -ms-flex: 0 0 100%;
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    .dt-horizontal-6 .form-group {
+        max-width: 51%;
+    }
+
 </style>
 
 <div class="table-responsive-sm">
@@ -157,6 +189,7 @@
     <div class="tab-content" style="margin-top: 16px;">
         {foreach from=$tbl.column_groupings key=i item=grp}
         <div class="tab-pane {if $i==0}active{/if}" id="{$tbl.table_id}-{$grp.id}">
+            {if empty($grp.editors)} {continue} {/if}
             {foreach from=$grp.editors key=j item=col}
             <div class="form-group {$col.edit_css}" data-editor-template="{$col.name}"></div>
             {/foreach}

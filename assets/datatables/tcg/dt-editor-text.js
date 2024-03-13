@@ -34,8 +34,6 @@
 
             conf._input_control = $('<input type="text" class="tcg-text-input form-control"/>');
 
-            conf._input.append(conf._input_control);
-      
             //default value
             if (typeof conf.def !== 'undefined' && conf.def != null) {
               conf._input_control.val(conf.def);
@@ -45,6 +43,8 @@
               conf._input_control.attr('readonly', true);
             }
     
+            conf._input.append(conf._input_control);
+      
             return conf._input;
         },
       

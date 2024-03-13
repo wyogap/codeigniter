@@ -150,8 +150,8 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		$page_data['page_header'] 			 = $page['page_header'];
 		$page_data['page_footer'] 			 = $page['page_footer'];
 
-		if (!empty($page['header_view'])) 		$page_data['header_view'] = $page['header_view'];
-		if (!empty($page['footer_view'])) 		$page_data['footer_view'] = $page['footer_view'];
+		if (!empty($page['header_view'])) 		$page_data['header_view'] = $this->smarty->get_template_path($page['header_view']);
+		if (!empty($page['footer_view'])) 		$page_data['footer_view'] = $this->smarty->get_template_path($page['footer_view']);
 		
 		//easy access
 		$page_data['page']			 = $page; 
@@ -300,6 +300,11 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		);
 		$page_data['permissions']	= $permissions;
 
+		//custom template
+		if (!empty($page['custom_view'])) {
+			$template = $page['custom_view'];
+		}
+	
 		//echo json_encode($page_data);
 		$this->smarty->render_theme($template, $page_data);
 	}
@@ -335,8 +340,8 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		$page_data['page_header'] 			 = $page['page_header'];
 		$page_data['page_footer'] 			 = $page['page_footer'];
 
-		if (!empty($page['header_view'])) 		$page_data['header_view'] = $page['header_view'];
-		if (!empty($page['footer_view'])) 		$page_data['footer_view'] = $page['footer_view'];
+		if (!empty($page['header_view'])) 		$page_data['header_view'] = $this->smarty->get_template_path($page['header_view']);
+		if (!empty($page['footer_view'])) 		$page_data['footer_view'] = $this->smarty->get_template_path($page['footer_view']);
 		
 		//easy access
 		$page_data['page']			 = $page; 
@@ -396,15 +401,17 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		// 	}
 		// }
 
-		// //easy access for everything
-		// $page_data['subtables']		 = $subtables;
-
-		$page_data['detail'] = null; 
-
-		//if it is crud page, always enable datatable
+		//dynamic loading
 		$page_data['use_datatable'] = 1;
 		$page_data['use_editor'] = 1;
-		$page_data['use_select2'] = 1;
+		if ($page['use_geo'])				$page_data['use_geo'] = 1;
+		if ($page['use_upload'])			$page_data['use_upload'] = 1;
+		if ($page['use_wysiwyg'])			$page_data['use_wysiwyg'] = 1;
+		if ($page['use_calendar'])			$page_data['use_calendar'] = 1;
+		if ($page['use_select2'])			$page_data['use_select2'] = 1;
+
+		$page_data['detail'] = null; 
+		$page_data['form_mode'] = 'add';
 
 		$template = '/crud/form.tpl';
 		$this->smarty->render_theme($template, $page_data);
@@ -439,8 +446,8 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		$page_data['page_header'] 			 = $page['page_header'];
 		$page_data['page_footer'] 			 = $page['page_footer'];
 
-		if (!empty($page['header_view'])) 		$page_data['header_view'] = $page['header_view'];
-		if (!empty($page['footer_view'])) 		$page_data['footer_view'] = $page['footer_view'];
+		if (!empty($page['header_view'])) 		$page_data['header_view'] = $this->smarty->get_template_path($page['header_view']);
+		if (!empty($page['footer_view'])) 		$page_data['footer_view'] = $this->smarty->get_template_path($page['footer_view']);
 		
 		//easy access
 		$page_data['page']			 = $page; 
@@ -528,10 +535,16 @@ abstract class MY_Crud_Controller extends CI_Controller {
 			$page_data['subtables']		 = $subtables;
 		}
 
-		//if it is crud page, always enable datatable
+		//dynamic loading
 		$page_data['use_datatable'] = 1;
 		$page_data['use_editor'] = 1;
-		$page_data['use_select2'] = 1;
+		if ($page['use_geo'])				$page_data['use_geo'] = 1;
+		if ($page['use_upload'])			$page_data['use_upload'] = 1;
+		if ($page['use_wysiwyg'])			$page_data['use_wysiwyg'] = 1;
+		if ($page['use_calendar'])			$page_data['use_calendar'] = 1;
+		if ($page['use_select2'])			$page_data['use_select2'] = 1;
+
+		$page_data['form_mode'] = 'edit';
 
 		$template = '/crud/form.tpl';
 		$this->smarty->render_theme($template, $page_data);
@@ -568,8 +581,8 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		$page_data['page_header'] 			 = $page['page_header'];
 		$page_data['page_footer'] 			 = $page['page_footer'];
 
-		if (!empty($page['header_view'])) 		$page_data['header_view'] = $page['header_view'];
-		if (!empty($page['footer_view'])) 		$page_data['footer_view'] = $page['footer_view'];
+		if (!empty($page['header_view'])) 		$page_data['header_view'] = $this->smarty->get_template_path($page['header_view']);
+		if (!empty($page['footer_view'])) 		$page_data['footer_view'] = $this->smarty->get_template_path($page['footer_view']);
 		
 		//easy access
 		$page_data['page']			 = $page; 
@@ -657,12 +670,16 @@ abstract class MY_Crud_Controller extends CI_Controller {
 			$page_data['subtables']		 = $subtables;
 		}
 
-		//if it is crud page, always enable datatable
+		//dynamic loading
 		$page_data['use_datatable'] = 1;
 		$page_data['use_editor'] = 1;
-		$page_data['use_select2'] = 1;
+		if ($page['use_geo'])				$page_data['use_geo'] = 1;
+		if ($page['use_upload'])			$page_data['use_upload'] = 1;
+		if ($page['use_wysiwyg'])			$page_data['use_wysiwyg'] = 1;
+		if ($page['use_calendar'])			$page_data['use_calendar'] = 1;
+		if ($page['use_select2'])			$page_data['use_select2'] = 1;
 
-		$page_data['readonly'] = 1;
+		$page_data['form_mode'] = 'detail';
 
 		$template = '/crud/form.tpl';
 		$this->smarty->render_theme($template, $page_data);
@@ -704,8 +721,8 @@ abstract class MY_Crud_Controller extends CI_Controller {
 	// 	$page_data['page_header'] 			 = $page['page_header'];
 	// 	$page_data['page_footer'] 			 = $page['page_footer'];
 
-	// 	if (!empty($page['header_view'])) 		$page_data['header_view'] = $page['header_view'];
-	// 	if (!empty($page['footer_view'])) 		$page_data['footer_view'] = $page['footer_view'];
+	// 	if (!empty($page['header_view'])) 		$page_data['header_view'] = $this->smarty->get_template_path($page['header_view']);
+	// 	if (!empty($page['footer_view'])) 		$page_data['footer_view'] = $this->smarty->get_template_path($page['footer_view']);
 
 	// 	$tablemeta = $model->tablemeta();
 
@@ -1083,6 +1100,19 @@ abstract class MY_Crud_Controller extends CI_Controller {
 
 		//build params
 		$filters = array();
+		foreach($this->input->post() as $key => $val)
+		{
+			if ($val == '') continue;
+			if (substr($key, 0, 2) != "f_") continue;
+			$filters[substr($key, 2)] = $val;
+		}
+
+		foreach($this->input->get() as $key => $val)
+		{
+			if ($val == '') continue;
+			if (substr($key, 0, 2) != "f_") continue;
+			$filters[substr($key, 2)] = $val;
+		}
 
 		$action = $this->input->post("action");
 
@@ -1116,9 +1146,17 @@ abstract class MY_Crud_Controller extends CI_Controller {
 
 			$values = $this->input->post("data");
 
+			$filter_value = '';
+			if (isset($params) && count($params) > 0) {
+				$filter_value = $params[0];
+			}
+
 			$error_msg = "";
 			$data['data'] = array();
 			foreach ($values as $key => $valuepair) {
+				//enforce the parent key
+				$valuepair[ $subtable['subtable_fkey_column'] ] = $filter_value;
+
 				$key = $model->update($key, $valuepair, $filters);
 				if (!$key)	continue;		//TODO: catch error message
 
