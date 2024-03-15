@@ -38,10 +38,11 @@ class Mcrud_tablemeta extends CI_Model
     protected $columns = null;
     protected $edit_columns = null;
     protected $select_columns = null;
-    protected $filter_columns = null;
+    //protected $filter_columns = null;
     protected $search_columns = null;
     protected $sorting_columns = null;
-
+    protected $filters = null;
+ 
     protected $lookup_columns = null;
 
     protected $level1_filter = array();
@@ -334,9 +335,6 @@ class Mcrud_tablemeta extends CI_Model
 
         $this->table_metas['title'] = empty($arr['title']) ? $this->name : $arr['title'];
 
-        // if no filter -> always autoload
-        if (!$this->table_metas['filter'])  $this->table_metas['initial_load'] = true;
-
         $this->table_metas['search'] = ($arr['search'] == 1);
         $this->table_metas['search_max_result'] = empty($arr['search_max_result']) ? 0 : $arr['search_max_result'];
 
@@ -531,8 +529,16 @@ class Mcrud_tablemeta extends CI_Model
 
                 $col['allow_insert'] = ($row['allow_insert'] == 1);
                 $col['allow_edit'] = ($row['allow_edit'] == 1);
-                $col['allow_filter'] = ($row['allow_filter'] == 1);
-                $col['allow_search'] = (isset($row['allow_search']) && $row['allow_search'] == 1);
+
+                //allow filter only if it is enabled in table level
+                $col['allow_filter'] = false;
+                if ($this->table_metas['filter'])   $col['allow_filter'] = ($row['allow_filter'] == 1);
+
+                //allow search only if it is enabled in table level
+                $col['allow_search'] = false;
+                if ($this->table_metas['search'])   $col['allow_search'] = (isset($row['allow_search']) && $row['allow_search'] == 1);
+
+                //show filtering in column header
                 $col['column_filter'] = ($row['column_filter'] == 1);
 
                 //hack for backward compatibility
@@ -1017,9 +1023,9 @@ class Mcrud_tablemeta extends CI_Model
 
         //custom actions
         do {
-            $this->db->select('*');
-            $this->db->order_by('order_no asc');
-            $arr = $this->db->get_where('dbo_crud_custom_actions', array('table_id'=>$this->table_id, 'is_deleted'=>0))->result_array();
+            $this->db->select('a.*');
+            $this->db->order_by('a.order_no asc');
+            $arr = $this->db->get_where('dbo_crud_custom_actions a', array('a.table_id'=>$this->table_id, 'a.is_deleted'=>0))->result_array();
             if ($arr == null) {
                 break;
             }
@@ -1065,43 +1071,159 @@ class Mcrud_tablemeta extends CI_Model
 
         } while (false);
 
-        //var_dump($this->editor_metas);
-
-        $this->table_metas['columns'] = $this->column_metas;
-        //$this->table_metas['editor_columns'] = $this->editor_metas;
         $this->table_metas['filter_columns'] = $this->filter_metas;
-        $this->table_metas['table_actions'] = $this->table_actions;
-        $this->table_metas['custom_actions'] = $this->custom_actions;
-        $this->table_metas['row_actions'] = $this->row_actions;
-        $this->table_metas['join_tables'] = $this->join_tables;
 
-        //disable editor if no edit columns
-        if (count($this->editor_metas) > 0) {
-            $this->table_metas['editor'] = true;
-        }
-        else {
-            $this->table_metas['editor'] = false;
-        }
+        //filters
+        $this->filter_metas = array();
+        $this->filters = array();
 
-        //disable filter if no filter columns
-        if (count($this->filter_metas) > 0) {
-            $this->table_metas['filter'] = true;
-        }
-        else {
-            $this->table_metas['filter'] = false;
-        }
+        do {
+            $this->db->select('a.*, b.name as column_name');
+            $this->db->order_by('a.order_no asc');
+            $this->db->join("dbo_crud_columns b","b.id=a.column_id and b.is_deleted=0","LEFT OUTER");
+            $arr = $this->db->get_where('dbo_crud_filters a', array('a.table_id'=>$this->table_id, 'a.is_deleted'=>0))->result_array();
+            if ($arr == null) {
+                break;
+            }
+    
+            foreach($arr as $row) {
+                $name = trim($row['name']);
 
-        //disable search if no search columns
-        if (count($this->search_columns) > 0) {
-            $this->table_metas['search'] = true;
-        }
-        else {
-            $this->table_metas['search'] = false;
-        }
+                //if already exist, ignore. prevent duplicate
+                if (false !== array_search($name, $this->filters)) {
+                    continue;
+                 }
+  
+                $filter = Mtablemeta::$FILTER;
+                $filter['name'] = $name;
+                $filter['label'] = __($row['label']);
+                $filter['type'] = trim($row['type']);
+                $filter['css'] = trim($row['css']);
+                $filter['onchange_js'] = trim($row['onchange_js']);
+                $filter['invalid_value'] = ($row['invalid_value'] == 1);
 
-        //column groupings
-        $this->table_metas['column_groupings'] = $this->column_groupings;
-        $this->table_metas['column_grouping_map'] = $this->column_grouping_map;
+                $filter['controller_id'] = $row['controller_id'];
+                $filter['controller_params'] = trim($row['controller_params']);
+                $filter['options_data_url'] = trim($row['options_data_url']);
+
+                $filter['column_id'] = $row['column_id'];
+                $filter['column_name'] = $row['column_name'];
+
+                $filter['attr_array'] = "";
+                if (!empty($row['attr_array'])) {
+                    $filter['attr'] = json_decode($row['attr_array']);
+                } 
+
+                $filter['options_array'] = "";
+                if (!empty($row['options_array'])) {
+                    $filter['options'] = json_decode($row['options_array']);
+                } 
+
+                //search in select columns
+                $col = null;
+                $col_idx = array_search(strtoupper($filter['column_name']), $this->columns);
+                if (false !== $col_idx) {
+                    $col = $this->column_metas[$col_idx];
+                    if (!empty($col['options'])) {
+                        $filter['options'] = $col['options'];
+                    }
+                };
+
+                //force select2
+                if (!empty($filter['options']) && empty($filter['type'])) {
+                    $filter['type'] = 'tcg_select2';
+                }
+                if (empty($filter['type']) && $col != null) {
+                    $filter['type'] = $col['type'];
+                }
+
+                if (!empty($filter['controller_id'])) {
+                    $controller = $this->get_controller_meta($filter['controller_id']);
+                    if ($controller != null) {
+                        $filter['options_table_name'] = $controller['name'];
+                        $filter['options_key_column'] = $controller['key_column'];
+                        $filter['options_label_column'] = $controller['lookup_column'];
+                        $filter['soft_delete'] = ($controller['soft_delete'] == 1);
+                        if (empty($filter['options_data_url'])) {
+                            $filter['options_data_url']= 'crud/'. $controller['controller_name'] .'/lookup';
+                            if (!empty($filter['controller_params'])) {
+                                $filter['options_data_url'] .= "?" .$filter['controller_params'];
+                            }
+                        }
+                    }
+                }
+
+                //parse the parameter
+                $filter['options_data_url_params'] = array();
+                $filter['cascading_filters'] = array();
+                if (!empty($row['options_data_url'])) {
+                    $url = $row['options_data_url'];
+                    $matches = null;
+
+                    preg_match_all('{{{[\w]*}}}', $url, $matches);
+                    if ($matches != null && count($matches) > 0) {
+
+                        foreach($matches[0] as $m) {
+                            $colname = substr($m, 2, strlen($m)-4);
+                            if ($colname == $level1_column) {
+                                $url = str_replace($m, $level1_value, $url);
+                            }
+                            //add cascading filter
+                            else if(substr($colname, 0, 2) == 'f_') {
+                                //dont reference itself
+                                if ($colname == 'f_'.$filter['name'])   continue;
+                                $filter['cascading_filters'][] = $colname;
+                            }
+                            //other params
+                            else {
+                                $filter['options_data_url_params'][] = $colname;
+                            }
+                        }
+                    }
+                }
+                 
+                $this->filter_metas[] = $filter;
+                $this->filters[] = $name;
+            }                    
+        } 
+        while (false);
+
+        //var_dump($this->filter_metas); exit;
+
+        //sortings
+        $this->sorting_metas = array();
+        $this->sorting_columns = array();
+
+        do {
+            $this->db->select('b.name, a.*');
+            $this->db->order_by('a.order_no asc');
+            $this->db->join('dbo_crud_columns b', 'b.id=a.column_id and b.is_deleted=0', 'INNER');
+            $arr = $this->db->get_where('dbo_crud_column_orderings a', array('a.table_id'=>$this->table_id, 'a.is_deleted'=>0))->result_array();
+            if ($arr == null) {
+                break;
+            }
+    
+            foreach($arr as $row) {
+                $name = trim($row['name']);
+
+                //if already exist, ignore. prevent duplicate
+                if (false !== array_search($name, $this->sorting_columns))   continue;
+
+                //search in select columns
+                $col_idx = array_search($name, $this->columns);
+                if (false === $col_idx) continue;
+
+                $sort = Mtablemeta::$SORTING;
+                $sort['name'] = $name;
+                $sort['column_no'] = $col_idx;
+                $sort['sort_no'] = $row['sort_no'];;
+                $sort['sort_asc'] = ($row['sort_asc'] == 1);;
+
+                $this->sorting_metas[] = $sort;
+                $this->sorting_columns[] = $name;
+            }                    
+        } 
+        while (false);
 
         //always add default sort from table definition
         $ci_name = null;
@@ -1183,13 +1305,48 @@ class Mcrud_tablemeta extends CI_Model
             }
         }
 
+        $this->table_metas['columns'] = $this->column_metas;
+        //2024-03-14: editor_columns now stored directly in column.editor
+        //$this->table_metas['editor_columns'] = $this->editor_metas;
+        //2024-03-14: filter_columns now stored in table.filters
+        //$this->table_metas['filter_columns'] = $this->filter_metas;
+        $this->table_metas['table_actions'] = $this->table_actions;
+        $this->table_metas['custom_actions'] = $this->custom_actions;
+        $this->table_metas['row_actions'] = $this->row_actions;
+        $this->table_metas['join_tables'] = $this->join_tables;
+
+        //disable editor if no edit columns
+        if (count($this->editor_metas) > 0) {
+            $this->table_metas['editor'] = true;
+        }
+        else {
+            $this->table_metas['editor'] = false;
+        }
+
+        //disable filter if no filter columns
+        if (count($this->filter_metas) == 0) {
+            $this->table_metas['filter'] = false;
+        }
+
+        // if no filter -> always autoload
+        if (!$this->table_metas['filter'])  $this->table_metas['initial_load'] = true;
+
+        //disable search if no search columns
+        if (count($this->search_columns) == 0) {
+            $this->table_metas['search'] = false;
+        }
+
+        //column groupings
+        $this->table_metas['column_groupings'] = $this->column_groupings;
+        $this->table_metas['column_grouping_map'] = $this->column_grouping_map;
+
         //table default sorting
         $this->table_metas['sorting_columns'] = $this->sorting_metas;
 
+        //filters
+        $this->table_metas['filters'] = $this->filter_metas;
+
         //TODO: re-calculate column-idx both in $this->column_metas and in $this->sorting_metas
-
-
-        //var_dump( $this->filter_metas);
 
         // //always include key-column in column search
         // if (false === array_search($this->table_metas['key_column'], $this->search_columns)) {
@@ -1217,10 +1374,10 @@ class Mcrud_tablemeta extends CI_Model
 
         //initialized the distinct filter options
         //must be performed after initialization is completed
-        foreach ($this->table_metas['filter_columns'] as $key => $row) {
-            if($row['filter_type'] != 'distinct')   continue;
+        foreach ($this->table_metas['filters'] as $key => $row) {
+            if($row['type'] != 'distinct')   continue;
 
-            ($this->table_metas['filter_columns'])[$key]['filter_options'] = $this->distinct_lookup($row['name']);
+            ($this->table_metas['filters'])[$key]['options'] = $this->distinct_lookup($row['column_name']);
         }
         return true;
     }
@@ -2557,6 +2714,16 @@ class Mcrud_tablemeta extends CI_Model
         $this->error_message = $message;
     }
 
+    protected function get_controller_meta($controller_id) {
+        $this->db->select('a.id as controller_id, a.name as controller_name, b.*');
+        $this->db->join('dbo_crud_tables b', "b.id=a.crud_table_id and b.is_deleted=0", 'INNER');
+        $arr = $this->db->get_where('dbo_crud_pages a', array('a.id'=>$controller_id, 'a.is_deleted'=>0))->row_array();
+        if ($arr == null) {
+            return false;
+        }
+       
+        return $arr;        
+    }
     protected function get_subtable_name($subtable_id) {
         $this->db->select('*');
         $arr = $this->db->get_where('dbo_crud_tables', array('id'=>$subtable_id, 'is_deleted'=>0))->row_array();

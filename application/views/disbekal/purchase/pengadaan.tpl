@@ -387,8 +387,8 @@
 <script type="text/javascript" defer> 
 
 {foreach $subtables as $subtbl}
-var selected_key_{$subtbl.crud.table_id} = '';
-var selected_label_{$subtbl.crud.table_id} = '';
+var fkey_value_{$subtbl.crud.table_id} = '';
+var fkey_label_{$subtbl.crud.table_id} = '';
 var data_{$subtbl.crud.table_id} = null;
 {/foreach}
 
@@ -405,7 +405,7 @@ $(document).ready(function() {
                 //on deselect all, clear subtables
                 {foreach $subtables as $subtbl}
                 dt_{$subtbl.crud.table_id}.clear().draw();
-                selected_key_{$subtbl.crud.table_id} = '';
+                fkey_value_{$subtbl.crud.table_id} = '';
                 data_{$subtbl.crud.table_id} = null;
                 {/foreach}
             } else {
@@ -413,13 +413,13 @@ $(document).ready(function() {
 
                 {foreach $subtables as $subtbl}
                 //master value
-                selected_key_{$subtbl.crud.table_id} = data[0]['{$subtbl.table_key_column}'];
-                selected_label_{$subtbl.crud.table_id} = data[0]['{$subtbl.table_label_column}'];
+                fkey_value_{$subtbl.crud.table_id} = data[0]['{$subtbl.table_key_column}'];
+                fkey_label_{$subtbl.crud.table_id} = data[0]['{$subtbl.table_label_column}'];
                 data_{$subtbl.crud.table_id} = data[0];
 
-                dt_{$subtbl.crud.table_id}.ajax.url("{$subtbl.crud.ajax}/" +selected_key_{$subtbl.crud.table_id} +"?f_tahun="+f_tahun);
+                dt_{$subtbl.crud.table_id}.ajax.url("{$subtbl.crud.ajax}/" +fkey_value_{$subtbl.crud.table_id} +"?f_tahun="+f_tahun);
                 {if $subtbl.crud.editor}
-                editor_{$subtbl.crud.table_id}.s.ajax = "{$subtbl.crud.ajax}/" +selected_key_{$subtbl.crud.table_id};
+                editor_{$subtbl.crud.table_id}.s.ajax = "{$subtbl.crud.ajax}/" +fkey_value_{$subtbl.crud.table_id};
                 {/if}
                 dt_{$subtbl.crud.table_id}.ajax.reload();
                 {/foreach}

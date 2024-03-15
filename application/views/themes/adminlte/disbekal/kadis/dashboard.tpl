@@ -1243,6 +1243,7 @@ border-right-color: #3c8dbc !important;
 
 	}
 
+	/*
 	function load_kadaluarsapergudang() {
        	//retrieve list from json
 	   	$.ajax({
@@ -1387,6 +1388,7 @@ border-right-color: #3c8dbc !important;
         });
 
 	}
+	*/
 
 	function load_perkiraankadaluarsa() {
        	//retrieve list from json

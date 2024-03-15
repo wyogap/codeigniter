@@ -54,6 +54,7 @@
     </div>
 </div>
 
+<!-- //filtering -->
 <section class="content">
     <div class="container-fluid">
         <div class="row">
@@ -68,13 +69,16 @@
 									</select>
 								</div>
 								<div class="form-group col-4 mb-0 mt-1 col-12 col-md-6 col-lg-4">
-									<select id="f_itemtypeid" name="itemtypeid" class="form-control filter_select" placeholder="Tipe Bekal">
+									<select id="f_siteid" name="siteid" class="form-control filter_select" placeholder="Satuan Kerja">
 										<option value="" data-select2-id="2">-- Satuan Kerja --</option>
 									</select>
 								</div>
 								<div class="form-group col-4 mb-0 mt-1 col-12 col-md-6 col-lg-4">
-									<select id="f_itemtypeid" name="itemtypeid" class="form-control filter_select" placeholder="Tipe Bekal">
-										<option value="" data-select2-id="2">-- Tahun --</option>
+									<select id="f_year" name="year" class="form-control filter_select" placeholder="Tahun Anggaran">
+										<option value="" data-select2-id="2">-- Tahun Anggaran --</option>
+                                        {for $year = date('Y')-5; $year <= date('Y')+5; $year++}
+                                        <option value="{$year}" data-select2-id="{$year}" {if $year == date('Y')}selected{/if}>TA {$year}</option>
+                                        {/for}
 									</select>
 								</div>
 							</div></div>
@@ -231,5 +235,63 @@
 
 <script type="text/javascript">
 
+
+</script>
+
+<script type="text/javascript">
+
+$(document).ready(function() {
+
+    let _attr = {
+            multiple: false,
+            minimumResultsForSearch: 25,
+        };
+
+    $.ajax({
+        url: "{$site_url}{$controller}/satuankerja/lookup",
+        type: 'GET',
+        dataType: 'json',
+        beforeSend: function(request) {
+            request.setRequestHeader("Content-Type", "application/json");
+        },
+        success: function(response) {
+            if (response.data === null) {} else if (typeof response.error !==
+                'undefined' && response.error !== null && response
+                .error != "") {} else {
+                _options = response.data;
+            }
+            select2_build($('#f_siteid'), '-- Satuan Kerja --', '', '', _options, _attr);
+
+            // select_build($('#edit-korwil'), _options, _attr);
+            // $('#edit-korwil').val(korwil);
+        },
+        error: function(jqXhr, textStatus, errorMessage) {
+            select2_build($('#f_siteid'), '-- Satuan Kerja --', '', '', null, _attr);
+            // select_build($('#edit-korwil'), _options, _attr);
+        }
+    });
+
+    $.ajax({
+        url: "{$site_url}disbekal/select/tipebekal",
+        type: 'GET',
+        dataType: 'json',
+        beforeSend: function(request) {
+            request.setRequestHeader("Content-Type", "application/json");
+        },
+        success: function(response) {
+            if (response !== null && response.length > 0) {
+                select2_build($('#f_itemtypeid'), '-- Tipe Bekal --', '', '', response, _attr);
+            }
+
+            // select_build($('#edit-korwil'), _options, _attr);
+            // $('#edit-korwil').val(korwil);
+        },
+        error: function(jqXhr, textStatus, errorMessage) {
+            select2_build($('#f_itemtypeid'), '-- Tipe Bekal --', '', '', null, _attr);
+            // select_build($('#edit-korwil'), _options, _attr);
+        }
+    });
+
+});
 
 </script>

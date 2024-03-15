@@ -14,7 +14,7 @@
 //     }
 // }
 
-function onselect_kontrak(dt, api, table_name) {
+function onselect_tender(dt, api, table_name) {
     let cnt = dt.rows('.selected').data().length;
 
     if (cnt == 0) {

@@ -5,12 +5,14 @@
     //$.fn.select2.defaults.set( "theme", "bootstrap" );
 
     $(function () {
+        {if !empty($use_datatable)}
         $('a[data-toggle="tab"]').on('shown.bs.tab', function(e) {
             $.fn.dataTable.tables({
                 visible: true,
                 api: true
             }).columns.adjust().responsive.recalc();
         });
+        {/if}
 
         $('[data-toggle="tooltip"]').tooltip();
     });

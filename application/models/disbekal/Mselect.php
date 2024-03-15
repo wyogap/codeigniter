@@ -22,7 +22,7 @@ class Mselect extends CI_Model
     }
 
     public function tipebekal() {
-        $sql = "select typeid as value, code as label from tcg_itemtype where is_deleted=0";
+        $sql = "select typeid as value, typecode as label from tcg_itemtype where is_deleted=0";
 
         $query = $this->db->query($sql);
         return $query->result_array();

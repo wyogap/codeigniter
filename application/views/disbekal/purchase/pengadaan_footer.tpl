@@ -454,7 +454,7 @@ $(document).ready(function() {
     //     {foreach $subtables as $subtbl}
     //     {if $subtbl.crud.table_id!='tdata_165'}{continue}{/if}
     //     //master value
-    //     dt_{$subtbl.crud.table_id}.ajax.url("{$subtbl.crud.ajax}/" +selected_key_{$subtbl.crud.table_id} +"?f_tahun="+f_tahun);
+    //     dt_{$subtbl.crud.table_id}.ajax.url("{$subtbl.crud.ajax}/" +fkey_value_{$subtbl.crud.table_id} +"?f_tahun="+f_tahun);
     //     dt_{$subtbl.crud.table_id}.ajax.reload();
     //     {/foreach}
     // });

@@ -674,7 +674,7 @@
 
 
                     <script type="text/javascript" defer>
-                    var selected_key_tdata_119 = '';
+                    var fkey_value_tdata_119 = '';
                     var data_tdata_119 = null;
 
                     $(document).ready(function() {
@@ -688,19 +688,19 @@
                             if (data.length == 0) {
                                 //on deselect all, clear subtables
                                 dt_tdata_119.clear().draw();
-                                selected_key_tdata_119 = '';
+                                fkey_value_tdata_119 = '';
                                 data_tdata_119 = null;
                             } else {
                                 //on select, reload subtables
                                 //master value
-                                selected_key_tdata_119 = data[0]['question_id'];
+                                fkey_value_tdata_119 = data[0]['question_id'];
                                 data_tdata_119 = data[0];
                                 dt_tdata_119.ajax.url(
                                     "http://localhost/kebumen/backend/index.php/user/teacher_question_banks/subtable/119/" +
-                                    selected_key_tdata_119);
+                                    fkey_value_tdata_119);
                                 // editor_tdata_119.s.ajax =
                                 //     "http://localhost/kebumen/backend/index.php/user/teacher_question_banks/subtable/119/" +
-                                //     selected_key_tdata_119;
+                                //     fkey_value_tdata_119;
                                 dt_tdata_119.ajax.reload();
                             }
 

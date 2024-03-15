@@ -14,6 +14,8 @@ class Mtablemeta extends CI_Model
         'columns' => [],
         'editor_columns' => [],
         'filter_columns' => [],
+        'filters' => [],
+        'orderings' => [],
         'table_actions' => [],
         'custom_actions' => [],
         'row_actions' => [],

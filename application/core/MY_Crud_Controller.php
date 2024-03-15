@@ -48,7 +48,7 @@ abstract class MY_Crud_Controller extends CI_Controller {
 
 		//navigation
 		$navigation = $this->get_navigation();
-		$session = $this->get_session();
+		//$session = $this->get_session();
 
 		//check for permission
 		$this->load->model(array('crud/Mpages', 'crud/Mpermission'));
@@ -156,7 +156,8 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		//easy access
 		$page_data['page']			 = $page; 
 		$page_data['navigation']	 = $navigation;
-		$page_data['session']		 = $session;
+		//$page_data['session']		 = $session;
+		$page_data['userdata']		 = $this->session->userdata();
 
 		//dynamic loading
 		if ($page['use_datatable'])			$page_data['use_datatable'] = 1;
@@ -201,7 +202,7 @@ abstract class MY_Crud_Controller extends CI_Controller {
 
 		//ajax url for data loading
 		//Important: we only provide the base path! ie. /crud/page-name
-		$base_ajax_url = site_url() .'/'. $controller .'/'. $name;
+		$base_ajax_url = site_url() .$controller .'/'. $name;
 
 		$tablemeta['ajax'] = $base_ajax_url .'/json';
 		if (!empty($page_data['get_params'])) {
@@ -361,7 +362,7 @@ abstract class MY_Crud_Controller extends CI_Controller {
 
 		//ajax url for data loading
 		//Important: we only provide the base path! ie. /crud/page-name
-		$base_ajax_url = site_url() .'/'. $controller .'/'. $page['name'];
+		$base_ajax_url = site_url() .$controller .'/'. $page['name'];
 
 		$tablemeta['ajax'] = $base_ajax_url .'/json';
 		$tablemeta['crud_url'] = $base_ajax_url;
@@ -467,7 +468,7 @@ abstract class MY_Crud_Controller extends CI_Controller {
 
 		//ajax url for data loading
 		//Important: we only provide the base path! ie. /crud/page-name
-		$base_ajax_url = site_url() .'/'. $controller .'/'. $page['name'];
+		$base_ajax_url = site_url() .$controller .'/'. $page['name'];
 
 		$tablemeta['ajax'] = $base_ajax_url .'/json';
 		$tablemeta['crud_url'] = $base_ajax_url;
@@ -602,7 +603,7 @@ abstract class MY_Crud_Controller extends CI_Controller {
 
 		//ajax url for data loading
 		//Important: we only provide the base path! ie. /crud/page-name
-		$base_ajax_url = site_url() .'/'. $controller .'/'. $page['name'];
+		$base_ajax_url = site_url() .$controller .'/'. $page['name'];
 
 		$tablemeta['ajax'] = $base_ajax_url .'/json';
 		$tablemeta['crud_url'] = $base_ajax_url;

@@ -1,4 +1,10 @@
 <style>
+    {if $tbl.custom_css}
+    {$tbl.custom_css}
+    {/if}
+</style>
+
+<style>
 
 .dtr-data .btn {
     margin-left: 4px;
@@ -181,6 +187,10 @@
 
 .dt-action-buttons {
     margin-bottom: 0.5rem;
+}
+
+.dt-mr2 {
+    margin-right: 2px !important;
 }
 
 @media (max-width: 768px) {

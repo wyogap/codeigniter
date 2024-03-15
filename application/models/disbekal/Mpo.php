@@ -43,6 +43,8 @@ class Mpo extends Mcrud_tablemeta
         $this->db->join("tcg_site g", "g.siteid=a.siteid AND g.is_deleted=0", "LEFT OUTER");
         $this->db->where($filter);
 
+        //soft delete
+        $this->db->where('a.is_deleted', '0');
         
         //order by
         if (!empty($orderby)) {
@@ -104,6 +106,8 @@ class Mpo extends Mcrud_tablemeta
         $this->db->join("tcg_site g", "g.siteid=a.siteid AND g.is_deleted=0", "LEFT OUTER");
         $this->db->where($filter);
 
+        //soft delete
+        $this->db->where('a.is_deleted', '0');
         $this->db->where("a.poid", $id);
 
         $arr = $this->db->get("tcg_po a")->row_array();

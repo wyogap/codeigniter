@@ -1,3 +1,6 @@
+
+{include file="crud/_css.tpl"}
+
 <div class="content-header">
     <div class="container-fluid">
         <div class="row ">
@@ -52,8 +55,6 @@
 </div>
 {else}
 
-{include file="crud/_css.tpl"}
-
 <div class="content">
     <div class="container-fluid">
         <div class="row"><div class="col-12">
@@ -69,7 +70,7 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col-12">
-                        {include file='crud/crud-form-subtables.tpl'}
+                        {include file='crud/crud-subtables.tpl'}
             </div> <!-- end col -->
         </div>
 
@@ -82,5 +83,7 @@
 {if !empty($subtables) && count($subtables)}
 {include file="crud/_js-crud-subtables.tpl" tbl=$crud}
 {/if}
+
+{include file="crud/_js.tpl" tbl=$crud}
 
 {/if}

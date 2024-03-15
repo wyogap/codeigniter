@@ -90,12 +90,16 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col-12">
-                        {include file='crud/crud-form-subtables.tpl'}
+                        {include file='crud/crud-subtables.tpl'}
             </div> <!-- end col -->
         </div>
 
     </div>
 </div>
+{/if}
+
+{if $crud.filter || $crud.search}
+{include file='crud/_js-crud-filter.tpl'}
 {/if}
 
 {include file="crud/_js-crud-table.tpl" tbl=$crud}
@@ -105,3 +109,5 @@
 {/if}
 
 {/if}
+
+{include file="crud/_js.tpl" tbl=$crud}

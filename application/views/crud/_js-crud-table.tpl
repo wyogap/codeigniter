@@ -11,14 +11,6 @@
 
 <script type="text/javascript" defer> 
 
-var base_url = "{$base_url}";
-var site_url = "{$site_url}";
-var ajax_url = "{$tbl.ajax}";
-var tbl_title = "{$tbl.title}";
-
-var level1_name = "{if !empty($level1_name)}{$level1_name}{/if}";
-var level1_id = "{if !empty($level1_id)}{$level1_id}{/if}";
-
 var editor_{$tbl.table_id} = null;
 var dt_{$tbl.table_id} = null;
 
@@ -43,7 +35,7 @@ $(document).ready(function() {
             ajax: "{$tbl.ajax}",
             table: "#{$tbl.table_id}",
             idSrc: "{$tbl.key_column}",
-            {if count($tbl.column_groupings) > 1}
+            {if count($tbl.column_groupings) > 1 or 1==1}
             template: '#{$tbl.table_id}-editor-layout',
             {/if}
             fields: [
@@ -58,8 +50,11 @@ $(document).ready(function() {
                 {$col = $col.editor}
                 {
                     label: "{$col.edit_label} {if $col.edit_label && $col.edit_compulsory}<span class='text-danger font-weight-bold'>*</span>{/if}",
+                    {if 1==0}
+                    {* Since we use template, we already apply edit_css in the template *}
                     {if count($tbl.column_groupings) <= 1}
                     className: "{$col.edit_css}",
+                    {/if}
                     {/if}
                     
                     {if $col.edit_compulsory}
@@ -314,14 +309,15 @@ $(document).ready(function() {
             {foreach $tbl.columns as $col}
                 {if !isset($col.editor)} {continue} {/if}
                 {$col = $col.editor}
-                //custom field
+
+                {* custom field *}
                 {if $fsubtable == 1 && $col.edit_field[0] == $fkey}
-                editor_{$tbl.table_id}.field("{$col.edit_field[0]}").set(selected_key_{$tbl.table_id});
+                editor_{$tbl.table_id}.field("{$col.edit_field[0]}").set(fkey_value_{$tbl.table_id});
                 {else if $col.edit_type == 'js' }
                 editor_{$tbl.table_id}.field("{$col.edit_field[0]}").set(v_{$col.name});
                 {/if}
 
-                //dynamic field from ajax
+                {* dynamic field from ajax *}
                 {if !empty($col.options_data_url) && $col.edit_type=='tcg_select2'}
                 {if $col.options_data_url_params|@count>0}
                 url = "{$site_url}{$col.options_data_url}";
@@ -334,10 +330,33 @@ $(document).ready(function() {
                         //just get the first value (in case multiple value)
                         let idx = Object.keys(val)[0];
                         val = val[ idx ];
-                        col = "{literal}{{{/literal}" + col + "{literal}}}{/literal}";
-                        url = url.replace(col, val);
+                        if (val !== undefined && val !== null && val != '' && val != 0) {
+                            col = "{literal}{{{/literal}" + col + "{literal}}}{/literal}";
+                            url = url.replace(col, val);
+                        }
                     }
                 }
+
+                {if !empty($fsubtable)}
+                    //subtable -> parent key
+                    if ("{$param}" == fkey_column_{$tbl.table_id}) {
+                        val = fkey_value_{$tbl.table_id};
+                        if (typeof val !== 'undefined' && val !== null && val != '') {
+                            col = "{literal}{{{/literal}{$param}{literal}}}{/literal}";
+                            url = url.replace(col, val);
+                        }
+                    }
+                    //subtable -> try to get parent data
+                    data = fdata_{$tbl.table_id};
+                    if (typeof data != 'undefined' && data !== null) {
+                        col = "{$param}";
+                        val = data[col];
+                        if (typeof val !== 'undefined' && val !== null && val != '' && val != 0) {
+                            col = "{literal}{{{/literal}" + col + "{literal}}}{/literal}";
+                            url = url.replace(col, val);
+                        }
+                    }
+                {/if}
                 {/foreach}
 
                 if (url.length > 0) {
@@ -347,7 +366,7 @@ $(document).ready(function() {
                 {/if}
                 {/if}
 
-                //onchange field
+                {* onchange field *}
                 {if !empty($col.edit_onchange_js)} 
                 // //set init value in case default value is not specified. 
                 // //if default value is specified, this is not necessary since the field onchange would have been called.
@@ -393,7 +412,7 @@ $(document).ready(function() {
                 let hasError = false;
 
                 {if $fsubtable == 1}
-                if (selected_key_{$tbl.table_id} == null || selected_key_{$tbl.table_id} == "" || selected_key_{$tbl.table_id} == 0) {
+                if (fkey_value_{$tbl.table_id} == null || fkey_value_{$tbl.table_id} == "" || fkey_value_{$tbl.table_id} == 0) {
                     field = this.field('{$fkey}');
                     hasError = true;
                     field.error('{__("Referensi harus diisi")}');
@@ -409,7 +428,6 @@ $(document).ready(function() {
                 if (!field.isMultiValue()) {
                     hasError = false;
                     {if isset($col.edit_compulsory) && $col.edit_compulsory == true}
-                    console.log('value: ' + field.val());
                     if (!field.val() || field.val() == 0) {
                         hasError = true;
                         field.error('{__("Harus diisi")}');
@@ -481,6 +499,11 @@ $(document).ready(function() {
                 {$tbl.on_delete_custom_js}(e, json, data, editor_{$tbl.table_id}, dt_{$tbl.table_id});
             }
             {/if}
+
+            {if count($tbl.filters) > 0}
+            //if there is some filter, reload. In case the changes are in the filter column. Retain the paging
+            dt_{$tbl.table_id}.ajax.reload(null, false);
+            {/if}            
             
         });
 
@@ -638,7 +661,6 @@ $(document).ready(function() {
 
     }, 1000);
 
-
     {if !empty($tbl.column_filter)}
     // Setup - add a text input to each footer cell
     $('#{$tbl.table_id} thead tr')
@@ -733,7 +755,7 @@ $(document).ready(function() {
             "dataType": "json",
             "type": "POST",
             "data": function(d) {
-                {foreach $tbl.filter_columns as $f}
+                {foreach $tbl.filters as $f}
                 d.f_{$f.name} = v_{$f.name};
                 {/foreach}
                 {if $crud.search}
@@ -1243,8 +1265,8 @@ $(document).ready(function() {
                 text: '{__("Ekspor")}',
                 className: 'btn-sm btn-primary btn-export',
                 {if !empty($fsubtable)}
-                title: function () { return "{$flabel} - " + (selected_label_{$tbl.table_id} == "" ? "NULL" : selected_label_{$tbl.table_id}) + " - {$app_name}";} ,
-                filename: function () { return "{$flabel} - " + (selected_label_{$tbl.table_id} == "" ? "NULL" : selected_label_{$tbl.table_id}) + " - {$app_name}";},             
+                title: function () { return "{$flabel} - " + (fkey_label_{$tbl.table_id} == "" ? "NULL" : fkey_label_{$tbl.table_id}) + " - {$app_name}";} ,
+                filename: function () { return "{$flabel} - " + (fkey_label_{$tbl.table_id} == "" ? "NULL" : fkey_label_{$tbl.table_id}) + " - {$app_name}";},             
                 {/if}
                 exportOptions: {
                     orthogonal: "export",
@@ -1267,7 +1289,7 @@ $(document).ready(function() {
                     let colno = {count($tbl.columns)};
 
                     sheet.write(2, colno, 'Hello');
-                    alert(selected_key_tdata_115 + " >> {$fkey}" );
+                    alert(fkey_value_tdata_115 + " >> {$fkey}" );
 
                     //lazy way of formatting. set all cell to text
                     $('row c', sheet).attr( 's', '50' );
@@ -1390,11 +1412,6 @@ $(document).ready(function() {
         }
     });
 
-    // dt_{$tbl.table_id}.on( 'column-sizing.dt', function ( e, settings ) {
-    //     //dt_{$tbl.table_id}.columns.adjust().responsive.recalc();
-    //     console.log( 'Column width recalculated in table' );
-    // });
-
     {if $tbl.row_reorder}
     dt_{$tbl.table_id}.on( 'row-reorder', function ( e, details, changes ) {
         editor_{$tbl.table_id}
@@ -1409,69 +1426,6 @@ $(document).ready(function() {
 });
 
 var dt_{$tbl.table_id}_initialized = false;
-
-function update_footer(api, colIdx, colName, colType = null) {
-    
-    //var api = this.api(), data;
-    //columnName = 4;
- 
-    col = api.column( colIdx);
-    if (col.length == 0)    return;
-
-    //$( api.column( 0 ).footer() ).html("Sum"); 
-
-
-    // Remove the formatting to get integer data for summation
-    var intVal = function ( i ) {
-        return typeof i === 'string' ?
-            i.replace(/[\$,]/g, '')*1 :
-            typeof i === 'number' ?
-                i : 0;
-    };
-
-    // Total over all pages
-    total = api
-        .column( colIdx, { search: 'applied' } )
-        .data()
-        .reduce( function (a, b) {
-            return intVal(a) + intVal(b);
-        }, 0 );
-
-    // Total over this page
-    pageTotal = api
-        .column( colIdx, { page: 'current'} )
-        .data()
-        .reduce( function (a, b) {
-            return intVal(a) + intVal(b);
-        }, 0 );
-
-    // Total over this page
-    selectedTotal = pageTotal;
-    // colname = api.columns();
-
-    data = api.rows({ selected: true}).data().pluck(colName);
-    if (data.length > 0) {
-        selectedTotal = data.reduce( function (a, b) {
-                return intVal(a) + intVal(b);
-            }, 0 );    
-    }
-
-    // Update footer
-    if (selectedTotal==0 && total==0) {
-        $( api.column( colIdx ).footer() ).html("-");
-    }
-    else {
-        if (colType == "tcg_currency") {
-            selectedTotal = $.fn.dataTable.render.number('{$currency_thousand_separator}', '{$currency_decimal_separator}', {$currency_decimal_precision}, '{$currency_prefix}').display(selectedTotal);
-            total = $.fn.dataTable.render.number('{$currency_thousand_separator}', '{$currency_decimal_separator}', {$currency_decimal_precision}, '{$currency_prefix}').display(total);
-        }
-
-        $( api.column( colIdx ).footer() ).html(
-            selectedTotal +'<br>('+ total +')'
-        );  
-    }
-  
-}
 
 function dt_{$tbl.table_id}_ajax_load(data) {
     return new Promise(function(resolve, reject) {
@@ -1489,7 +1443,7 @@ function dt_{$tbl.table_id}_ajax_load(data) {
             "dataType": "json",
             "type": "POST",
             "data": {
-                {foreach $tbl.filter_columns as $f}
+                {foreach $tbl.filters as $f}
                     {if $f.filter_type == 'js'}
                         f_{$f.name}: v_{$f.name},
                     {else}
@@ -1651,7 +1605,8 @@ function dt_{$tbl.table_id}_import(e, dt, node, conf){
                             //hide spinner
                             spinner.addClass('d-none');
 
-                            dt.ajax.reload();
+                            //reload, retain paging
+                            dt.ajax.reload(null, false);
                             that.close();
                         },
                         error: function(jqXHR, textStatus, errorThrown) {
@@ -1690,124 +1645,5 @@ function dt_{$tbl.table_id}_import(e, dt, node, conf){
         }
     });
 }
-
-function toColumnName(num) {
-    for (var ret = '', a = 1, b = 26; (num -= a) >= 0; a = b, b *= 26) {
-        ret = String.fromCharCode(parseInt((num % b) / a) + 65) + ret;
-    }
-    return ret;
-}
-
-</script>
-
-{if $tbl.custom_js}
-<script type="text/javascript" defer>
-    {$tbl.custom_js}
-</script>
-{/if}
-
-<script type="text/javascript" defer>
-    function throttle(func, wait, options) {
-        var timeout, context, args, result;
-        var previous = 0;
-        if (!options) options = {};
-
-        var later = function() {
-            previous = options.leading === false ? 0 : now();
-            timeout = null;
-            result = func.apply(context, args);
-            if (!timeout) context = args = null;
-        };
-
-        var throttled = function() {
-            var _now = now();
-            if (!previous && options.leading === false) previous = _now;
-            var remaining = wait - (_now - previous);
-            context = this;
-            args = arguments;
-            if (remaining <= 0 || remaining > wait) {
-            if (timeout) {
-                clearTimeout(timeout);
-                timeout = null;
-            }
-            previous = _now;
-            result = func.apply(context, args);
-            if (!timeout) context = args = null;
-            } else if (!timeout && options.trailing !== false) {
-            timeout = setTimeout(later, remaining);
-            }
-            return result;
-        };
-
-        throttled.cancel = function() {
-            clearTimeout(timeout);
-            previous = 0;
-            timeout = context = args = null;
-        };
-
-        return throttled;
-    }
-
-    function restArguments(func, startIndex) {
-        startIndex = startIndex == null ? func.length - 1 : +startIndex;
-
-        return function() {
-            var length = Math.max(arguments.length - startIndex, 0),
-                rest = Array(length),
-                index = 0;
-            for (; index < length; index++) {
-                rest[index] = arguments[index + startIndex];
-            }
-            switch (startIndex) {
-                case 0: return func.call(this, rest);
-                case 1: return func.call(this, arguments[0], rest);
-                case 2: return func.call(this, arguments[0], arguments[1], rest);
-            }
-            var args = Array(startIndex + 1);
-                for (index = 0; index < startIndex; index++) {
-                args[index] = arguments[index];
-            }
-            args[startIndex] = rest;
-            return func.apply(this, args);
-        };
-    };
-
-    function now() {
-        return new Date().getTime();
-    };
-
-    function debounce(func, wait, immediate) {
-        var timeout, previous, args, result, context;
-
-        var later = function() {
-            var passed = now() - previous;
-            if (wait > passed) {
-                // new call while the existing call is executing -> schedule for latter
-                timeout = setTimeout(later, wait - passed);
-            } else {
-                timeout = null;
-                if (!immediate) result = func.apply(context, args);
-                if (!timeout) args = context = null;
-            }
-        };
-
-        var debounced = restArguments(function(_args) {
-            context = this;
-            args = _args;
-            previous = now();
-            if (!timeout) {
-                timeout = setTimeout(later, wait);
-                if (immediate) result = func.apply(context, args);
-            }
-            return result;
-        });
-
-        debounced.cancel = function() {
-            clearTimeout(timeout);
-            timeout = args = context = null;
-        };
-
-        return debounced;
-    }
 
 </script>

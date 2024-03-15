@@ -106,17 +106,17 @@
 						<div class="row">
 							<div class="col-12 col-md-9"> <div class="row">
 								<div class="form-group col-4 mb-0 mt-1 col-12 col-md-6 col-lg-4">
-									<select id="f_itemtypeid" name="f_itemtypeid" class="form-control filter_select" placeholder="Tipe Bekal">
+									<select id="f_itemtypeid" name="itemtypeid" class="form-control filter_select" placeholder="Tipe Bekal">
 										<option value="" data-select2-id="2">-- Tipe Bekal --</option>
 									</select>
 								</div>
 								<div class="form-group col-4 mb-0 mt-1 col-12 col-md-6 col-lg-4">
-									<select id="f_siteid" name="f_siteid" class="form-control filter_select" placeholder="Satuan Kerja">
+									<select id="f_siteid" name="siteid" class="form-control filter_select" placeholder="Satuan Kerja">
 										<option value="" data-select2-id="2">-- Satuan Kerja --</option>
 									</select>
 								</div>
 								<div class="form-group col-4 mb-0 mt-1 col-12 col-md-6 col-lg-4">
-									<select id="f_tahunanggaran" name="f_tahunanggaran" class="form-control filter_select" placeholder="Tahun Anggaran">
+									<select id="f_year" name="year" class="form-control filter_select" placeholder="Tahun Anggaran">
 										<option value="" data-select2-id="2">-- Tahun Anggaran --</option>
                                         {for $year = date('Y')-5; $year <= date('Y')+5; $year++}
                                         <option value="{$year}" data-select2-id="{$year}" {if $year == date('Y')}selected{/if}>TA {$year}</option>
@@ -196,7 +196,58 @@
 </div>
 {/if}
 
+{include file="crud/_js-crud-table.tpl" tbl=$crud}
+
+<script type="text/javascript" defer> 
+
+{foreach $subtables as $subtbl}
+var fkey_value_{$subtbl.crud.table_id} = '';
+var fkey_label_{$subtbl.crud.table_id} = '';
+var data_{$subtbl.crud.table_id} = null;
+{/foreach}
+
+$(document).ready(function() {
+
+    {if empty($detail)}
+        //use user-select event instead of select/deselect to avoid being triggerred because of API
+        dt_{$crud.table_id}.on('select.dt deselect.dt', function() {
+            let data = dt_{$crud.table_id}.rows({
+                selected: true
+            }).data();
+
+            if (data.length == 0) {
+                //on deselect all, clear subtables
+                {foreach $subtables as $subtbl}
+                dt_{$subtbl.crud.table_id}.clear().draw();
+                fkey_value_{$subtbl.crud.table_id} = '';
+                data_{$subtbl.crud.table_id} = null;
+                {/foreach}
+            } else {
+                let f_tahun= $("#f_tahun").val();
+
+                {foreach $subtables as $subtbl}
+                //master value
+                fkey_value_{$subtbl.crud.table_id} = data[0]['{$subtbl.table_key_column}'];
+                fkey_label_{$subtbl.crud.table_id} = data[0]['{$subtbl.table_label_column}'];
+                data_{$subtbl.crud.table_id} = data[0];
+
+                dt_{$subtbl.crud.table_id}.ajax.url("{$subtbl.crud.ajax}/" +fkey_value_{$subtbl.crud.table_id} +"?f_tahun="+f_tahun);
+                {if $subtbl.crud.editor}
+                editor_{$subtbl.crud.table_id}.s.ajax = "{$subtbl.crud.ajax}/" +fkey_value_{$subtbl.crud.table_id};
+                {/if}
+                dt_{$subtbl.crud.table_id}.ajax.reload();
+                {/foreach}
+            }
+
+        });
+    {/if}
+});
+
+</script>
 
 
+{foreach $subtables as $subtbl}
+    {include file="crud/_js-crud-table.tpl" tbl=$subtbl.crud fsubtable='1' fkey=$subtbl.subtable_fkey_column flabel=$subtbl.label}
+{/foreach}
 
 {/if}

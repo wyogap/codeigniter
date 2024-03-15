@@ -12,7 +12,8 @@
         <!-- Sidebar user panel (optional) -->
         <div class="user-panel mt-3 pb-3 mb-3 d-flex">
             <div class="image">
-                <img src="{$userdata.profile_img}" class="img-circle elevation-2" alt="User Image">
+                <img src="{$base_url}/images/home.jpeg" class="img-circle elevation-2" alt="User Image">
+                <!-- <img src="{$userdata.profile_img}" class="img-circle elevation-2" alt="User Image"> -->
             </div>
             <div class="info">
                 <a href="{$site_url}{$page_role}" class="d-block">{$userdata.nama}</a>

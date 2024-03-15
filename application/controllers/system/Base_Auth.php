@@ -153,11 +153,11 @@ class Base_Auth extends CI_Controller
         $page_role = $this->session->userdata('page_role');
         
         if ($json == 1) {
-            $data = array("status"=>1, "redirect"=>site_url() ."/$page_role/home");
+            $data = array("status"=>1, "redirect"=>site_url() ."$page_role/home");
             echo json_encode($data, JSON_INVALID_UTF8_IGNORE);
         } 
         else {
-            redirect(site_url() ."/$page_role");
+            redirect(site_url() ."$page_role");
         }
     }
 

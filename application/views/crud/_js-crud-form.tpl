@@ -36,10 +36,10 @@
 
 <script type="text/javascript" defer>
 
-    var base_url = "{$base_url}";
-    var site_url = "{$site_url}";
-    var ajax_url = "{$tbl.ajax}";
-    var tbl_title = "{$tbl.title}";
+    // var base_url = "{$base_url}";
+    // var site_url = "{$site_url}";
+    // var ajax_url = "{$tbl.ajax}";
+    // var tbl_title = "{$tbl.title}";
 
     var field_list = [];
 
@@ -66,8 +66,8 @@
 
         //set key and value for subtable
         {foreach $subtables as $subtbl}
-        selected_key_{$subtbl.crud.table_id} = detail['{$tbl.key_column}'];
-        selected_label_{$subtbl.crud.table_id} = detail['{$tbl.lookup_column}'];
+        fkey_value_{$subtbl.crud.table_id} = detail['{$tbl.key_column}'];
+        fkey_label_{$subtbl.crud.table_id} = detail['{$tbl.lookup_column}'];
         {/foreach}
 
         {if !empty($tbl.edit_conditional_js) && $form_mode=='edit'}

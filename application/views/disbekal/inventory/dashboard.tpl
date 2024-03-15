@@ -609,10 +609,10 @@ border-right-color: #3c8dbc !important;
 		load_barangmasukperwaktu();
 
 		load_stokperkategori();
-		load_kadaluarsapergudang();
-		load_kadaluarsaperkategori();
-		load_rusakpergudang();
-		load_rusakperkategori();
+		// load_kadaluarsapergudang();
+		// load_kadaluarsaperkategori();
+		// load_rusakpergudang();
+		// load_rusakperkategori();
 		load_perkiraankadaluarsa();
 
 		load_barangmasukpergudang();
@@ -1243,6 +1243,7 @@ border-right-color: #3c8dbc !important;
 
 	}
 
+	/*
 	function load_kadaluarsapergudang() {
        	//retrieve list from json
 	   	$.ajax({
@@ -1387,6 +1388,7 @@ border-right-color: #3c8dbc !important;
         });
 
 	}
+	*/
 
 	function load_perkiraankadaluarsa() {
        	//retrieve list from json
