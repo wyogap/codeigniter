@@ -140,7 +140,6 @@
     </div>
 </section>
 
-
 <section class="content">
     <div class="container-fluid">
         <div class="row">
@@ -195,59 +194,5 @@
     </div>
 </div>
 {/if}
-
-{include file="crud/_js-crud-table.tpl" tbl=$crud}
-
-<script type="text/javascript" defer> 
-
-{foreach $subtables as $subtbl}
-var fkey_value_{$subtbl.crud.table_id} = '';
-var fkey_label_{$subtbl.crud.table_id} = '';
-var data_{$subtbl.crud.table_id} = null;
-{/foreach}
-
-$(document).ready(function() {
-
-    {if empty($detail)}
-        //use user-select event instead of select/deselect to avoid being triggerred because of API
-        dt_{$crud.table_id}.on('select.dt deselect.dt', function() {
-            let data = dt_{$crud.table_id}.rows({
-                selected: true
-            }).data();
-
-            if (data.length == 0) {
-                //on deselect all, clear subtables
-                {foreach $subtables as $subtbl}
-                dt_{$subtbl.crud.table_id}.clear().draw();
-                fkey_value_{$subtbl.crud.table_id} = '';
-                data_{$subtbl.crud.table_id} = null;
-                {/foreach}
-            } else {
-                let f_tahun= $("#f_tahun").val();
-
-                {foreach $subtables as $subtbl}
-                //master value
-                fkey_value_{$subtbl.crud.table_id} = data[0]['{$subtbl.table_key_column}'];
-                fkey_label_{$subtbl.crud.table_id} = data[0]['{$subtbl.table_label_column}'];
-                data_{$subtbl.crud.table_id} = data[0];
-
-                dt_{$subtbl.crud.table_id}.ajax.url("{$subtbl.crud.ajax}/" +fkey_value_{$subtbl.crud.table_id} +"?f_tahun="+f_tahun);
-                {if $subtbl.crud.editor}
-                editor_{$subtbl.crud.table_id}.s.ajax = "{$subtbl.crud.ajax}/" +fkey_value_{$subtbl.crud.table_id};
-                {/if}
-                dt_{$subtbl.crud.table_id}.ajax.reload();
-                {/foreach}
-            }
-
-        });
-    {/if}
-});
-
-</script>
-
-
-{foreach $subtables as $subtbl}
-    {include file="crud/_js-crud-table.tpl" tbl=$subtbl.crud fsubtable='1' fkey=$subtbl.subtable_fkey_column flabel=$subtbl.label}
-{/foreach}
 
 {/if}

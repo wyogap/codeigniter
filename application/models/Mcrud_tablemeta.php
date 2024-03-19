@@ -393,7 +393,7 @@ class Mcrud_tablemeta extends CI_Model
         $this->columns = array();
         $this->edit_columns = array();
         $this->select_columns = array();
-        $this->filter_columns = array();
+        //$this->filter_columns = array();
         $this->search_columns = array();
         $this->sorting_columns = array();
 
@@ -468,6 +468,9 @@ class Mcrud_tablemeta extends CI_Model
         //lookup alias
         $lookup_idx = 1;
 
+        //column filter
+        $column_filter = 0;
+
         //columns metas
         do {
             $this->db->select('*');
@@ -540,6 +543,7 @@ class Mcrud_tablemeta extends CI_Model
 
                 //show filtering in column header
                 $col['column_filter'] = ($row['column_filter'] == 1);
+                if ($col['column_filter'])  $column_filter = 1;
 
                 //hack for backward compatibility
                 if (!isset($row['allow_sort'])) $col['allow_sort'] = true;
@@ -834,53 +838,53 @@ class Mcrud_tablemeta extends CI_Model
                     $col["editor"] = $editor;
                 }
 
-                if ($this->table_metas['filter'] && $col['allow_filter']) {
-                    $filter = Mtablemeta::$FILTER;
-                    $filter['name'] = $row['name'];
-                    $filter['allow_filter'] = $col['allow_filter'];
+                // if ($this->table_metas['filter'] && $col['allow_filter']) {
+                //     $filter = Mtablemeta::$FILTER;
+                //     $filter['name'] = $row['name'];
+                //     $filter['allow_filter'] = $col['allow_filter'];
 
-                    $filter['filter_label'] = __($row['filter_label']);
-                    if (empty($filter['filter_label'])) {
-                        $filter['filter_label'] = ucwords($col['label']);
-                    }
+                //     $filter['filter_label'] = __($row['filter_label']);
+                //     if (empty($filter['filter_label'])) {
+                //         $filter['filter_label'] = ucwords($col['label']);
+                //     }
 
-                    $filter['filter_css'] = $row['filter_css'];
-                    $filter['filter_onchange_js'] = $row['filter_onchange_js'];
+                //     $filter['filter_css'] = $row['filter_css'];
+                //     $filter['filter_onchange_js'] = $row['filter_onchange_js'];
 
-                    if (!empty($row['filter_attr_array'])) {
-                        $filter['filter_attr'] = json_decode($row['filter_attr_array']);
-                    }
+                //     if (!empty($row['filter_attr_array'])) {
+                //         $filter['filter_attr'] = json_decode($row['filter_attr_array']);
+                //     }
 
-                    $row['filter_data_url'] = '';
-                    if (!empty($col['options_data_url'])) {
-                        $row['filter_data_url'] = $col['options_data_url'];
-                    }
+                //     $row['filter_data_url'] = '';
+                //     if (!empty($col['options_data_url'])) {
+                //         $row['filter_data_url'] = $col['options_data_url'];
+                //     }
 
-                    if (!empty($row['filter_data_url'])) {
-                        if (!isset($filter['filter_attr'])) {
-                            $filter['filter_attr'] = array();
-                        }
-                        $filter['filter_attr']['ajax'] = $row['filter_data_url'];
-                    } else if (!empty($row['filter_options_array'])) {
-                        $filter['filter_options'] = json_decode($row['filter_options_array']);
-                    } else if (!empty($col['options'])) {
-                        $filter['filter_options'] = $col['options'];
-                    }
+                //     if (!empty($row['filter_data_url'])) {
+                //         if (!isset($filter['filter_attr'])) {
+                //             $filter['filter_attr'] = array();
+                //         }
+                //         $filter['filter_attr']['ajax'] = $row['filter_data_url'];
+                //     } else if (!empty($row['filter_options_array'])) {
+                //         $filter['filter_options'] = json_decode($row['filter_options_array']);
+                //     } else if (!empty($col['options'])) {
+                //         $filter['filter_options'] = $col['options'];
+                //     }
 
-                    //force select2
-                    $filter['filter_type'] = $row['filter_type'];
-                    if (!empty($filter['filter_options']) && empty($filter['filter_type'])) {
-                        $filter['filter_type'] = 'tcg_select2';
-                    }
-                    if (empty($filter['filter_type'])) {
-                        $filter['filter_type'] = $col['type'];
-                    }
+                //     //force select2
+                //     $filter['filter_type'] = $row['filter_type'];
+                //     if (!empty($filter['filter_options']) && empty($filter['filter_type'])) {
+                //         $filter['filter_type'] = 'tcg_select2';
+                //     }
+                //     if (empty($filter['filter_type'])) {
+                //         $filter['filter_type'] = $col['type'];
+                //     }
 
-                    $filter['filter_invalid_value'] = ($row['filter_invalid_value'] == 1);
+                //     $filter['filter_invalid_value'] = ($row['filter_invalid_value'] == 1);
 
-                    $this->filter_metas[] = $filter;
-                    $this->filter_columns[] = $col['name'];
-                }
+                //     $this->filter_metas[] = $filter;
+                //     $this->filter_columns[] = $col['name'];
+                // }
     
                 //bubble editor 
                 $col['edit_bubble'] = ($row['edit_bubble'] == 1);
@@ -973,10 +977,17 @@ class Mcrud_tablemeta extends CI_Model
         } 
         while (false);
         
+        //if no column-filter is enabled in the column, ignore the table level setting
+        if ($column_filter == 0) {
+            $this->table_metas['column_filter'] = false;
+        }
+
+        //default key column is first column
         if (empty($this->table_metas['key_column']) && count($this->column_metas)>0) {
             $this->table_metas['key_column'] = $this->column_metas[0]['name'];
         }
 
+        //default lookup column is first column
         if (empty($this->table_metas['lookup_column']) && count($this->column_metas)>0) {
             $this->table_metas['lookup_column'] = $this->column_metas[0]['name'];
         }
@@ -1071,7 +1082,7 @@ class Mcrud_tablemeta extends CI_Model
 
         } while (false);
 
-        $this->table_metas['filter_columns'] = $this->filter_metas;
+        //$this->table_metas['filter_columns'] = $this->filter_metas;
 
         //filters
         $this->filter_metas = array();
@@ -1406,7 +1417,8 @@ class Mcrud_tablemeta extends CI_Model
     }
 
     function filter_columns() {
-        return $this->filter_columns;
+        //return $this->filter_columns;
+        return $this->filters;
     }
 
     function distinct_lookup($column, $filter = null) {
@@ -2640,17 +2652,31 @@ class Mcrud_tablemeta extends CI_Model
                     }
                 }
 
-                //find matching filter column if any
-                foreach($this->table_metas['filter_columns'] as $key=>$filter) {
-                    if ($filter['name'] !== $name)      continue;
+                // //find matching filter column if any
+                // foreach($this->table_metas['filter_columns'] as $key=>$filter) {
+                //     if ($filter['name'] !== $name)      continue;
 
-                    //var_dump($filter);
+                //     //var_dump($filter);
+
+                //     //update filter lookup
+                //     if ($filter['filter_type'] == 'tcg_select2') {
+                //         $this->table_metas['filter_columns'][$key]['filter_options'] = $lookup;
+                //     }          
+                // }
+
+                //get column id
+                $id = $val['id'];
+
+                //find matching filter column if any
+                foreach($this->table_metas['filters'] as $key=>$filter) {
+                    if ($filter['column_id'] !== $id)      continue;
 
                     //update filter lookup
                     if ($filter['filter_type'] == 'tcg_select2') {
-                        $this->table_metas['filter_columns'][$key]['filter_options'] = $lookup;
+                        $this->table_metas['filters'][$key]['filter_options'] = $lookup;
                     }          
                 }
+
             }   //foreach editor column
 
             $matches = null;

@@ -14,7 +14,7 @@ class Base_Crud extends MY_Crud_Controller {
 
 		$isLoggedIn = $this->session->userdata('is_logged_in');
 		if(!isset($isLoggedIn) || $isLoggedIn != TRUE) {
-			redirect(site_url() .'/auth');
+			redirect(site_url() .'auth');
 		}		
     }
 

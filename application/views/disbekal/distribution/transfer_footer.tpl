@@ -147,3 +147,20 @@ $(document).ready(function() {
 });
 
 </script>
+
+{if $crud.filter || $crud.search}
+{include file='crud/_js-crud-filter.tpl'}
+{/if}
+
+<script type="text/javascript">
+    //override default filter value. must be after include js-crud-filter.tpl
+    v_itemtypeid = '{if !empty($userdata["itemtypeid"])}{$userdata["itemtypeid"]}{/if}';
+    v_siteid = '{if !empty($userdata["siteid"])}{$userdata["siteid"]}{/if}';
+    v_year = new Date().getFullYear();
+</script>
+
+{include file="crud/_js-crud-table.tpl" tbl=$crud}
+
+{include file="crud/_js-crud-subtables.tpl" tbl=$crud}
+
+{include file='crud/_js.tpl'}

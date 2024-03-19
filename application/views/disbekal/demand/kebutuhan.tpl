@@ -116,7 +116,7 @@
 									</select>
 								</div>
 								<div class="form-group col-4 mb-0 mt-1 col-12 col-md-6 col-lg-4">
-									<select id="f_tahunanggaran" name="f_tahunanggaran" class="form-control filter_select" placeholder="Tahun Anggaran">
+									<select id="f_year" name="f_year" class="form-control filter_select" placeholder="Tahun Anggaran">
 										<option value="" data-select2-id="2">-- Tahun Anggaran --</option>
                                         {for $year = date('Y')-5; $year <= date('Y')+5; $year++}
                                         <option value="{$year}" data-select2-id="{$year}" {if $year == date('Y')}selected{/if}>TA {$year}</option>
@@ -196,7 +196,5 @@
 </div>
 {/if}
 
-
-
-
 {/if}
+

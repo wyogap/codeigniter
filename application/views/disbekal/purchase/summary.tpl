@@ -1,135 +1,135 @@
 
 <style>
 
-.wf {
-	display: flex;
-    /* margin: auto; */
-    align-items: flex-start;
-    justify-content: center;
-	margin: 16px 16px;
-}
-
-.wf-block {
-	display: flex;
-	align-items: flex-start;
-    justify-content: center;
-	width: 160px;
-}
-
-.wf-start {
-	display: flex;
-	align-items: flex-start;
-    justify-content: center;
-}
-
-.wf-end {
-	display: flex;
-	align-items: flex-start;
-    justify-content: center;
-	width: 120px;
-}
-
-.wf-arrow {
-
-}
-
-.wf-arrow img {
-	width: 64px;
-    margin: 26px 4px 0px 4px;
-}
-
-.wf-state {
-	text-align: center;
-}
-
-.wf-state img {
-    margin: 0px 4px 8px 4px;
-    width: 64px;
-    height: 64px;
-}
-
-.wf-endpoint img {
-    margin: 12px 4px 0px 4px;
-    height: 40px;
-    width: 40px;
-}
-
-@media screen and (max-width: 767px) {
-
-.wf-block {
-	font-size: small;
-}
-
-.wf-arrow img {
-    width: 48px;
-    margin: 16px 4px 0px 4px;
-}
-
-.wf-state img {
-    margin: 0px 4px 8px 4px;
-    width: 40px;
-    height: 40px;
-}
-
-.wf-endpoint img {
-    margin: 5px 4px 0px 4px;
-    height: 32px;
-    width: 32px;
-}
-
-}
-
-@media screen and (max-width: 576px) {
-
-	/* .wf {
-		display: block;
-	}
-
-	.wf-block {
-		margin: auto;
-    	padding: 12px 0px 12px 0px;
-	} */
-
 	.wf {
 		display: flex;
-		-ms-flex-wrap: wrap;
-		flex-wrap: wrap;
-		padding: 8px;
-		margin: 0px;
+		/* margin: auto; */
+		align-items: flex-start;
+		justify-content: center;
+		margin: 16px 16px;
 	}
 
 	.wf-block {
-		margin-right: auto;
-		margin-left: auto;
-		-ms-flex: 0 0 16.666667%;
-		flex: 0 0 16.666667%;
-		max-width: 16.666667%;
+		display: flex;
+		align-items: flex-start;
+		justify-content: center;
+		width: 160px;
 	}
 
 	.wf-start {
-		display: none;
+		display: flex;
+		align-items: flex-start;
+		justify-content: center;
 	}
 
 	.wf-end {
-		display: none;
-	}		
+		display: flex;
+		align-items: flex-start;
+		justify-content: center;
+		width: 120px;
+	}
 
 	.wf-arrow {
-		display: none;
+
+	}
+
+	.wf-arrow img {
+		width: 64px;
+		margin: 26px 4px 0px 4px;
 	}
 
 	.wf-state {
 		text-align: center;
-		display: block;
-		flex: 0 0 100%;
-		max-width: 100%;
-		font-size: small;
 	}
 
 	.wf-state img {
-    	margin: 0px 0px 8px 0px;
+		margin: 0px 4px 8px 4px;
+		width: 64px;
+		height: 64px;
 	}
-}
+
+	.wf-endpoint img {
+		margin: 12px 4px 0px 4px;
+		height: 40px;
+		width: 40px;
+	}
+
+	@media screen and (max-width: 767px) {
+
+	.wf-block {
+		font-size: small;
+	}
+
+	.wf-arrow img {
+		width: 48px;
+		margin: 16px 4px 0px 4px;
+	}
+
+	.wf-state img {
+		margin: 0px 4px 8px 4px;
+		width: 40px;
+		height: 40px;
+	}
+
+	.wf-endpoint img {
+		margin: 5px 4px 0px 4px;
+		height: 32px;
+		width: 32px;
+	}
+
+	}
+
+	@media screen and (max-width: 576px) {
+
+		/* .wf {
+			display: block;
+		}
+
+		.wf-block {
+			margin: auto;
+			padding: 12px 0px 12px 0px;
+		} */
+
+		.wf {
+			display: flex;
+			-ms-flex-wrap: wrap;
+			flex-wrap: wrap;
+			padding: 8px;
+			margin: 0px;
+		}
+
+		.wf-block {
+			margin-right: auto;
+			margin-left: auto;
+			-ms-flex: 0 0 16.666667%;
+			flex: 0 0 16.666667%;
+			max-width: 16.666667%;
+		}
+
+		.wf-start {
+			display: none;
+		}
+
+		.wf-end {
+			display: none;
+		}		
+
+		.wf-arrow {
+			display: none;
+		}
+
+		.wf-state {
+			text-align: center;
+			display: block;
+			flex: 0 0 100%;
+			max-width: 100%;
+			font-size: small;
+		}
+
+		.wf-state img {
+			margin: 0px 0px 8px 0px;
+		}
+	}
 
 </style>
 
@@ -302,7 +302,6 @@
 		<div class="wf-endpoint"><img id="wf-end" src="{$site_url}images/wf/pos0.png"></div>
 	</div>	
 </div></div></div>
-
 
 </div>
 

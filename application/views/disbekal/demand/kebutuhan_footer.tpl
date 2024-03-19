@@ -126,6 +126,125 @@ function conditional_buatpengadaan(data, row, meta) {
     return 0;
 }
 
+function onclick_buatpengadaan(rowIdx, dt, id) {
+    let data = dt.row(rowIdx).data();
+    let label = data['demandnum'];
+    let tahun = $("#f_year").val();
+    let url = "{$site_url}disbekal/kebutuhan/buatpengadaan";
+
+    {literal}
+    $.ajax({
+        url: url,
+        type: 'POST',
+        data: {id: id, year: tahun},
+        dataType: 'json',
+        beforeSend: function(request) {
+            request.setRequestHeader("Content-Type", "application/json");
+        },
+        success: function(response) {
+            if (response.status === null || response.status == 0 || (response.error !== undefined && response.error !== null && response.error !== '')) {
+                //error
+                let msg = "Tidak spesifik";
+                if (response.error !== undefined && response.error !== null && response.error !== '') {
+                    msg = response.error;
+                }
+                toastr.error("Tidak berhasil membuat DRAFT Perintah Pengadaan untuk Rencana Kebutuhan " +label+ ". Error: " +msg, 'Error');
+                return;
+            }
+
+            //successful -> open edit page
+            window.open(response.editurl, '_blank');
+            toastr.success("Berhasil membuat DRAFT Perintah Pengadaan untuk Rencana Kebutuhan " +label+ ". Perintah Pengadaan baru telah dibuka di halaman/tab baru.");
+        },
+        error: function(jqXhr, textStatus, errorMessage) {
+            toastr.error(errorMessage, 'Error');
+        }
+    });
+    {/literal}
+
+}
+
+function onclose_demand(rowIdx, dt, id) {
+    let data = dt.row(rowIdx).data();
+    let label = data['demandnum'];
+    let url = "{$site_url}disbekal/kebutuhan/close";
+
+    {literal}
+    $.ajax({
+        url: url,
+        type: 'POST',
+        data: {id: id},
+        dataType: 'json',
+        beforeSend: function(request) {
+            request.setRequestHeader("Content-Type", "application/json");
+        },
+        success: function(response) {
+            if (response.status === null || response.status == 0 || (response.error !== undefined && response.error !== null && response.error !== '')) {
+                //error
+                let msg = "Tidak spesifik";
+                if (response.error !== undefined && response.error !== null && response.error !== '') {
+                    msg = response.error;
+                }
+                toastr.error("Tidak berhasil mengarsipkan Rencana Kebutuhan " +label+ ". Error: " +msg, 'Error');
+                return;
+            }
+
+            //successful -> reload
+            let row = dt.row(rowIdx);
+            let data = row.data();
+            data['status'] = 'CLOSED';
+            row.data(data);
+            toastr.success("Berhasil menutup dan mengarsipkan Rencana Kebutuhan " +label+ ".");
+        },
+        error: function(jqXhr, textStatus, errorMessage) {
+            toastr.error(errorMessage, 'Error');
+        }
+    });
+    {/literal}
+
+}
+
+function onapprove_demand(rowIdx, dt, id) {
+    let data = dt.row(rowIdx).data();
+    let label = data['demandnum'];
+    let url = "{$site_url}disbekal/kebutuhan/approve";
+
+    {literal}
+    $.ajax({
+        url: url,
+        type: 'POST',
+        data: {id: id},
+        dataType: 'json',
+        beforeSend: function(request) {
+            request.setRequestHeader("Content-Type", "application/json");
+        },
+        success: function(response) {
+            if (response.status === null || response.status == 0 || (response.error !== undefined && response.error !== null && response.error !== '')) {
+                //error
+                let msg = "Tidak spesifik";
+                if (response.error !== undefined && response.error !== null && response.error !== '') {
+                    msg = response.error;
+                }
+                toastr.error("Tidak berhasil menyetujui Rencana Kebutuhan " +label+ ". Error: " +msg, 'Error');
+                return;
+            }
+
+            //successful - reload
+            //dt.ajak.reload();
+            let row = dt.row(rowIdx);
+            let data = row.data();
+            data['status'] = 'APPR';
+            row.data(data);
+            toastr.success("Berhasil menyetujui Rencana Kebutuhan " +label+ ".");
+        },
+        error: function(jqXhr, textStatus, errorMessage) {
+            toastr.error(errorMessage, 'Error');
+        }
+    });
+    {/literal}
+
+}
+
 function onclick_pengadaan(row, dt, id) {
     let data = dt.rows(row).data()[0];
     let status = data['status'];
@@ -202,163 +321,15 @@ function display_item_doinfo(value, tipe, data) {
     </select>
 </div>
 
+{if $crud.filter || $crud.search}
+{include file='crud/_js-crud-filter.tpl'}
+{/if}
 
 <script type="text/javascript">
-
-    var v_itemtypeid = '{if !empty($userdata["itemtypeid"])}{$userdata["itemtypeid"]}{/if}';
-    var v_siteid = '{if !empty($userdata["siteid"])}{$userdata["siteid"]}{/if}';
-    var v_tahunanggaran = new Date().getFullYear();
-
-    $('.adv-search-btn').click(function(e) {
-        $('.adv-search-box').toggle();
-    });
-
-    $('.btn-search').click(function(e) {
-        e.stopPropagation();
-        dt_{$crud.table_id}.ajax.reload();
-    });
-
-    $("#search").keyup(function (e) {
-        if (e.which == 13) {
-            $('.btn-search').trigger('click');
-        }
-    });
-
-    $(document).ready(function() {
-        $('input.date').datepicker({
-            format: "yyyy-mm-dd",
-            autoclose: true,
-            todayHighlight: true
-        });
-
-        $('.daterange').datepicker({
-            format: "yyyy-mm-dd",
-            autoclose: true,
-            todayHighlight: true
-        });
-
-        let _options = [];
-        let _attr = {};
-
-        let _multiple = false;
-        let _minimumResult = 10;
-        let _url = '';
-
-        {foreach $crud.filters as $f} 
-            {if ($f.type == 'select' || $f.type == 'tcg_select2')}
-                //default value
-                _multiple = false;
-                _minimumResult = 10;
-
-                {if isset($f.attr)}
-                _multiple = {if empty($f.attr.multiple)}_multiple{else}true{/if};
-                _minimumResult = {if empty($f.attr.minimumResultsForSearch)}_minimumResult{else}{$f.attr.minimumResultsForSearch} {/if}
-                {/if}
-
-                _attr = {
-                    multiple: _multiple,
-                    minimumResultsForSearch: _minimumResult,
-                };
-
-                {if (!empty($f.options_data_url))}
-                //retrieve list from json
-                url = "{$site_url}{$f.options_data_url}";
-                {if (!empty($f.controller_params))}
-                url += "?{$f.controller_params}";
-                {/if}
-                $.ajax({
-                    url: url,
-                    type: 'GET',
-                    dataType: 'json',
-                    beforeSend: function(request) {
-                        request.setRequestHeader("Content-Type", "application/json");
-                    },
-                    success: function(response) {
-                        if (response.data === null) {
-                            //error("Gagal mendapatkan daftar kas.");
-                            _options = null;
-                        } else if (typeof response.error !== 'undefined' && response.error !== null && response
-                            .error != "") {
-                            //error(response.error);
-                            _options = null;
-                        } else {
-                            _options = response.data;
-                        }
-
-                        {if $f.type == 'tcg_select2'}
-                        select2_build($('#f_{$f.name}'), "-- {$f.label} --", "", v_{$f.name}, _options, _attr, null);
-                        {else}
-                        select_build($('#f_{$f.name}'), "-- {$f.label} --", "", v_{$f.name}, _options, _attr);
-                        {/if}
-                    },
-                    error: function(jqXhr, textStatus, errorMessage) {
-                        {if $f.type == 'tcg_select2'}
-                        select2_build($('#f_{$f.name}'), "-- {$f.label} --", "", v_{$f.name}, _options, _attr, null);
-                        {else}
-                        select_build($('#f_{$f.name}'), "-- {$f.label} --", "", v_{$f.name}, _options, _attr);
-                        {/if}
-                    }
-                });
-                {else if ($f.type == 'tcg_select2')}
-                //rebuild as select2
-                //select2_rebuild($('#f_{$f.name}'), _attr, null);
-                {/if}
-
-            {/if}
-        {/foreach}
-
-        {foreach $crud.filters as $f} 
-            {if $f.type == 'js'}{continue}{/if}
-            $("#f_{$f.name}").val(v_{$f.name});
-            $('#f_{$f.name}').on('change', function() {
-                v_{$f.name} = $("#f_{$f.name}").val();   
-                do_filter();
-            });        
-        {/foreach}
-
-        $('#btn_crud_filter').click(function(e) {
-            e.stopPropagation();
-            do_filter();
-        });
-
-        {foreach $crud.filters as $f} 
-        {if $f.type == 'distinct'}
-            $("#f_{$f.name}").select2({
-                minimumResultsForSearch: 10,
-                minimumInputLength: 0,
-                //theme: "bootstrap",
-            });    
-        {/if}
-        {/foreach}
-    });
-
-    function do_filter() {
-
-        let flag = true;
-        {foreach $crud.filters as $f} 
-            {if $f.type == 'js' || !$f.is_required} {continue} {/if}
-
-            if (v_{$f.name} == '' || v_{$f.name} == 0 || v_{$f.name} === null) {
-                $("#f_{$f.name}").addClass('need-attention');
-                flag = false;
-
-                {if $f.type == 'tcg_select2'}
-                $("#f_{$f.name}").select2();
-                {/if}
-            }
-            else {
-                $("#f_{$f.name}").removeClass('need-attention');
-            }
-        {/foreach}
-
-        if (flag) {
-            dt_{$crud.table_id}.ajax.reload();
-        }
-        else {
-            error_notify('Filter wajib belum diisi');
-        }
-
-    }
+    //override default filter value. must be after include js-crud-filter.tpl
+    v_itemtypeid = '{if !empty($userdata["itemtypeid"])}{$userdata["itemtypeid"]}{/if}';
+    v_siteid = '{if !empty($userdata["siteid"])}{$userdata["siteid"]}{/if}';
+    v_year = new Date().getFullYear();
 </script>
 
 {include file="crud/_js-crud-table.tpl" tbl=$crud}
@@ -391,7 +362,7 @@ function display_item_doinfo(value, tipe, data) {
                     fkey_column_{$subtbl.crud.table_id} = "";
                     {/foreach}
                 } else {
-                    let f_tahun= $("#f_tahun").val();
+                    let f_tahun= $("#f_year").val();
 
                     {foreach $subtables as $subtbl}
                     //master value
@@ -433,9 +404,9 @@ function display_item_doinfo(value, tipe, data) {
 
         $("#tdata_89_wrapper .dt-action-buttons .dt-buttons").hide();
 
-        let x_tahun = $("#form-tahun");
-        let par3 = $("#tdata_164_wrapper .row .dt-action-buttons");
-        par3.html("").append(x_tahun);
+        // let x_tahun = $("#form-tahun");
+        // let par3 = $("#tdata_164_wrapper .row .dt-action-buttons");
+        // par3.html("").append(x_tahun);
 
         // $("#f_tahun").on('change', function() {
         //     let f_tahun= $("#f_tahun").val();
@@ -502,4 +473,4 @@ function display_item_doinfo(value, tipe, data) {
 
 </script>
 
-
+{include file='crud/_js.tpl'}

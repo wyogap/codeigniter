@@ -370,6 +370,8 @@ class Mcrud extends CI_Model
         $this->table_metas['row_actions'] = array();
         $this->table_metas['join_tables'] = array();
 
+        //var_dump($this->table_metas); exit;
+
         return true;
     }
 

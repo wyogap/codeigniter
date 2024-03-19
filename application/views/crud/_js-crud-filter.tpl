@@ -9,6 +9,9 @@
         {/if}
     {/foreach}
 
+    //flag when filter is changing, to protect when we use cascading filter
+    var _onfilterchanging = false;
+
     $('.adv-search-btn').click(function(e) {
         $('.adv-search-box').toggle();
     });
@@ -38,7 +41,6 @@
             todayHighlight: true
         });
 
-        let _onfilterchanging = false;
         {foreach $crud.filters as $f} 
             {if $f.type == 'js'}{continue}{/if}
 
@@ -64,7 +66,7 @@
             {/if}
 
             //reset the value
-            $("#f_{$f.name}").val(v_{$f.name});
+            $("#f_{$f.name}").val(v_{$f.name}).trigger('change');
 
             //on-change event
             $('#f_{$f.name}').on('change', function() {
@@ -207,7 +209,7 @@
 
         if (flag) {
             //reload, reset paging
-            dt_{$crud.table_id}.ajax.reload();
+            dt_{$crud.table_id}.ajax.reload(dt_{$crud.table_id}_post_load);
         }
         else {
             error_notify('Filter wajib belum diisi');

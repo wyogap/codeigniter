@@ -231,6 +231,16 @@
         padding: 1rem;
     }
 
+    /* switch spacing from horizontal-right to vertical-bottom */
+    .dt-mr2 {
+        margin-right: 0px !important;
+    }
+
+    /* breakdown button group into vertical list of buttons */
+    .btn-group .btn {
+        border-radius: 0.2rem !important;
+    }
+
     /* li.paginate_button {
         width: fit-content;
         display: inline-flex !important;

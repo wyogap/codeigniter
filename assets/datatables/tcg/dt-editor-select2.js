@@ -137,11 +137,8 @@
 
 		set: function (conf, val) {
 			if (typeof val === 'undefined' || val == null) {
+				//set default value
 				val = conf.def;
-			}
-			else {
-				//set as new default value
-				conf.def = val;
 			}
 
 			let old_val = conf._select.val();

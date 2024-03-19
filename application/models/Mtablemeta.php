@@ -13,6 +13,7 @@ class Mtablemeta extends CI_Model
         'column_filter' => false,
         'columns' => [],
         'editor_columns' => [],
+        'sorting_columns' => [],
         'filter_columns' => [],
         'filters' => [],
         'orderings' => [],

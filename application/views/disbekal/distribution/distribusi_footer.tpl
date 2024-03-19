@@ -88,62 +88,22 @@ function conditional_close(data, row, meta) {
 
     return 0;
 }
+
 </script>
+
+{if $crud.filter || $crud.search}
+{include file='crud/_js-crud-filter.tpl'}
+{/if}
 
 <script type="text/javascript">
-
-$(document).ready(function() {
-
-    let _attr = {
-            multiple: false,
-            minimumResultsForSearch: 25,
-        };
-
-    $.ajax({
-        url: "{$site_url}{$controller}/satuankerja/lookup",
-        type: 'GET',
-        dataType: 'json',
-        beforeSend: function(request) {
-            request.setRequestHeader("Content-Type", "application/json");
-        },
-        success: function(response) {
-            if (response.data === null) {} else if (typeof response.error !==
-                'undefined' && response.error !== null && response
-                .error != "") {} else {
-                _options = response.data;
-            }
-            select2_build($('#f_siteid'), '-- Satuan Kerja --', '', '', _options, _attr);
-
-            // select_build($('#edit-korwil'), _options, _attr);
-            // $('#edit-korwil').val(korwil);
-        },
-        error: function(jqXhr, textStatus, errorMessage) {
-            select2_build($('#f_siteid'), '-- Satuan Kerja --', '', '', null, _attr);
-            // select_build($('#edit-korwil'), _options, _attr);
-        }
-    });
-
-    $.ajax({
-        url: "{$site_url}disbekal/select/tipebekal",
-        type: 'GET',
-        dataType: 'json',
-        beforeSend: function(request) {
-            request.setRequestHeader("Content-Type", "application/json");
-        },
-        success: function(response) {
-            if (response !== null && response.length > 0) {
-                select2_build($('#f_itemtypeid'), '-- Tipe Bekal --', '', '', response, _attr);
-            }
-
-            // select_build($('#edit-korwil'), _options, _attr);
-            // $('#edit-korwil').val(korwil);
-        },
-        error: function(jqXhr, textStatus, errorMessage) {
-            select2_build($('#f_itemtypeid'), '-- Tipe Bekal --', '', '', null, _attr);
-            // select_build($('#edit-korwil'), _options, _attr);
-        }
-    });
-
-});
-
+    //override default filter value. must be after include js-crud-filter.tpl
+    v_itemtypeid = '{if !empty($userdata["itemtypeid"])}{$userdata["itemtypeid"]}{/if}';
+    v_siteid = '{if !empty($userdata["siteid"])}{$userdata["siteid"]}{/if}';
+    v_year = new Date().getFullYear();
 </script>
+
+{include file="crud/_js-crud-table.tpl" tbl=$crud}
+
+{include file="crud/_js-crud-subtables.tpl" tbl=$crud}
+
+{include file='crud/_js.tpl'}

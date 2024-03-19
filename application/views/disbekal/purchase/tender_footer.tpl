@@ -147,3 +147,5 @@ $(document).ready(function() {
 });
 
 </script>
+
+{include file='crud/_js.tpl'}

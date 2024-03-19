@@ -34,7 +34,7 @@ class Base_Auth extends CI_Controller
             $this->session->set_userdata('page_role', $page_role);
         }      
 
-        redirect(site_url() ."/$page_role/home");
+        redirect(site_url() ."$page_role/home");
     }
     
     

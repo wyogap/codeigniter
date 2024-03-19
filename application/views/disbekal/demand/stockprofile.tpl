@@ -112,7 +112,7 @@
 				<thead>
 					<tr>
 						<th class="text-center" data-priority="1">Bekal</th>
-						<th class="text-center" data-priority="1">Stok Awal</th>
+						<th class="text-center" data-priority="1">Stok Awal Tahun</th>
 						<th class="text-center" data-priority="1">Bekal Masuk</th>
 						<th class="text-center" data-priority="1">Dalam Pengadaan</th>
 						<th class="text-center" data-priority="1">Bekal Keluar</th>
@@ -194,7 +194,7 @@
 	</div> <!-- end col-->
 	<div class="col-12 col-sm-12 col-md-6 col-xl-4">
 		<div class="card widget-inline">
-			<div class="card-header">Bekal Keluar</div>
+			<div class="card-header">Bekal Keluar (Termasuk Perintah Distribusi Aktif)</div>
 			<div class="card-body">
 			<div class="row">
 				<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
@@ -217,7 +217,7 @@
 	</div> <!-- end col-->
 	<div class="col-12 col-sm-12 col-md-6 col-xl-4">
 		<div class="card widget-inline">
-			<div class="card-header">Transfer Bekal</div>
+			<div class="card-header">Transfer Bekal (Termasuk Perintah Transfer Aktif)</div>
 			<div class="card-body">
 			<div class="row">
 				<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">

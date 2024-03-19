@@ -658,7 +658,6 @@ $(document).ready(function() {
 
         //recreate tooltip. it is lost after redraw()
         $('[data-toggle="tooltip"]').tooltip();
-
     }, 1000);
 
     {if !empty($tbl.column_filter)}
@@ -669,6 +668,9 @@ $(document).ready(function() {
         .addClass('d-none')
         .appendTo('#{$tbl.table_id} thead');
     {/if}
+
+    //easy access
+    api_{$tbl.table_id} = null;
 
     dt_{$tbl.table_id} = $('#{$tbl.table_id}').DataTable({
         "processing": true,
@@ -683,8 +685,8 @@ $(document).ready(function() {
         "pageLength": 25,
         {/if}
         "lengthMenu": [
-            [25, 50, 100, 200, -1],
-            [25, 50, 100, 200, "All"]
+            [25, 50, 100, -1],
+            [25, 50, 100, "All"]
         ],
         "paging": true,
         "pagingType": "numbers",
@@ -811,10 +813,6 @@ $(document).ready(function() {
                 orderable: {if !empty($x.allow_sort)}true{else}false{/if},
                 {if isset($x.type) && $x.type=="tcg_select2"}
                 render: function ( data, type, row ) {
-                    // if (type == "export") {
-                    //     //export raw data?
-                    // }
-
                     if (data == null) {
                         return data;
                     }
@@ -872,11 +870,6 @@ $(document).ready(function() {
                 },
                 {else if isset($x.type) && $x.type=="tcg_date"}
                 render: function ( data, type, row ) {
-                    // if (type == "export") {
-                    //     //export raw data?
-                    //     return data;
-                    // }
-
                     if (typeof data === 'undefined' || data == null || data.substring(0,10) == "0000-00-00") {
                         data = "";
                     }
@@ -896,11 +889,6 @@ $(document).ready(function() {
                 },
                 {else if isset($x.type) && $x.type=="tcg_datetime"}
                 render: function ( data, type, row ) {
-                    // if (type == "export") {
-                    //     //export raw data?
-                    //     return data;
-                    // }
-
                     if (typeof data === 'undefined' || data == null || data == "0000-00-00 00:00:00") {
                         data = "";
                     }
@@ -1102,7 +1090,6 @@ $(document).ready(function() {
             //     orderable: false
             // }
         ],
-        //testing-sort
         order: [
             {foreach $tbl.sorting_columns as $x}[{$x.column_no}, {if $x.sort_asc}'asc'{else}'desc'{/if}], {/foreach}
         ],
@@ -1151,8 +1138,6 @@ $(document).ready(function() {
                                     this.value == ''
                                 )
                                 .draw();
-
-                            //api.columns.adjust().responsive.recalc();
                         })
                         .on('keyup', function (e) {
                             e.stopPropagation();
@@ -1174,14 +1159,13 @@ $(document).ready(function() {
                     else {
                         cell.hide();
                     }
- 
-
                 });
 
             //show the filter row
             $('#{$tbl.table_id} thead tr').removeClass("d-none");
             {/if}
 
+            api_{$tbl.table_id} = this.api();
             dt_{$tbl.table_id}_initialized = true;
         },
         "createdRow": function ( row, data, index ) {
@@ -1202,14 +1186,15 @@ $(document).ready(function() {
         // },
         "footerCallback": function ( row, data, start, end, display ) {
             {$tbl.table_id}_refresh(this.api());
-            //update_footer(this.api(), 4);
         },
     });
 
     dt_{$tbl.table_id}.on('select.dt deselect.dt', function(e, settings) {
-        var api = new $.fn.dataTable.Api( settings );
+        let that = dt_{$tbl.table_id};
+        let api = new $.fn.dataTable.Api( settings );
         {$tbl.table_id}_refresh(api);    
         
+        //custom select/deselect routine
         {if !empty($tbl.on_select_custom_js)}
         {$tbl.on_select_custom_js}(dt_{$tbl.table_id}, api, "{$tbl.table_id}");
         {/if}
@@ -1257,9 +1242,13 @@ $(document).ready(function() {
 
     dt_{$tbl.table_id}.buttons( 0, null ).container().addClass("mr-md-2 mb-1");
 
+    {* Button group index*}
+    {assign var=idx value=0}
+
+    {if !empty($tbl.table_actions) && ($tbl.table_actions.export || $tbl.table_actions.import)}    
     let buttons = new $.fn.dataTable.Buttons( dt_{$tbl.table_id}, {
         buttons: [
-            {if isset($tbl.table_actions) && $tbl.table_actions.export}
+            {if !empty($tbl.table_actions) && $tbl.table_actions.export}
             {
                 extend: 'excelHtml5',
                 text: '{__("Ekspor")}',
@@ -1311,7 +1300,7 @@ $(document).ready(function() {
                 {/if}
             },
             {/if}
-            {if isset($tbl.table_actions) && $tbl.table_actions.import  && ($form_mode!='detail')}
+            {if !empty($tbl.table_actions) && $tbl.table_actions.import  && ($form_mode!='detail')}
             {
                 text: '{__("Impor")}',
                 className: 'btn-sm btn-danger btn-import',
@@ -1331,10 +1320,15 @@ $(document).ready(function() {
         buttons.container().addClass('mr-md-2 mb-1 dt-export-buttons');
     }
 
-    dt_{$tbl.table_id}.buttons( 0, null ).container().after(
-        dt_{$tbl.table_id}.buttons( 1, null ).container()
+    dt_{$tbl.table_id}.buttons( {$idx}, null ).container().after(
+        dt_{$tbl.table_id}.buttons( {$idx+1}, null ).container()
     );
 
+    {* Increase button-group index*}
+    {$idx=$idx+1}
+    {/if}
+
+    {if $tbl.client_side_filter || $tbl.client_side_query}
     buttons = new $.fn.dataTable.Buttons( dt_{$tbl.table_id}, {
         buttons: [
             {if $tbl.client_side_filter}
@@ -1368,10 +1362,14 @@ $(document).ready(function() {
         buttons.container().addClass('mr-md-2 mb-1 dt-filter-buttons');
     }
 
-    dt_{$tbl.table_id}.buttons( 1, null ).container().after(
-        dt_{$tbl.table_id}.buttons( 2, null ).container()
+    dt_{$tbl.table_id}.buttons( {$idx}, null ).container().after(
+        dt_{$tbl.table_id}.buttons( {$idx+1}, null ).container()
     );
-    
+
+    {* Increase button-group index*}
+    {$idx=$idx+1}
+    {/if}
+
     {if count($tbl.custom_actions) > 0}
         buttons = new $.fn.dataTable.Buttons( dt_{$tbl.table_id}, {
             buttons: [
@@ -1386,7 +1384,7 @@ $(document).ready(function() {
                     action: function ( e, dt, node, conf ) {
                         {$x.onclick_js}(e, dt, node, conf);
                     },
-                    className: 'btn-sm {$x.css}'
+                    className: 'btn-sm mb-1 {$x.css}'
                 },
                 {/foreach}
             ]
@@ -1394,8 +1392,8 @@ $(document).ready(function() {
     
         buttons.container().addClass('mr-md-2 mb-1 dt-custom-buttons');
 
-        dt_{$tbl.table_id}.buttons( 2, null ).container().after(
-            dt_{$tbl.table_id}.buttons( 3, null ).container()
+        dt_{$tbl.table_id}.buttons( {$idx}, null ).container().after(
+            dt_{$tbl.table_id}.buttons( {$idx+1}, null ).container()
         );
     {/if}
 
@@ -1427,6 +1425,35 @@ $(document).ready(function() {
 
 var dt_{$tbl.table_id}_initialized = false;
 
+function dt_{$tbl.table_id}_post_load(json) {
+    //Hack: when dt is reloaded and the selected rows is gone, deselect event is not raised!
+    setTimeout(function() {
+        let dt = dt_{$tbl.table_id};
+        let api = api_{$tbl.table_id};
+
+        let rows = dt.rows({ selected: true });
+        if (rows[0].length == 0) {
+            {if !empty($tbl.on_select_custom_js)}
+            //custom hook
+            {$tbl.on_select_custom_js}(dt, api, "{$tbl.table_id}");
+            {/if}
+            //on deselect all, clear subtables
+            {foreach $subtables as $subtbl}
+            if (fkey_value_{$subtbl.crud.table_id} != '') {
+                dt_{$subtbl.crud.table_id}.clear().draw();
+                fkey_value_{$subtbl.crud.table_id} = '';
+                fkey_label_{$subtbl.crud.table_id} = "";
+                fdata_{$subtbl.crud.table_id} = null;
+                fkey_column_{$subtbl.crud.table_id} = "";
+            }
+            {/foreach}
+        }
+    }
+    , 1000);
+    
+}
+
+{if !$tbl.initial_load}
 function dt_{$tbl.table_id}_ajax_load(data) {
     return new Promise(function(resolve, reject) {
         {if !$tbl.initial_load}
@@ -1483,7 +1510,9 @@ function dt_{$tbl.table_id}_ajax_load(data) {
         });
     });
 }
+{/if}
 
+{if isset($tbl.table_actions) && $tbl.table_actions.edit && $tbl.edit_row_action}
 function dt_{$tbl.table_id}_edit_row(row_id, dt, key) {
     let row = dt.row('#' +key);
 
@@ -1509,7 +1538,9 @@ function dt_{$tbl.table_id}_edit_row(row_id, dt, key) {
 
     return;
 }
+{/if}
 
+{if isset($tbl.table_actions) && $tbl.table_actions.delete && $tbl.delete_row_action}
 function dt_{$tbl.table_id}_delete_row(row_id, dt, key) {
     let row = dt.row('#' +key);
 
@@ -1531,7 +1562,9 @@ function dt_{$tbl.table_id}_delete_row(row_id, dt, key) {
     //     ]
     // } );
 }
+{/if}
 
+{if !empty($tbl.table_actions) && $tbl.table_actions.import}
 function dt_{$tbl.table_id}_import(e, dt, node, conf){
     $.confirm({
         columnClass: 'medium',
@@ -1645,5 +1678,6 @@ function dt_{$tbl.table_id}_import(e, dt, node, conf){
         }
     });
 }
+{/if}
 
 </script>

@@ -61,7 +61,7 @@
       },
     
       set: function ( conf, val ) {
-			if (isNaN(val))		val = 0;
+			  if (isNaN(val))		val = 0;
         conf._input_control.val(val).trigger("input");
 
         //trigger change event

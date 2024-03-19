@@ -529,7 +529,7 @@ border-right-color: #3c8dbc !important;
 	</div>
 </div>
 
-{include "$theme_prefix/disbekal/kadis/context_menu.tpl"}
+{include "disbekal/inventory/context_menu.tpl"}
 
 <script type="text/javascript">
 

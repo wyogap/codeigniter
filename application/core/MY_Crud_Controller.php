@@ -849,8 +849,12 @@ abstract class MY_Crud_Controller extends CI_Controller {
             }
 
             if (count($errors) > 0) {
+				$data['status'] = 0;
                 $data['error'] = implode(', ', $errors);
-            }
+            } else {
+				$data['status'] = 1;
+				$data['affected'] = count($data['data']);
+			}
 			echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
         }
         else if ($action=='remove') {
@@ -874,7 +878,11 @@ abstract class MY_Crud_Controller extends CI_Controller {
 
             $data['data'] = array(); 
             if (strlen($error_msg) > 0) {
+				$data['status'] = 0;
                 $data['error'] = $error_msg;
+            } else {
+				$data['status'] = 1;
+				$data['affected'] = count($values);
             }
 			echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
         }
@@ -891,9 +899,10 @@ abstract class MY_Crud_Controller extends CI_Controller {
 
             $key = $model->add($values[0], $filters);
             if ($key == 0) {
-                //$data['error'] = $this->db->error()['message'];
+				$data['status'] = 0;
 				$data['error'] = $model->get_error_message();
             } else {
+				$data['status'] = 1;
 				$data['data'] = [];
 				$detail = $model->detail($key, $filters); 
 				if ($detail != null && count($detail) > 0)		$data['data'][] = $detail;
@@ -1041,6 +1050,7 @@ abstract class MY_Crud_Controller extends CI_Controller {
 			$status = $model->import($_FILES['upload']);
 
             if($status == 0) {
+				$data['status'] = 0;
                 $data['error'] = $model->get_error_message();
             } else {
                 $data['status'] = $status;

@@ -14,9 +14,58 @@ class Mpo extends Mcrud_tablemeta
 
     protected static $SOFT_DELETE = true;
 
+    function approve($id) {
+        //TODO
+        return 1;
+
+    }
+
+    function close($id) {
+        //TODO
+        return 0;
+
+    }
+
+    function buattender($id) {
+        //TODO
+        return 0;
+
+    }
+
+    function buatkontrak($id) {
+        //TODO
+        return 0;
+
+    }
+
+    function buatperintahterima($id) {
+        //TODO
+        return 0;
+
+    }
+
     function list($filter = null, $limit = null, $offset = null, $orderby = null) {
         $this->reset_error();
         
+        //filter
+        $arr = array();
+        if (!empty($filter) && is_array($filter)) {
+            if (!empty($filter['year'])) {
+                $arr["a.financial_year"] = $filter['year'];
+                unset($filter['year']);
+            }
+            //clean up non existing filter columns
+            $ci_name = null;
+            foreach($filter as $key => $val) {
+                $ci_name = strtoupper($key);
+                if (false !== array_search($ci_name, $this->columns)) {
+                    $arr["a.$key"] = $val;
+                    //$this->db->where("a.$key", $val);
+                }
+            }
+        }
+        $filter = $arr;
+
         $this->db->select("a.poid, group_concat(e.doid separator ',') as doid, group_concat(concat('{\"doid\":\"',e.doid,'\",\"donum\":\"',e.donum,'\",\"dodate\":\"',e.dodate,'\",\"status\":\"',e.status,'\"}') separator ',') as dolabel");
         $this->db->from("tcg_po a");
         //$this->db->join("tcg_contract d", "d.contractid=a.contractid AND d.is_deleted=0", "INNER");
@@ -34,6 +83,7 @@ class Mpo extends Mcrud_tablemeta
         $this->db->select("e.doid as doid, e.dolabel as doid_label");
         $this->db->select("f.evaluationcode as evaluationid_label, f.status as evaluationid_status");
         $this->db->select("g.name as siteid_label");
+        $this->db->select("h.typecode as itemtypeid_label");
         //$this->db->from("tcg_po a");
         $this->db->join("tcg_demand b", "b.demandid=a.demandid AND b.is_deleted=0", "LEFT OUTER");
         $this->db->join("tcg_tender c", "c.tenderid=a.tenderid AND c.is_deleted=0", "LEFT OUTER");
@@ -41,7 +91,21 @@ class Mpo extends Mcrud_tablemeta
         $this->db->join("(" .$subquery. ") e", "e.poid=a.poid", "LEFT OUTER");
         $this->db->join("tcg_poevaluation f", "f.evaluationid=a.evaluationid AND f.is_deleted=0", "LEFT OUTER");
         $this->db->join("tcg_site g", "g.siteid=a.siteid AND g.is_deleted=0", "LEFT OUTER");
-        $this->db->where($filter);
+        $this->db->join("tcg_itemtype h", "h.typeid=a.itemtypeid AND h.is_deleted=0", "LEFT OUTER");
+
+        //filter
+        foreach($filter as $key => $val) {
+            if ($key == 'a.financial_year' && $val == date("Y")) {
+                //for current year, include draft version
+                $this->db->group_start();
+                $this->db->where($key, $val);
+                $this->db->or_where("(a.status='DRAFT')");
+                $this->db->group_end();                
+            }
+            else {
+                $this->db->where($key, $val);
+            }
+        }
 
         //soft delete
         $this->db->where('a.is_deleted', '0');
@@ -80,41 +144,17 @@ class Mpo extends Mcrud_tablemeta
     function detail($id, $filter = null) {
         $this->reset_error();
         
-        $this->db->select("a.poid, group_concat(e.doid separator ',') as doid, group_concat(concat('{\"doid\":\"',e.doid,'\",\"donum\":\"',e.donum,'\",\"dodate\":\"',e.dodate,'\",\"status\":\"',e.status,'\"}') separator ',') as dolabel");
-        $this->db->from("tcg_po a");
-        //$this->db->join("tcg_contract d", "d.contractid=a.contractid AND d.is_deleted=0", "INNER");
-        $this->db->join("tcg_do e", "e.contractid=a.contractid AND e.is_deleted=0", "INNER");
-        $this->db->group_by("a.poid");
-        $this->db->where($filter);
-        $subquery = $this->db->get_compiled_select();
+        if ($filter == null)    $filter = array();
 
-        $this->db->reset_query();
+        //add filter based on key
+        $filter['a.poid'] = $id;
 
-        $this->db->select("a.*");
-        $this->db->select("b.demandnum as demandid_label, b.description as demandid_desc, b.status as demandid_status");
-        $this->db->select("c.tendernum as tenderid_label, c.startdate as tenderid_startdate, c.enddate as tenderid_enddate");
-        $this->db->select("d.contractnum as contractid_label, d.description as contractid_desc, d.status as contractid_status, d.contractdate, d.contractvalue, d.vendorid");
-        $this->db->select("e.doid as doid, e.dolabel as doid_label");
-        $this->db->select("f.evaluationcode as evaluationid_label, f.status as evaluationid_status");
-        $this->db->select("g.name as siteid_label");
-        //$this->db->from("tcg_po a");
-        $this->db->join("tcg_demand b", "b.demandid=a.demandid AND b.is_deleted=0", "LEFT OUTER");
-        $this->db->join("tcg_tender c", "c.tenderid=a.tenderid AND c.is_deleted=0", "LEFT OUTER");
-        $this->db->join("tcg_contract d", "d.contractid=a.contractid AND d.is_deleted=0", "LEFT OUTER");
-        $this->db->join("(" .$subquery. ") e", "e.poid=a.poid", "LEFT OUTER");
-        $this->db->join("tcg_poevaluation f", "f.evaluationid=a.evaluationid AND f.is_deleted=0", "LEFT OUTER");
-        $this->db->join("tcg_site g", "g.siteid=a.siteid AND g.is_deleted=0", "LEFT OUTER");
-        $this->db->where($filter);
+        $arr = $this->list($filter);
+        if ($arr == null || count($arr) == 0)       return $arr;
 
-        //soft delete
-        $this->db->where('a.is_deleted', '0');
-        $this->db->where("a.poid", $id);
-
-        $arr = $this->db->get("tcg_po a")->row_array();
-        if ($arr == null)       return $arr;
-
-        return $arr;
+        return $arr[0];
     }
+
 }
 
   
