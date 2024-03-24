@@ -14,6 +14,13 @@
 
 <style>
 
+.myDivIcon {
+  text-align: center;
+  /* Horizontally center the text (icon) */
+  line-height: 20px;
+  /* Vertically center the text (icon) */
+}
+
 a > .info-box.bg-purple:hover {
 	background-color: #8e54f9!important;
 }
@@ -123,7 +130,7 @@ border-right-color: #3c8dbc !important;
     <div class="container-fluid">
         <div class="row ">
 			<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-				<div id="peta" style="width: 100%; height: 400px;"></div><br>
+				<div id="peta" style="width: 100%; height: 500px;"></div><br>
 			</div>
 			<div class="col-xl-12" style="margin-top: -8px;">
 				<div class="info-box bg-white" style="min-height: 0px;">
@@ -1751,6 +1758,13 @@ border-right-color: #3c8dbc !important;
 			popupAnchor:  [0, -15] // point from which the popup should open relative to the iconAnchor
 		});		
 
+		// icon = L.divIcon({
+		// 	// iconUrl: '{$base_url}images/disbekal-xsm.png',
+		// 	html: '<i class="fas fa-landmark fa-2x"></i>',
+		// 	iconSize: [20, 20],
+		// 	className: 'myDivIcon'
+		// });
+
 		map_pendaftaran();
 	});
 
@@ -1761,7 +1775,7 @@ border-right-color: #3c8dbc !important;
 			data.data.forEach(function(value, index, array) {
 				if (value.latitude != "" && value.latitude != null 
 						& value.longitude != "" && value.longitude != null) {
-					if (value.sitecode=='DISBEKAL') {
+					if (value.orgcode=='DISBEKAL') {
 						var msg = "<a href='#' onclick='switch_store(\"" +value.storeid+ "\")'>" +value.description+"</a><br>" 
 							+ "Nilai Stok: <b>" +indo_money(value.nilai_total)+ "</b>, Rusak: <b>" +indo_money(value.rusak)+ "</b>, Kadaluarsa: <b>" +indo_money(value.kadaluarsa)+ "</b>"
 							+ "<br>Perwira Gudang: ";

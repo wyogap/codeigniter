@@ -553,7 +553,7 @@
             if (error) {
                 let msg = '{__("Data wajib belum diisi atau tidak berhasil divalidasi")}';
                 form.trigger('crud.error', "validation-error", msg, null);
-                toastr.error(msg, "validation-error");
+                toastr.error(msg);
                 return;
             } 
 
@@ -582,15 +582,18 @@
                     //raise event
                     if (id == 0) {
                         //get new id
-                        if (typeof response.error != "undefined") {
+                        if (response.status == 0 || response.error != undefined) {
+                            if (response.error === null || response.error == "") {
+                                response.error = "unspecified-error";
+                            }
                             form.trigger('crud.error', "ajax-error", response.error, form_data);
-                            toastr.error(response.error, "ajax-error");
+                            toastr.error(response.error);
                         } 
-                        else if (typeof response.data !== "undefined" && response.data.length > 0) {
+                        else if (response.data !== undefined && response.data.length > 0) {
                             let item = response.data[0];
-                            if (item === "undefined" || item === null) {
+                            if (item === undefined || item === null) {
                                 form.trigger('crud.error', "ajax-error", "invalid-response", form_data);
-                                toastr.error("{__('Response tidak valid.')}!", "ajax-error");
+                                toastr.error("{__('Response tidak valid.')}!");
                                 return;
                             }
 
@@ -608,14 +611,17 @@
                         }
                         else {
                             form.trigger('crud.error', "ajax-error", "invalid-response", form_data);
-                            toastr.error("{__('Response tidak valid.')}!", "ajax-error");
+                            toastr.error("{__('Response tidak valid.')}!");
                         }
                     }
                     else {
                         //TODO: update fields
-                        if (typeof response.error != "undefined") {
+                        if (response.status == 0 || response.error != undefined) {
+                            if (response.error === null || response.error == "") {
+                                response.error = "unspecified-error";
+                            }
                             form.trigger('crud.error', "ajax-error", response.error, form_data);
-                            toastr.error(response.error, "ajax-error");
+                            toastr.error(response.error);
                         } else {
                             //raise event
                             form.trigger('crud.updated', response, form_data);
@@ -625,9 +631,11 @@
 
                 },
                 error: function(jqXhr, textStatus, errorMessage) {
-
+                    if (errorMessage === undefined || errorMessage === null || errorMessage == "") {
+                        errorMessage = textStatus;
+                    }
                     form.trigger('crud.error', textStatus, errorMessage, form_data);
-                    toastr.error(errorMessage, "ajax-error");
+                    toastr.error("Ajax error: " +textStatus);
                 }    
             }); 
 

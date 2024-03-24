@@ -5,7 +5,16 @@ abstract class MY_Crud_Controller extends CI_Controller {
 	protected static $PAGE_GROUP = null;
 	protected static $AUTHENTICATED = true;
 
-	//abstract function get_ajax_url($table);
+    const HTTP_OK = 200;
+    const HTTP_CREATED = 201;
+    const HTTP_NOT_MODIFIED = 304;
+    const HTTP_BAD_REQUEST = 400;
+    const HTTP_UNAUTHORIZED = 401;
+    const HTTP_FORBIDDEN = 403;
+    const HTTP_NOT_FOUND = 404;
+    const HTTP_METHOD_NOT_ALLOWED = 405;
+    const HTTP_NOT_ACCEPTABLE = 406;
+    const HTTP_INTERNAL_ERROR = 500;
 
 	abstract function index($params = array());
 
@@ -26,9 +35,9 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		$isLoggedIn = $this->session->userdata('is_logged_in');
 		if (static::$AUTHENTICATED && (!isset($isLoggedIn) || $isLoggedIn != TRUE)) {
 			if (isset($params) && count($params) > 0 && $params[0] == 'json') {
-				json_not_login();
+				$this->json_not_login();
 			} else {
-				redirect(site_url() .'/auth');
+				redirect(site_url() .'auth');
 			}
 		}
 
@@ -36,7 +45,8 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		{
 			return call_user_func_array(array($this, $method), $params);
 		}
-		$this->table($method, $params);
+
+        return $this->table($method, $params);
 	}
 
 	protected function table($name = '', $params = array())
@@ -53,6 +63,9 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		//check for permission
 		$this->load->model(array('crud/Mpages', 'crud/Mpermission'));
 		if (!$this->Mpermission->can_view($name)) {
+			if (isset($params) && count($params) > 0 && ($params[0] == 'lookup' || $params[0] == 'json')) {
+                $this->json_not_authorized();
+			}
 			theme_403_with_navigation($navigation);		//not-authorized
 			return;
 		}
@@ -60,26 +73,34 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		$page = $this->Mpages->get_page($name, static::$PAGE_GROUP);
 		if ($page == null) {
 			if (isset($params) && count($params) > 0 && ($params[0] == 'lookup' || $params[0] == 'json')) {
-				$json['error'] = "invalid-page";
-				echo json_encode($json, JSON_INVALID_UTF8_IGNORE);		
-				return;			
+                $this->json_invalid_page();
 			}
 			theme_404_with_navigation($navigation);
 			return;
 		}
 
-		if ($page['page_type']!='custom' && !empty($page['crud_table_id'])) {
+        if ($page['page_type']=='form' && !empty($page['crud_table_id'])&& (!isset($params) || count($params) == 0)) {
+            if ($this->Mpermission->can_edit($page['name'])) {
+                //edit
+                $this->table_edit($page, $navigation);
+            }
+            else {
+                //detail
+                $this->table_detail($page, $navigation);
+            }
+            return;
+        }
+
+		if (!empty($page['crud_table_id']) && isset($params) && count($params) > 0) {
+            $action = $params[0];
+
 			//CRUD page
-			if (isset($params) && count($params) > 0 && $params[0] == 'add') {
-				unset($params[0]);
+			if ($action == 'add') {
 				$this->table_add($page, $navigation);
 				return;
 			}
-	
-			if (isset($params) && count($params) > 0 && $params[0] == 'edit') {
+            else if ($action == 'edit') {
 				unset($params[0]);
-	
-				//var_dump($params);
 	
 				$id = array_shift($params);
 				if ($id != null)		$this->table_edit($page, $navigation, $id);
@@ -87,44 +108,27 @@ abstract class MY_Crud_Controller extends CI_Controller {
 				
 				return;
 			}
-										
-			if (isset($params) && count($params) > 0 && $params[0] == 'lookup') {
+            else if ($action == 'detail') {
 				unset($params[0]);
-	
-				$model = $this->get_model_for_lookup($page['crud_table_id']);
-				if ($model == null) {
-					$json['error'] = "invalid-page";
-					echo json_encode($json, JSON_INVALID_UTF8_IGNORE);		
-					return;			
-				}
-	
-				$this->table_lookup($model, $params);
+
+                $id = array_shift($params);
+				$this->table_detail($page, $navigation, $id);
 				return;
 			}
-	
-			//crud pages
-			$model = $this->get_model($page['crud_table_id']);
-			if ($model == null) {
-				theme_404_with_navigation($navigation);
+			else if ($action == 'lookup') {
+				$this->table_lookup($page);
 				return;
 			}
-	
-			if (isset($params) && count($params) > 0 && $params[0] == 'detail') {
-				unset($params[0]);
-				$this->table_detail($page, $model, $navigation, $params);
+            else if ($action == 'json') {
+				$this->table_json($page);
 				return;
-			}
-	
-			if (isset($params) && count($params) > 0 && $params[0] == 'json') {
+			} 
+            else if ($action == 'subtable') {
 				unset($params[0]);
-				$this->table_json($page['name'], $model, $params);
-				return;
-			}
-	
-			if (isset($params) && count($params) > 1 && $params[0] == 'subtable') {
-				unset($params[0]);
+                
 				$subtable_id = array_shift($params);
-				$this->table_subtable($page['id'], $subtable_id, $params);
+                $parent_id = array_shift($params);
+				$this->table_subtable($page, $subtable_id, $parent_id);
 				return;
 			}	
 		}
@@ -193,6 +197,13 @@ abstract class MY_Crud_Controller extends CI_Controller {
 			return;
 		}
 
+        //crud pages
+        $model = $this->get_model($page['crud_table_id']);
+        if ($model == null) {
+            theme_404_with_navigation($navigation);
+            return;
+        }
+	
 		$tablemeta = $model->tablemeta();
 
 		//pass on the GET params
@@ -242,29 +253,29 @@ abstract class MY_Crud_Controller extends CI_Controller {
 			$page_data['use_editor'] = 1;
 			$page_data['use_select2'] = 1;
 		}
-		else if ($page_type == 'form') {
-			$template = '/crud/form.tpl';
-			//get detail key
-			$key = $page['userdata_key'];
-			if (!empty($key)) {
-				//actual key is from userdata
-				$key = $this->session->userdata($key);
-				$detail = $model->detail($key);
-			}
-			else if (isset($params) && count($params) > 0) {
-				//get from param
-				$key = $params[0];
-				$detail = $model->detail($key);
-			}
-			else {
-				$detail = array();
-			}
-			$page_data['detail'] = $detail; 
-			//if it is crud page, always enable datatable
-			$page_data['use_datatable'] = 1;
-			$page_data['use_editor'] = 1;
-			$page_data['use_select2'] = 1;
-		}
+		// else if ($page_type == 'form') {
+		// 	$template = '/crud/form.tpl';
+		// 	//get detail key
+		// 	$key = $page['userdata_key'];
+		// 	if (!empty($key)) {
+		// 		//actual key is from userdata
+		// 		$key = $this->session->userdata($key);
+		// 		$detail = $model->detail($key);
+		// 	}
+		// 	else if (isset($params) && count($params) > 0) {
+		// 		//get from param
+		// 		$key = $params[0];
+		// 		$detail = $model->detail($key);
+		// 	}
+		// 	else {
+		// 		$detail = array();
+		// 	}
+		// 	$page_data['detail'] = $detail; 
+		// 	//if it is crud page, always enable datatable
+		// 	$page_data['use_datatable'] = 1;
+		// 	$page_data['use_editor'] = 1;
+		// 	$page_data['use_select2'] = 1;
+		// }
 		else {
 			$template = '/crud/table.tpl';
 		}
@@ -311,8 +322,7 @@ abstract class MY_Crud_Controller extends CI_Controller {
 	}
 
 	protected function table_add($page, $navigation) {
-		$page_type = $page['page_type'];
-		if ($page_type != 'table') {
+		if (empty($page['crud_table_id'])) {
 			theme_404_with_navigation($navigation);		//not-found
 			return;
 		}
@@ -383,7 +393,12 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		}
 
 		//show link back to table
-		$page_data['show_table_link'] = true;
+        if ($page['page_type'] == 'form') {
+            $page_data['show_table_link'] = false;
+        }
+        else {
+            $page_data['show_table_link'] = true;
+        }
 
 		//override paging size if necessary
 		if (!empty($page['page_size'])) {
@@ -419,8 +434,7 @@ abstract class MY_Crud_Controller extends CI_Controller {
 	}
 
 	protected function table_edit($page, $navigation, $id=null) {
-		$page_type = $page['page_type'];
-		if ($page_type != 'table') {
+		if (empty($page['crud_table_id'])) {
 			theme_404_with_navigation($navigation);		//not-found
 			return;
 		}
@@ -489,7 +503,12 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		}
 
 		//show link back to table
-		$page_data['show_table_link'] = true;
+        if ($page['page_type'] == 'form') {
+            $page_data['show_table_link'] = false;
+        }
+        else {
+            $page_data['show_table_link'] = true;
+        }
 
 		//override paging size if necessary
 		if (!empty($page['page_size'])) {
@@ -551,9 +570,8 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		$this->smarty->render_theme($template, $page_data);
 	}
 
-	protected function table_detail($page, $model, $navigation, $params = null) {
-		$page_type = $page['page_type'];
-		if ($page_type != 'table') {
+	protected function table_detail($page, $navigation, $id = null) {
+		if (empty($page['crud_table_id'])) {
 			theme_404_with_navigation($navigation);		//not-found
 			return;
 		}
@@ -564,7 +582,12 @@ abstract class MY_Crud_Controller extends CI_Controller {
 			return;
 		}
 
-		$id = array_shift($params);
+        //crud pages
+        $model = $this->get_model($page['crud_table_id']);
+        if ($model == null) {
+            theme_404_with_navigation($navigation);
+            return;
+        }
 
 		//controller name
 		if (!empty($this->session->userdata('page_role'))) {
@@ -624,7 +647,12 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		}
 
 		//show link back to table
-		$page_data['show_table_link'] = true;
+        if ($page['page_type'] == 'form') {
+            $page_data['show_table_link'] = false;
+        }
+        else {
+            $page_data['show_table_link'] = true;
+        }
 
 		//override paging size if necessary
 		if (!empty($page['page_size'])) {
@@ -686,91 +714,22 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		$this->smarty->render_theme($template, $page_data);
 	}
 
-	// protected function table_detail($page, $model, $navigation, $params = null) {
-	// 	if ($params == null || count($params) == 0) {
-	// 		theme_404_with_navigation($navigation);
-	// 		return;
-	// 	}
+	protected function table_json($page) {
+		if (empty($page['crud_table_id'])) {
+			$this->json_invalid_page();
+		}
 
-	// 	$page_name = $page['name'];
-
-	// 	$this->load->model(array('crud/Mpermission'));
-	// 	if (!$this->Mpermission->can_view($page_name)) {
-	// 		$data['error'] = 'not-authorized';
-	// 		echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
-	// 		return;
-	// 	}
-
-	// 	//$id = $params[0];
-	// 	$id = array_shift($params);
-	// 	$page_data['detail'] = $model->detail($id);
-
-	// 	//controller name
-	// 	if (!empty($this->session->userdata('page_role'))) {
-	// 		$controller = $this->session->userdata('page_role');
-	// 	}
-	// 	else {
-	// 		$controller = $this->router->class;
-	// 	}
-	// 	$page_data['controller'] = $controller;
-
-	// 	$page_data['page_name']              = $page['name'];
-	// 	$page_data['query_params']           = $params;
-		
-	// 	$page_data['page_role']           	 = $this->session->userdata('page_role');
-
-	// 	$page_data['page_header'] 			 = $page['page_header'];
-	// 	$page_data['page_footer'] 			 = $page['page_footer'];
-
-	// 	if (!empty($page['header_view'])) 		$page_data['header_view'] = $this->smarty->get_template_path($page['header_view']);
-	// 	if (!empty($page['footer_view'])) 		$page_data['footer_view'] = $this->smarty->get_template_path($page['footer_view']);
-
-	// 	$tablemeta = $model->tablemeta();
-
-	// 	$page_data['page_title']             = __("Ubah") ." ". $tablemeta['title'];
-	// 	$page_data['page_icon']              = '';
-
-	// 	//ajax url for data loading
-	// 	//Important: we only provide the base path! ie. /crud/page-name
-	// 	$base_ajax_url = site_url() .'/'. $controller .'/'. $page_name;
-
-	// 	$tablemeta['ajax'] = $base_ajax_url .'/json';
-	// 	$tablemeta['crud_url'] = $base_ajax_url;
-
-	// 	//easy access
-	// 	$page_data['table_meta']			 = $tablemeta; 
-	// 	$page_data['page']			 		 = $page; 
-	// 	$page_data['navigation']	 		 = $navigation;
-
-	// 	$page_data['crud']			 = $tablemeta; 
-
-	// 	// $custom_view = $model->custom_view();
-	// 	// if (empty($custom_view)) {
-	// 	// 	$custom_view = 'crud/form.tpl';
-	// 	// }
-
-	// 	$custom_view = '/crud/form.tpl';
-
-	// 	//permission
-	// 	$permissions = array (
-	// 		'allow_edit'	=> $this->Mpermission->can_edit($page_name)
-	// 	);
-	// 	$page_data['permissions']	= $permissions;
-		
-	// 	//if it is crud page, always enable datatable
-	// 	$page_data['use_datatable'] = 1;
-	// 	$page_data['use_editor'] = 1;
-	// 	$page_data['use_select2'] = 1;
-
-	// 	//echo json_encode($page_data);
-	// 	$this->smarty->render_theme($custom_view, $page_data);
-	// }
-
-	protected function table_json($page_name, $model, $params = null) {
-		$table_name = $model->tablename();
+        //crud pages
+        $model = $this->get_model($page['crud_table_id']);
+        if ($model == null) {
+            $this->json_invalid_page();
+        }
+	
+		// $table_name = $model->tablename();
 		$db_table_name = $model->editable_table();
+        $page_name = $page['name'];
 
-		//build params
+        //build params
 		$filters = array();
 		foreach($this->input->post() as $key => $val)
 		{
@@ -804,9 +763,7 @@ abstract class MY_Crud_Controller extends CI_Controller {
 
 			$this->load->model(array('crud/Mpermission'));
 			if (!$this->Mpermission->can_view($page_name)) {
-				$data['error'] = 'not-authorized';
-				echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
-				return;
+                $this->json_not_authorized();
 			}
 			
 			if (empty($search)) {
@@ -823,9 +780,7 @@ abstract class MY_Crud_Controller extends CI_Controller {
 
 			$this->load->model(array('crud/Mpermission'));
 			if (!$this->Mpermission->can_edit($page_name)) {
-				$data['error'] = 'not-authorized';
-				echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
-				return;
+				$this->json_not_authorized();
 			}
 
 			$values = $this->input->post("data");
@@ -861,9 +816,7 @@ abstract class MY_Crud_Controller extends CI_Controller {
 
 			$this->load->model(array('crud/Mpermission'));
 			if (!$this->Mpermission->can_delete($page_name)) {
-				$data['error'] = 'not-authorized';
-				echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
-				return;
+				$this->json_not_authorized();
 			}
 
 			$values = $this->input->post("data");
@@ -890,9 +843,7 @@ abstract class MY_Crud_Controller extends CI_Controller {
 
 			$this->load->model(array('crud/Mpermission'));
 			if (!$this->Mpermission->can_add($page_name)) {
-				$data['error'] = 'not-authorized';
-				echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
-				return;
+				$this->json_not_authorized();
 			}
 
 			$values = $this->input->post("data");
@@ -914,9 +865,7 @@ abstract class MY_Crud_Controller extends CI_Controller {
 
 			$this->load->model(array('crud/Mpermission'));
 			if (!$this->Mpermission->can_edit($page_name)) {
-				$data['error'] = 'not-authorized';
-				echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
-				return;
+				$this->json_not_authorized();
 			}
 
 			$key = $this->input->post("uploadField");
@@ -947,9 +896,7 @@ abstract class MY_Crud_Controller extends CI_Controller {
 
 			$this->load->model(array('crud/Mpermission'));
 			if (!$this->Mpermission->can_edit($page_name)) {
-				$data['error'] = 'not-authorized';
-				echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
-				return;
+				$this->json_not_authorized();
 			}
             
             $key = $this->input->post("field");
@@ -988,9 +935,7 @@ abstract class MY_Crud_Controller extends CI_Controller {
 
 			$this->load->model(array('crud/Mpermission'));
 			if (!$this->Mpermission->can_edit($page_name)) {
-				$data['error'] = 'not-authorized';
-				echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
-				return;
+				$this->json_not_authorized();
 			}
 
 			$files = $this->input->post("files");
@@ -1042,9 +987,7 @@ abstract class MY_Crud_Controller extends CI_Controller {
 
 			$this->load->model(array('crud/Mpermission'));
 			if (!$this->Mpermission->can_edit($page_name) || !$this->Mpermission->can_add($page_name)) {
-				$data['error'] = 'not-authorized';
-				echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
-				return;
+				$this->json_not_authorized();
 			}
 
 			$status = $model->import($_FILES['upload']);
@@ -1060,14 +1003,26 @@ abstract class MY_Crud_Controller extends CI_Controller {
             return;
         }   
         else {
-            $data['error'] = __('not-implemented');
-            echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
+            $this->json_not_implemented();
         }
 
 		return;
 	}
 
-	protected function table_lookup($model, $params = null) {
+	protected function table_lookup($page) {
+		if (empty($page['crud_table_id'])) {
+			$this->json_invalid_page();
+		}
+
+        //crud pages
+        $model = $this->get_model($page['crud_table_id']);
+        if ($model == null) {
+            $this->json_invalid_page();
+        }
+	
+		// $table_name = $model->tablename();
+		// $db_table_name = $model->editable_table();
+        // $page_name = $page['name'];
 			
 		//build params
 		$filters = array();
@@ -1091,7 +1046,14 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		echo json_encode($json, JSON_INVALID_UTF8_IGNORE);	
 	}
 
-	protected function table_subtable($page_id, $subtable_id, $params = null) {
+	protected function table_subtable($page, $subtable_id, $parent_id) {
+		if (empty($page['crud_table_id'])) {
+			$this->json_invalid_page();
+		}
+
+		// $table_name = $model->tablename();
+		// $db_table_name = $model->editable_table();
+        $page_id = $page['id'];
 
 		$subtable = $this->Mpages->subtable_detail($page_id, $subtable_id);
 		if($subtable == null) {
@@ -1100,15 +1062,12 @@ abstract class MY_Crud_Controller extends CI_Controller {
 			return;
 		}
 
-		$model = $this->get_model($subtable_id);
-		if ($model == null) {
-			$data['error'] = 'Invalid table-id';
-			echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
-			return;
-		}
-		
-		$page_name = $subtable['subtable_name'];
-
+        //crud pages
+        $model = $this->get_model($subtable['subtable_id']);
+        if ($model == null) {
+            $this->json_invalid_page();
+        }
+	
 		//build params
 		$filters = array();
 		foreach($this->input->post() as $key => $val)
@@ -1131,16 +1090,11 @@ abstract class MY_Crud_Controller extends CI_Controller {
 
 			$this->load->model(array('crud/Mpermission'));
 			if (!$this->Mpermission->can_view_table_id($subtable_id)) {
-				$data['error'] = 'not-authorized';
-				echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
-				return;
+				$this->json_not_authorized();
 			}
 			
-			$filter_value = '';
-			if (isset($params) && count($params) > 0) {
-				$filter_value = $params[0];
-			}
-			$filters[ $subtable['subtable_fkey_column'] ] = $filter_value;
+            //filter by parent key
+			$filters[ $subtable['subtable_fkey_column'] ] = $parent_id;
 			
 			$json['data'] = $model->list($filters);
 
@@ -1150,23 +1104,16 @@ abstract class MY_Crud_Controller extends CI_Controller {
 
 			$this->load->model(array('crud/Mpermission'));
 			if (!$this->Mpermission->can_edit_table_id($subtable_id)) {
-				$data['error'] = 'not-authorized';
-				echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
-				return;
+				$this->json_not_authorized();
 			}
 
 			$values = $this->input->post("data");
-
-			$filter_value = '';
-			if (isset($params) && count($params) > 0) {
-				$filter_value = $params[0];
-			}
 
 			$error_msg = "";
 			$data['data'] = array();
 			foreach ($values as $key => $valuepair) {
 				//enforce the parent key
-				$valuepair[ $subtable['subtable_fkey_column'] ] = $filter_value;
+				$valuepair[ $subtable['subtable_fkey_column'] ] = $parent_id;
 
 				$key = $model->update($key, $valuepair, $filters);
 				if (!$key)	continue;		//TODO: catch error message
@@ -1185,12 +1132,13 @@ abstract class MY_Crud_Controller extends CI_Controller {
 
 			$this->load->model(array('crud/Mpermission'));
 			if (!$this->Mpermission->can_delete_table_id($subtable_id)) {
-				$data['error'] = 'not-authorized';
-				echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
-				return;
+				$this->json_not_authorized();
 			}
 
 			$values = $this->input->post("data");
+
+            //can only delete children
+            $filters[ $subtable['subtable_fkey_column'] ] = $parent_id;
 
             $error_msg = "";
 			foreach ($values as $key => $valuepair) {
@@ -1208,18 +1156,13 @@ abstract class MY_Crud_Controller extends CI_Controller {
 
 			$this->load->model(array('crud/Mpermission'));
 			if (!$this->Mpermission->can_add_table_id($subtable_id)) {
-				$data['error'] = 'not-authorized';
-				echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
-				return;
+				$this->json_not_authorized();
 			}
 
 			$values = $this->input->post("data");
 
-			$filter_value = '';
-			if (isset($params) && count($params) > 0) {
-				$filter_value = $params[0];
-			}
-			$values[0][ $subtable['subtable_fkey_column'] ] = $filter_value;
+            //enforce parent key
+			$values[0][ $subtable['subtable_fkey_column'] ] = $parent_id;
 			
 			$key = $model->add($values[0], $filters);
             if ($key == 0) {
@@ -1236,9 +1179,7 @@ abstract class MY_Crud_Controller extends CI_Controller {
 
 			$this->load->model(array('crud/Mpermission'));
 			if (!$this->Mpermission->can_edit_table_id($subtable_id)) {
-				$data['error'] = 'not-authorized';
-				echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
-				return;
+				$this->json_not_authorized();
 			}
 
 			$key = $this->input->post("uploadField");
@@ -1269,9 +1210,7 @@ abstract class MY_Crud_Controller extends CI_Controller {
 
 			$this->load->model(array('crud/Mpermission'));
 			if (!$this->Mpermission->can_add_table_id($subtable_id) || !$this->Mpermission->can_edit_table_id($subtable_id)) {
-				$data['error'] = 'not-authorized';
-				echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
-				return;
+				$this->json_not_authorized();
 			}
 
 			$status = $model->import($_FILES['upload']);
@@ -1286,8 +1225,7 @@ abstract class MY_Crud_Controller extends CI_Controller {
             return;
         }   
         else {
-            $data['error'] = __('not-implemented');
-            echo json_encode($data, JSON_INVALID_UTF8_IGNORE);	
+            $this->json_not_implemented();
         }
 
 		return;
@@ -1349,4 +1287,82 @@ abstract class MY_Crud_Controller extends CI_Controller {
 
 		return $sessions;
 	}
+
+    protected function json_not_login() {
+        $data['error'] = 'not-login';
+        $this->json_response($data, self::HTTP_FORBIDDEN);
+    }
+
+    protected function json_not_authorized() {
+        $data['error'] = 'not-authorized';
+        $this->json_response($data, self::HTTP_UNAUTHORIZED);
+    }
+
+    protected function json_not_implemented() {
+        $data['error'] = 'not-implemented';
+        $this->json_response($data, self::HTTP_FORBIDDEN);
+    }
+
+    protected function json_invalid_page() {
+        $data['error'] = "invalid-page";
+        $this->json_response($data, self::HTTP_OK);
+    }
+
+    protected function json_response($data = null, $http_code = null, $continue = false)
+    {
+        if (!isset($this->output)) {
+            //most probably called from constructor, when initialization is not yet completed
+            echo json_encode($data, JSON_INVALID_UTF8_IGNORE); exit;
+        }
+
+        ob_start();
+        // If the HTTP status is not NULL, then cast as an integer
+        if ($http_code !== null) {
+            // So as to be safe later on in the process
+            $http_code = (int) $http_code;
+        }
+
+        // Set the output as NULL by default
+        $output = null;
+
+        // If data is NULL and no HTTP status code provided, then display, error and exit
+        if ($data === null && $http_code === null) {
+            $http_code = self::HTTP_NOT_FOUND;
+        }
+
+        // If data is not NULL and a HTTP status code provided, then continue
+        elseif ($data !== null) {
+            // Parse as a json, so as to be a 'string'
+            $output = json_encode($data, JSON_INVALID_UTF8_IGNORE);
+        }
+
+        // If not greater than zero, then set the HTTP status code as 200 by default
+        // Though perhaps 500 should be set instead, for the developer not passing a
+        // correct HTTP status code
+        $http_code > 0 || $http_code = self::HTTP_OK;
+
+        $this->output->set_status_header($http_code);
+        $this->output->set_content_type('application/json');
+
+        // Output the data
+        $this->output->set_output($output);
+
+        if ($continue === false) {
+            // Display the data and exit execution
+            $this->output->_display();
+            exit;
+        } else {
+            if (is_callable('fastcgi_finish_request')) {
+                // Terminates connection and returns response to client on PHP-FPM.
+                $this->output->_display();
+                ob_end_flush();
+                fastcgi_finish_request();
+                ignore_user_abort(true);
+            } else {
+                // Legacy compatibility.
+                ob_end_flush();
+            }
+        }
+        ob_end_flush();
+    }    
 }

@@ -95,7 +95,9 @@
 <link href="{$base_url}assets/dripicons/icons.min.css" rel="stylesheet" type="text/css" />
 
 <!-- many of the 3rd-party library (including datatables) require older version of materialdesign icon -->
+{if !empty($use_google_fonts)}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/MaterialDesign-Webfont/3.4.93/css/materialdesignicons.min.css" integrity="sha512-9hrcuHFRJBsyfJiotGL1U+zraOkuI5fzlo0X0C8s7gkkgV1wLkmiP1JbUjVAws4Wo8FcSK82Goj64vT8ERocgg==" crossorigin="anonymous" />
+{/if}
 
 <!-- materialdesignicon v5 -->
 <!-- <link href="{$base_url}assets/materialdesignicons/css/icons.min.css" rel="stylesheet" type="text/css" /> -->
@@ -119,8 +121,10 @@
 <link href="{$base_url}{$theme_prefix}/app.css" rel="stylesheet" type="text/css" />
 <!-- <link href="{$base_url}{$theme_prefix}/css/main.css" rel="stylesheet" type="text/css" /> -->
 
+{if !empty($use_google_fonts)}
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;display=swap" rel="stylesheet">
+{/if}
 
 <style>
 
@@ -257,4 +261,30 @@ table.dataTable.nowrap th, table.dataTable.nowrap td {
         background-color: rgba(0, 0, 0, 0.15) !important;
     }
 
+    /** OPTION DROPDOWN **/
+    .select2-container .select-option-level-1 {
+        padding-left: 0px !important;
+    }
+
+    .select2-container .select-option-level-2 {
+        padding-left: 12px !important;
+    }
+
+    .select2-container .select-option-level-3 {
+        padding-left: 24px !important;
+    }
+
+    .select2-container .select-option-level-4 {
+        padding-left: 36px !important;
+    }
+
+    .select2-container .select-option-level-5 {
+        padding-left: 48px !important;
+    }
+
+    .select2-container .select-option-group {
+        font-weight: bold !important;
+        color: black;
+    }
+    /** END OPTION-DROPDOWN **/
 </style>

@@ -118,7 +118,8 @@
                     if (response.error !== undefined && response.error !== null && response.error !== '') {
                         msg = response.error;
                     }
-                    toastr.error("Tidak berhasil mengarsipkan Kontrak " +label+ ". Error: " +msg, 'Error');
+                    toastr.error("Tidak berhasil mengarsipkan Kontrak " +label)
+                    toastr.error(msg)
                     return;
                 }
 
@@ -130,7 +131,7 @@
                 toastr.success("Berhasil menutup dan mengarsipkan Kontrak " +label+ ".");
             },
             error: function(jqXhr, textStatus, errorMessage) {
-                toastr.error(errorMessage, 'Error');
+                toastr.error(errorMessage)
             }
         });
         {/literal}
@@ -158,7 +159,8 @@
                     if (response.error !== undefined && response.error !== null && response.error !== '') {
                         msg = response.error;
                     }
-                    toastr.error("Tidak berhasil menyetujui Kontrak " +label+ ". Error: " +msg, 'Error');
+                    toastr.error("Tidak berhasil menyetujui Kontrak " +label)
+                    toastr.error(msg)
                     return;
                 }
 
@@ -171,7 +173,7 @@
                 toastr.success("Berhasil menyetujui Kontrak " +label+ ".");
             },
             error: function(jqXhr, textStatus, errorMessage) {
-                toastr.error(errorMessage, 'Error');
+                toastr.error(errorMessage)
             }
         });
         {/literal}
@@ -199,7 +201,8 @@
                     if (response.error !== undefined && response.error !== null && response.error !== '') {
                         msg = response.error;
                     }
-                    toastr.error("Tidak berhasil membuat DRAFT Perintah Terima untuk Kontrak " +label+ ". Error: " +msg, 'Error');
+                    toastr.error("Tidak berhasil membuat DRAFT Perintah Terima untuk Kontrak " +label)
+                    toastr.error(msg)
                     return;
                 }
 
@@ -212,7 +215,7 @@
                 toastr.success("Berhasil membuat DRAFT Perintah Terima untuk Kontrak " +label+ ".");
             },
             error: function(jqXhr, textStatus, errorMessage) {
-                toastr.error(errorMessage, 'Error');
+                toastr.error(errorMessage)
             }
         });
         {/literal}
@@ -241,7 +244,8 @@
                     if (response.error !== undefined && response.error !== null && response.error !== '') {
                         msg = response.error;
                     }
-                    toastr.error("Tidak berhasil membuat DRAFT Kontrak untuk Tender " +label+ ". Error: " +msg, 'Error');
+                    toastr.error("Tidak berhasil membuat DRAFT Kontrak untuk Tender " +label)
+                    toastr.error(msg)
                     return;
                 }
 
@@ -250,7 +254,7 @@
                 toastr.success("Berhasil membuat DRAFT Kontrak dari Tender " +label+ ".");
             },
             error: function(jqXhr, textStatus, errorMessage) {
-                toastr.error(errorMessage, 'Error');
+                toastr.error(errorMessage)
             }
         });
         {/literal}
@@ -279,7 +283,8 @@
                     if (response.error !== undefined && response.error !== null && response.error !== '') {
                         msg = response.error;
                     }
-                    toastr.error("Tidak berhasil membuat DRAFT Kontrak untuk Pengadaan " +label+ ". Error: " +msg, 'Error');
+                    toastr.error("Tidak berhasil membuat DRAFT Kontrak untuk Pengadaan " +label)
+                    toastr.error(msg)
                     return;
                 }
 
@@ -288,7 +293,7 @@
                 toastr.success("Berhasil membuat DRAFT Kontrak dari Pengadaan " +label+ ".");
             },
             error: function(jqXhr, textStatus, errorMessage) {
-                toastr.error(errorMessage, 'Error');
+                toastr.error(errorMessage)
             }
         });
         {/literal}
@@ -305,6 +310,10 @@
     v_itemtypeid = '{if !empty($userdata["itemtypeid"])}{$userdata["itemtypeid"]}{/if}';
     v_siteid = '{if !empty($userdata["siteid"])}{$userdata["siteid"]}{/if}';
     v_year = new Date().getFullYear();
+
+    if (v_itemtypeid!='' && v_itemtypeid!=0) {
+        $("#f_itemtypeid").attr("disabled", true);
+    }
 </script>
 
 {include file="crud/_js-crud-table.tpl" tbl=$crud}

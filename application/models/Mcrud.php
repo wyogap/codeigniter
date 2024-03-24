@@ -1,5 +1,12 @@
 <?php if(!defined('BASEPATH')) exit('No direct script access allowed');
 
+/**
+ * Mcrud
+ * 
+ * This is the base class for CRUD Model used for internal usage.
+ * This should NOT be used for data model used to build form display. For data model to build form display, use Mcrud_tablemeta.
+ */
+
 require_once(APPPATH.'models/Mtablemeta.php');
 
 class Mcrud extends CI_Model

@@ -5,7 +5,10 @@ require_once BASEPATH.'../vendor/autoload.php';
 /**
  * Mcrud_tablemeta
  * 
- * This is the base class for CRUD Model which retrieve table definition from dabatase (TableMeta)
+ * This is the base class for CRUD Model which retrieve table definition from dabatase (TableMeta).
+ * This should be used for data model used to build form display.
+ * 
+ * This class is by default REUSABLE. Just re-init with the current tableid.
  */
 
 require_once(APPPATH.'models/Mtablemeta.php');
@@ -344,6 +347,8 @@ class Mcrud_tablemeta extends CI_Model
         $this->table_metas['row_reorder'] = ($arr['row_reorder'] == 1);
         $this->table_metas['row_reorder_column'] = empty($arr['row_reorder_column']) ? $arr['key_column'] : $arr['row_reorder_column'];
         $this->table_metas['multi_row_selection'] = ($arr['multi_row_selection'] == 1);
+        $this->table_metas['show_paging_options'] = ($arr['show_paging_options'] == 1);
+        $this->table_metas['multi_edit'] = ($arr['multi_edit'] == 1);
 
         $this->table_metas['client_side_query'] = ($arr['client_side_query'] == 1);
         $this->table_metas['client_side_filter'] = ($arr['client_side_filter'] == 1);
@@ -900,65 +905,65 @@ class Mcrud_tablemeta extends CI_Model
                 }
                 $this->columns[] = $col['ci_name'];
 
-                //if type=upload, add related columns
-                if ($col['type'] == "tcg_upload") {
-                    $col_name = $col['name'];
-                    $col_label = $col['label'];
+                // //if type=upload, add related columns
+                // if ($col['type'] == "tcg_upload") {
+                //     $col_name = $col['name'];
+                //     $col_label = $col['label'];
 
-                    //filenames
-                    $col = Mtablemeta::$COLUMN;
-                    $col['name'] = $col_name .'_filename';
-                    $col['ci_name'] = strtoupper($col['name']);
-                    $col['label'] = $col_label .' (File Name)';
-                    $col['column_name'] = $this->table_name. "." .$col['name'];
-                    $col['visible'] = false;
+                //     //filenames
+                //     $col = Mtablemeta::$COLUMN;
+                //     $col['name'] = $col_name .'_filename';
+                //     $col['ci_name'] = strtoupper($col['name']);
+                //     $col['label'] = $col_label .' (File Name)';
+                //     $col['column_name'] = $this->table_name. "." .$col['name'];
+                //     $col['visible'] = false;
     
-                    $col['foreign_key'] = false;
-                    $col['allow_insert'] = false;
-                    $col['allow_edit'] = false;
-                    $col['allow_filter'] = false;
-                    $col['allow_sort'] = false;
+                //     $col['foreign_key'] = false;
+                //     $col['allow_insert'] = false;
+                //     $col['allow_edit'] = false;
+                //     $col['allow_filter'] = false;
+                //     $col['allow_sort'] = false;
 
-                    $this->column_metas[] = $col;
-                    $this->select_columns[] = $col['column_name']." as ".$col['name'];
-                    $this->columns[] = $col['ci_name'];
+                //     $this->column_metas[] = $col;
+                //     $this->select_columns[] = $col['column_name']." as ".$col['name'];
+                //     $this->columns[] = $col['ci_name'];
 
-                    //path
-                    $col = Mtablemeta::$COLUMN;
-                    $col['name'] = $col_name .'_path';
-                    $col['ci_name'] = strtoupper($col['name']);
-                    $col['label'] = $col_label .' (Path)';
-                    $col['column_name'] = $this->table_name. "." .$col['name'];
-                    $col['visible'] = false;
+                //     //path
+                //     $col = Mtablemeta::$COLUMN;
+                //     $col['name'] = $col_name .'_path';
+                //     $col['ci_name'] = strtoupper($col['name']);
+                //     $col['label'] = $col_label .' (Path)';
+                //     $col['column_name'] = $this->table_name. "." .$col['name'];
+                //     $col['visible'] = false;
     
-                    $col['foreign_key'] = false;
-                    $col['allow_insert'] = false;
-                    $col['allow_edit'] = false;
-                    $col['allow_filter'] = false;
-                    $col['allow_sort'] = false;
+                //     $col['foreign_key'] = false;
+                //     $col['allow_insert'] = false;
+                //     $col['allow_edit'] = false;
+                //     $col['allow_filter'] = false;
+                //     $col['allow_sort'] = false;
 
-                    $this->column_metas[] = $col;
-                    $this->select_columns[] = $col['column_name']." as ".$col['name'];
-                    $this->columns[] = $col['ci_name'];
+                //     $this->column_metas[] = $col;
+                //     $this->select_columns[] = $col['column_name']." as ".$col['name'];
+                //     $this->columns[] = $col['ci_name'];
 
-                    //thumbnail
-                    $col = Mtablemeta::$COLUMN;
-                    $col['name'] = $col_name .'_thumbnail';
-                    $col['ci_name'] = strtoupper($col['name']);
-                    $col['label'] = $col_label .' (Thumbnail)';
-                    $col['column_name'] = $this->table_name. "." .$col['name'];
-                    $col['visible'] = false;
+                //     //thumbnail
+                //     $col = Mtablemeta::$COLUMN;
+                //     $col['name'] = $col_name .'_thumbnail';
+                //     $col['ci_name'] = strtoupper($col['name']);
+                //     $col['label'] = $col_label .' (Thumbnail)';
+                //     $col['column_name'] = $this->table_name. "." .$col['name'];
+                //     $col['visible'] = false;
     
-                    $col['foreign_key'] = false;
-                    $col['allow_insert'] = false;
-                    $col['allow_edit'] = false;
-                    $col['allow_filter'] = false;
-                    $col['allow_sort'] = false;
+                //     $col['foreign_key'] = false;
+                //     $col['allow_insert'] = false;
+                //     $col['allow_edit'] = false;
+                //     $col['allow_filter'] = false;
+                //     $col['allow_sort'] = false;
 
-                    $this->column_metas[] = $col;
-                    $this->select_columns[] = $col['column_name']." as ".$col['name'];
-                    $this->columns[] = $col['ci_name'];
-                }
+                //     $this->column_metas[] = $col;
+                //     $this->select_columns[] = $col['column_name']." as ".$col['name'];
+                //     $this->columns[] = $col['ci_name'];
+                // }
             
                 //default column sorting
                 if ($col['allow_sort'] && !empty($row['default_sort_no'])) {
@@ -1658,8 +1663,11 @@ class Mcrud_tablemeta extends CI_Model
         }
 
         if ($this->table_metas['soft_delete'])   $this->db->where($table_name. '.is_deleted', 0);
-        if (!empty($this->table_metas['where_clause']))   
+        if (!empty($this->table_metas['where_clause']))  { 
+            $this->db->group_start();
             $this->db->where($this->table_metas['where_clause']);
+            $this->db->group_end();
+        }
 
         $select_str = implode(', ', $this->select_columns);
 
@@ -1680,6 +1688,8 @@ class Mcrud_tablemeta extends CI_Model
 
             $this->db->join($row['reference_table_name'] .' as '. $row['reference_alias'], $where_clause, 'LEFT OUTER');
         }
+
+        //TODO: join to dbo_uploads using FIND_IN_SET() for upload type
 
         //order by
         if (!empty($orderby)) {
@@ -1806,16 +1816,16 @@ class Mcrud_tablemeta extends CI_Model
                 }
                 $valuepair[ $col['name'] ] = $val;
             }
-            else if ($col['type'] == "tcg_upload") {
-                if (empty($valuepair[ $col['name'] ]))  continue;
-                $val = $this->get_upload_list($valuepair[ $col['name'] ]);
-                if ($val != null) {
-                    $valuepair[ $col['name'] ] = $val['upload_id'];
-                    $valuepair[ $col['name'] .'_filename' ] = $val['filename'];
-                    $valuepair[ $col['name'] .'_path' ] = $val['web_path'];
-                    $valuepair[ $col['name'] .'_thumbnail' ] = $val['thumbnail_path'];
-                }
-            }
+            // else if ($col['type'] == "tcg_upload") {
+            //     if (empty($valuepair[ $col['name'] ]))  continue;
+            //     $val = $this->get_upload_list($valuepair[ $col['name'] ]);
+            //     if ($val != null) {
+            //         $valuepair[ $col['name'] ] = $val['upload_id'];
+            //         $valuepair[ $col['name'] .'_filename' ] = $val['filename'];
+            //         $valuepair[ $col['name'] .'_path' ] = $val['web_path'];
+            //         $valuepair[ $col['name'] .'_thumbnail' ] = $val['thumbnail_path'];
+            //     }
+            // }
         }
 
         //use internal table if specified
@@ -1943,16 +1953,16 @@ class Mcrud_tablemeta extends CI_Model
                 }
                 $valuepair[ $col['name'] ] = $val;
             }
-            else if ($col['type'] == "tcg_upload") {
-                if (empty($valuepair[ $col['name'] ]))  continue;
-                $val = $this->get_upload_list($valuepair[ $col['name'] ]);
-                if ($val != null) {
-                    $valuepair[ $col['name'] ] = $val['upload_id'];
-                    $valuepair[ $col['name'] .'_filename' ] = $val['filename'];
-                    $valuepair[ $col['name'] .'_path' ] = $val['web_path'];
-                    $valuepair[ $col['name'] .'_thumbnail' ] = $val['thumbnail_path'];
-                }
-            }
+            // else if ($col['type'] == "tcg_upload") {
+            //     if (empty($valuepair[ $col['name'] ]))  continue;
+            //     $val = $this->get_upload_list($valuepair[ $col['name'] ]);
+            //     if ($val != null) {
+            //         $valuepair[ $col['name'] ] = $val['upload_id'];
+            //         $valuepair[ $col['name'] .'_filename' ] = $val['filename'];
+            //         $valuepair[ $col['name'] .'_path' ] = $val['web_path'];
+            //         $valuepair[ $col['name'] .'_thumbnail' ] = $val['thumbnail_path'];
+            //     }
+            // }
         }
 
         //inject
@@ -2161,21 +2171,27 @@ class Mcrud_tablemeta extends CI_Model
             else if($col['type'] == 'tcg_select') {
                 $column_def[] = $col['name'] ." varchar(100)";
             }
+            else if($col['type'] == 'tcg_select2') {
+                $column_def[] = $col['name'] ." varchar(100)";
+            }
+            else if($col['type'] == 'tcg_currency') {
+                $column_def[] = $col['name'] ." varchar(50)";
+            }
             else if($col['type'] == 'tcg_toggle') {
                 $column_def[] = $col['name'] ." smallint";
             }
             else if($col['type'] == 'tcg_upload') {
-                $column_def[] = $col['name'] ." varchar(100)";
-                $column_def[] = $col['name'] ."_filename longtext";
-                $column_def[] = $col['name'] ."_path longtext";
-                $column_def[] = $col['name'] ."_thumbnail longtext";
-                //prevent double columns
-                $column_names[] = $col['name'] ."_filename";
-                $column_names[] = $col['name'] ."_path";
-                $column_names[] = $col['name'] ."_thumbnail";
+                $column_def[] = $col['name'] ." varchar(50)";
+                // $column_def[] = $col['name'] ."_filename longtext";
+                // $column_def[] = $col['name'] ."_path longtext";
+                // $column_def[] = $col['name'] ."_thumbnail longtext";
+                // //prevent double columns
+                // $column_names[] = $col['name'] ."_filename";
+                // $column_names[] = $col['name'] ."_path";
+                // $column_names[] = $col['name'] ."_thumbnail";
             }
             else {
-                $column_def[] = $col['name'] ." varchar(1000)";
+                $column_def[] = $col['name'] ." varchar(250)";
             }
             //exported columns
             if ($col['export']) {
@@ -2183,15 +2199,15 @@ class Mcrud_tablemeta extends CI_Model
                 $column_type[] = $col['type'];
             }
             //imported columns
-            if ($col['allow_insert']) {
+            if ($col['allow_insert'] && $col['allow_edit']) {
                 $import_columns[] = $col['name'];
-                if($col['type'] == 'tcg_upload') {
-                    $import_columns[] = $col['name'] ."_filename";
-                    $import_columns[] = $col['name'] ."_path";
-                    $import_columns[] = $col['name'] ."_thumbnail";
-                    //store separately for intermediate processing
-                    $upload_columns[] = $col['name'];
-                }
+                // if($col['type'] == 'tcg_upload') {
+                //     $import_columns[] = $col['name'] ."_filename";
+                //     $import_columns[] = $col['name'] ."_path";
+                //     $import_columns[] = $col['name'] ."_thumbnail";
+                //     //store separately for intermediate processing
+                //     $upload_columns[] = $col['name'];
+                // }
             }
         }
 
@@ -2407,23 +2423,23 @@ class Mcrud_tablemeta extends CI_Model
      * 
      * The informastion related individual uploaded file is stored in table tcg_uploads  
      */
-    protected function __update_upload_columns($table_name, $upload_columns) {
+    protected function __update_upload_columns($temp_table_name, $upload_columns) {
         //create secondary temp table for subquery because we cannot open temporary table > 1 in the same query
         //this issue should be fixed in MariaDb 10.2
 
-        $temp_table_name = $table_name .'_v';
+        $upload_table_name = $temp_table_name .'_v';
 
         //always drop first
-        $this->db->query("DROP TEMPORARY TABLE IF EXISTS $temp_table_name;");
+        $this->db->query("DROP TEMPORARY TABLE IF EXISTS $upload_table_name;");
 
-        $sql = "create temporary table " .$temp_table_name. " (__id__ int, col_name varchar(1000), upload_id varchar(1000), filename longtext, web_path longtext, thumbnail_path longtext)";
+        $sql = "create temporary table " .$upload_table_name. " (__id__ int, col_name varchar(1000), upload_id varchar(1000), filename longtext, web_path longtext, thumbnail_path longtext)";
         $this->db->query($sql);
 
         foreach($upload_columns as $col_name) {
-            $this->db->query("truncate table " .$temp_table_name);
+            $this->db->query("truncate table " .$upload_table_name);
 
             $sql = "
-            insert into ".$temp_table_name." (__id__, col_name, upload_id, filename, web_path, thumbnail_path)
+            insert into ".$upload_table_name." (__id__, col_name, upload_id, filename, web_path, thumbnail_path)
             select
                 c.id,
                 c." .$col_name. ",
@@ -2431,7 +2447,7 @@ class Mcrud_tablemeta extends CI_Model
                 group_concat(x.filename separator ';') as filename,
                 group_concat(x.web_path separator ';') as web_path,
                 group_concat(x.thumbnail_path separator ';') as thumbnail_path
-            from " .$table_name. " c
+            from " .$temp_table_name. " c
             left join dbo_uploads x on x.is_deleted=0 and find_in_set(x.id, c." .$col_name. ") > 0
             where 
                 c." .$col_name. " is not null and c." .$col_name. " != '' and c." .$col_name. " != 0
@@ -2441,8 +2457,8 @@ class Mcrud_tablemeta extends CI_Model
             $this->db->query($sql);
 
             $sql = "
-            update " .$table_name. " a 
-            join " .$temp_table_name. " b on b.__id__=a.id
+            update " .$temp_table_name. " a 
+            join " .$upload_table_name. " b on b.__id__=a.id
             set
                 a." .$col_name. " = b.upload_id,
                 a." .$col_name. "_filename = b.filename,
@@ -2455,10 +2471,10 @@ class Mcrud_tablemeta extends CI_Model
             $this->db->query($sql);
         }
 
-        $this->db->query("DROP TEMPORARY TABLE $temp_table_name;");
+        $this->db->query("DROP TEMPORARY TABLE $upload_table_name;");
     }
 
-    protected function __update_custom_column($table_name) {
+    protected function __update_custom_column($temp_table_name) {
         //nothing to do
     }
 
@@ -2494,7 +2510,8 @@ class Mcrud_tablemeta extends CI_Model
 
         //match foreign key
         foreach($join_tables as $idx => $tbl) {
-            $sql = "update " .$temp_table_name. " a join " .$tbl['reference_table_name']. " b on lower(b." .$tbl['reference_lookup_column']. ")=lower(a." .$tbl['name']. ") set a." .$tbl['name']. "=b." .$tbl['reference_key_column'];
+            //use left join here so that those that cannot find the reference will be set to null
+            $sql = "update " .$temp_table_name. " a left join " .$tbl['reference_table_name']. " b on lower(b." .$tbl['reference_lookup_column']. ")=lower(a." .$tbl['name']. ") set a." .$tbl['name']. "=b." .$tbl['reference_key_column'];
             $this->db->query($sql);
         }
 

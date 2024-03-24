@@ -191,6 +191,16 @@
         cursor: pointer
     }
 
+    .popover-body a.btn {
+        color: white;
+        width: 100%;
+    }
+
+    .popover-body a.btn:hover {
+        color: white;
+        width: 100%;
+    }
+
 </style>
 
 <div class="content-header">

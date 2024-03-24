@@ -4,45 +4,53 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 require_once(APPPATH.'core/MY_Crud_Controller.php');
 
 abstract class MY_Json_Controller extends MY_Crud_Controller {
-    /**
-     * This is default constructor of the class
-     */
-    public function __construct()
-    {
-        parent::__construct();
+    /** Enable if you want to support access to all CRUD pages */
+	protected static $CRUD = false;
 
+    public function _remap($method, $params = array()) {
 		$isLoggedIn = $this->session->userdata('is_logged_in');
 		if (static::$AUTHENTICATED && (!isset($isLoggedIn) || $isLoggedIn != TRUE)) {
-			json_not_login();
+			$this->json_not_login();
 		}
+
+		if (method_exists($this, $method))
+		{
+			return call_user_func_array(array($this, $method), $params);
+		}
+
+        if (static::$CRUD) {
+            return $this->table($method, $params);
+        }
+		
+        $this->json_not_implemented();
     }
 
     public function index($params = array())
 	{
-        json_not_implemented();
+        $this->json_not_implemented();
     }
 
     //override default handler to server only json
     protected function table($name = '', $params = array()) {
 		if (empty($name)) {
-			json_not_implemented();
+			$this->json_not_implemented();
 		}
         
 		//check for permission
 		$this->load->model(array('crud/Mpages', 'crud/Mpermission'));
 		if (!$this->Mpermission->can_view($name)) {
-			json_not_authorized();
+			$this->json_not_authorized();
 		}
 		
 		$page = $this->Mpages->get_page($name, static::$PAGE_GROUP);
 		if ($page == null) {
-			json_not_implemented();
+			$this->json_not_implemented();
 		}
 
 		//crud pages
 		$model = $this->get_model($page['crud_table_id']);
 		if ($model == null) {
-			json_not_implemented();
+			$this->json_not_implemented();
 		}
 
 		if (isset($params) && count($params) > 0 && $params[0] == 'lookup') {
@@ -63,7 +71,7 @@ abstract class MY_Json_Controller extends MY_Crud_Controller {
 		}
 
 		//get permissions
-		$permissions = $this->Mpermission->get_permissions($page['name']);
+		$permissions = $this->Mpermission->get_page_permission($page['name']);
 
         //page filters
         $page_filter = array();
@@ -82,8 +90,19 @@ abstract class MY_Json_Controller extends MY_Crud_Controller {
         }
 
         //handle json only
-        $this->table_json($model, $permissions, $params, $page_filter);
+        $this->table_json($page['name'], $model, $params);
         return;
     }
 
+    protected function table_add($page, $navigation) {
+        $this->json_not_implemented();
+    }
+
+    protected function table_edit($page, $navigation, $id=null) {
+        $this->json_not_implemented();
+    }
+
+    protected function table_detail($page, $model, $navigation, $params = null) {
+        $this->json_not_implemented();
+    }
 }

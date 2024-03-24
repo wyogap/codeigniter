@@ -67,6 +67,6 @@ class Sistem extends Base_Crud {
 		$page_data['use_select2'] = 1;
 		
 		// $this->smarty->render_theme('sistem/home.tpl', $page_data);
-		$this->smarty->render_theme('/disbekal/inventory/dashboard.tpl', $page_data);
+		$this->smarty->render_theme('/disbekal/inventory/pencarian.tpl', $page_data);
 	}
 }

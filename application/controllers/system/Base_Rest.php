@@ -7,6 +7,8 @@ require_once APPPATH .'/third_party/php-jwt/src/JWT.php';
 use \Firebase\JWT\JWT;
 
 class Base_Rest extends MY_Rest_Controller {
+    /** Enable if you want to support access to all CRUD pages */
+	protected static $CRUD = true;
 
     protected $_use_key = TRUE;
 
@@ -64,9 +66,7 @@ class Base_Rest extends MY_Rest_Controller {
             return;
         }
 
-        $crud_api = $this->config->item('rest_enable_crud_api');
-
-        $entity = $this->Mpages->get_api_page($object_called, $crud_api);
+        $entity = $this->Mpages->get_api_page($object_called, static::$CRUD);
         if ($entity == null || empty($entity['crud_table_id'])) {
             $this->response([
                 $this->config->item('rest_status_field_name')  => false,

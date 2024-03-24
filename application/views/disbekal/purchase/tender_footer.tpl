@@ -90,61 +90,40 @@ function conditional_close(data, row, meta) {
 }
 </script>
 
+{if $crud.filter || $crud.search}
+{include file='crud/_js-crud-filter.tpl'}
+{/if}
+
 <script type="text/javascript">
+    //override default filter value. must be after include js-crud-filter.tpl
+    v_itemtypeid = '{if !empty($userdata["itemtypeid"])}{$userdata["itemtypeid"]}{/if}';
+    v_siteid = '{if !empty($userdata["siteid"])}{$userdata["siteid"]}{/if}';
+    v_year = new Date().getFullYear();
 
-$(document).ready(function() {
+    if (v_itemtypeid!='' && v_itemtypeid!=0) {
+        $("#f_itemtypeid").attr("disabled", true);
+    }
+</script>
 
-    let _attr = {
-            multiple: false,
-            minimumResultsForSearch: 25,
-        };
+{include file="crud/_js-crud-table.tpl" tbl=$crud}
 
-    $.ajax({
-        url: "{$site_url}{$controller}/satuankerja/lookup",
-        type: 'GET',
-        dataType: 'json',
-        beforeSend: function(request) {
-            request.setRequestHeader("Content-Type", "application/json");
-        },
-        success: function(response) {
-            if (response.data === null) {} else if (typeof response.error !==
-                'undefined' && response.error !== null && response
-                .error != "") {} else {
-                _options = response.data;
-            }
-            select2_build($('#f_siteid'), '-- Satuan Kerja --', '', '', _options, _attr);
+<script type="text/javascript">
+    $(document).ready(function() {
+        // editor_tdata_150.on( 'initEdit', function (e, node, data, items, type) {
+        //     //disable field itemtypeid
+        //     editor_tdata_150.field('itemtypeid').disable();
+        // });
 
-            // select_build($('#edit-korwil'), _options, _attr);
-            // $('#edit-korwil').val(korwil);
-        },
-        error: function(jqXhr, textStatus, errorMessage) {
-            select2_build($('#f_siteid'), '-- Satuan Kerja --', '', '', null, _attr);
-            // select_build($('#edit-korwil'), _options, _attr);
-        }
+        // editor_tdata_150.on( 'initCreate', function (e, node, data, items, type) {
+        //     //enable field itemtypeid
+        //     editor_tdata_150.field('itemtypeid').enable();
+
+        //     if (v_itemtypeid != null && v_itemtypeid != '') {
+        //         editor_tdata_150.field('itemtypeid').set(v_itemtypeid);
+        //         editor_tdata_150.field('itemtypeid').disable();
+        //     }
+        // });
     });
-
-    $.ajax({
-        url: "{$site_url}disbekal/select/tipebekal",
-        type: 'GET',
-        dataType: 'json',
-        beforeSend: function(request) {
-            request.setRequestHeader("Content-Type", "application/json");
-        },
-        success: function(response) {
-            if (response !== null && response.length > 0) {
-                select2_build($('#f_itemtypeid'), '-- Tipe Bekal --', '', '', response, _attr);
-            }
-
-            // select_build($('#edit-korwil'), _options, _attr);
-            // $('#edit-korwil').val(korwil);
-        },
-        error: function(jqXhr, textStatus, errorMessage) {
-            select2_build($('#f_itemtypeid'), '-- Tipe Bekal --', '', '', null, _attr);
-            // select_build($('#edit-korwil'), _options, _attr);
-        }
-    });
-
-});
 
 </script>
 

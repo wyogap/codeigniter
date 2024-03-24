@@ -106,7 +106,7 @@ class Mtable extends CI_Model
 
         if ($this->data_model == null) {
             $this->data_model = new Mcrud_tablemeta();
-            $this->data_model->init($arr['id'], true, $level1_column, $level1_value);
+            $this->data_model->init_with_tablemeta($arr, $level1_column, $level1_value);
         }
 
         if($this->data_model != null) {

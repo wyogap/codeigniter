@@ -10,6 +10,73 @@ class Mdashboard extends CI_Model
         //TODO
     }
 
+    public function gissearch($siteid, $itemtypeid, $age, $str) {
+        //default
+        $v_siteid = $this->session->userdata("siteid");
+        if (!empty($siteid)) {
+            $this->load->model('disbekal/Msite');
+            $v_siteid = $this->Msite->check_siteid($siteid);
+        }
+        $siteid = $v_siteid;
+
+        $v_itemtypeid = $this->session->userdata("itemtypeid");
+        if (empty($v_itemtypeid) && !empty($itemtypeid)) {
+            $v_itemtypeid = $itemtypeid;
+        }
+        $itemtypeid = $v_itemtypeid;
+
+        $this->db->select("c.storeid, c.storecode, c.description, c.latitude, c.longitude, sum(a.availableamount) as total");
+        $this->db->from("tcg_inventory a");
+        $this->db->join("tcg_item b", "b.itemid=a.itemid and b.is_deleted=0", "INNER");
+        $this->db->join("tcg_store c", "c.storeid=a.storeid and c.is_deleted=0", "INNER");
+        if (!empty($siteid)) {
+            $this->db->join("tcg_site d", "d.siteid=c.siteid and d.is_deleted=0", "INNER");
+            $this->db->join("tcg_site e", "e.siteid=d.parentid and e.is_deleted=0", "LEFT OUTER");
+            $this->db->join("tcg_site f", "f.siteid=e.parentid and f.is_deleted=0", "LEFT OUTER");
+            $this->db->group_start();
+            $this->db->where("d.siteid", $siteid);
+            $this->db->or_where("e.siteid", $siteid);
+            $this->db->or_where("f.siteid", $siteid);
+            $this->db->group_end();
+        }
+        $this->db->join("tcg_itemcategory g", "g.categoryid=b.categoryid and g.is_deleted=0", "INNER");
+        if (!empty($itemtypeid)) {
+            $this->db->where("g.typeid", $itemtypeid);
+        }
+        if (!empty($str)) {
+            $this->db->like("b.description",$str);
+        }
+        $this->db->where("a.is_deleted", 0);
+        $this->db->where("a.status", 'INSTOCK');
+        $this->db->where("a.availableamount>0");
+        //TODO: more precise date substract
+        if ($age == 1) {
+            $this->db->where("(YEAR(curdate())-YEAR(a.receiveddate)) <= 1");
+        }
+        else if ($age == 2) {
+            $this->db->where("(YEAR(curdate())-YEAR(a.receiveddate)) = 2");
+        }
+        else if ($age == 3) {
+            $this->db->where("(YEAR(curdate())-YEAR(a.receiveddate)) = 3");
+        }
+        else if ($age == 4) {
+            $this->db->where("(YEAR(curdate())-YEAR(a.receiveddate)) = 4");
+        }
+        else if ($age == 5) {
+            $this->db->where("(YEAR(curdate())-YEAR(a.receiveddate)) = 5");
+        }
+        else if ($age == 6) {
+            $this->db->where("(YEAR(curdate())-YEAR(a.receiveddate)) > 5");
+        }
+
+        $this->db->group_by("c.storeid, c.storecode, c.description");
+
+        $result = $this->db->get()->result_array();
+        if ($result == null)    return $result;
+
+        return $result;
+    }
+
     public function nilaistok($storeid = null)
     {
         if (empty($storeid)) {
@@ -122,7 +189,7 @@ class Mdashboard extends CI_Model
     public function stokpergudang($storeid = null)
     {
         if (empty($storeid)) {
-            $sql = "SELECT a.storeid, a.storecode, a.description, a.latitude, a.longitude, a.orgcode, a.sitecode
+            $sql = "SELECT a.storeid, a.storecode, a.description, a.latitude, a.longitude, e.siteid, e.sitecode, f.orgid, f.orgcode
                 , coalesce(b.nilai_total,0) as nilai_total
                 , coalesce(c.nilai_total,0) as rusak
                 , coalesce(d.nilai_total,0) as kadaluarsa
@@ -145,6 +212,8 @@ class Mdashboard extends CI_Model
                 where a.is_deleted=0 and a.writeoff=0 and a.status='EXPIRED'
                 group by b.storeid
             ) d on d.storeid=a.storeid
+            join tcg_site e on e.siteid=a.siteid and e.is_deleted=0
+            join tcg_organisation f on f.orgid=e.orgid and f.is_deleted=0
             where a.is_deleted=0";
         }
         else {
@@ -633,12 +702,12 @@ class Mdashboard extends CI_Model
                     group by a.tostoreid
                 ) e on e.tostoreid=x.storeid
                 left join (
-                    SELECT a.fromstoreid, sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
+                    SELECT a.storeid, sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
                     join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
                     where a.is_deleted=0 and a.status not in ('DRAFT')
                         and YEAR(a.transferdate)=YEAR(".$datestr.")
-                    group by a.fromstoreid
-                ) f on f.fromstoreid=x.storeid
+                    group by a.storeid
+                ) f on f.storeid=x.storeid
                 where x.is_deleted=0
             ) a
             where a.storeid=" .$storeidstr. "
@@ -705,12 +774,12 @@ class Mdashboard extends CI_Model
                     group by a.tostoreid
                 ) e on e.tostoreid=x.storeid
                 left join (
-                    SELECT a.fromstoreid, sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
+                    SELECT a.storeid, sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
                     join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
                     where a.is_deleted=0 and a.status not in ('DRAFT')
                         and YEAR(a.transferdate)=YEAR(".$datestr.") and MONTH(a.transferdate)=MONTH(".$datestr.")
-                    group by a.fromstoreid
-                ) f on f.fromstoreid=x.storeid
+                    group by a.storeid
+                ) f on f.storeid=x.storeid
                 where x.is_deleted=0
             ) a
             where a.storeid=".$storeidstr."
@@ -782,13 +851,13 @@ class Mdashboard extends CI_Model
                     group by a.tostoreid
                 ) e on e.tostoreid=x.storeid
                 left join (
-                    SELECT a.fromstoreid, sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
+                    SELECT a.storeid, sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
                     join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
                     where a.is_deleted=0 and a.status not in ('DRAFT')
                         and datediff(a.transferdate,".$datestr.") >= " .$periodestr. "
                         and datediff(a.transferdate,".$datestr.") < 0
-                    group by a.fromstoreid
-                ) f on f.fromstoreid=x.storeid
+                    group by a.storeid
+                ) f on f.storeid=x.storeid
                 where x.is_deleted=0
             ) a
             where a.storeid=".$storeidstr."
@@ -1640,12 +1709,12 @@ class Mdashboard extends CI_Model
                     group by b.storeid, month(a.writeoffdate)
                 ) d on d.storeid=x.storeid and d.bulan=y.id
                 left join (
-                    SELECT a.fromstoreid, month(a.transferdate) as bulan, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
+                    SELECT a.storeid, month(a.transferdate) as bulan, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
                     join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
                     where a.is_deleted=0 and a.status not in ('DRAFT')
                         and YEAR(a.transferdate)=YEAR(".$datestr.")
-                    group by a.fromstoreid, month(a.transferdate)
-                ) f on f.fromstoreid=x.storeid and f.bulan=y.id
+                    group by a.storeid, month(a.transferdate)
+                ) f on f.storeid=x.storeid and f.bulan=y.id
                 where (YEAR(curdate())=YEAR(".$datestr.") and y.id<=MONTH(".$datestr.")) or (YEAR(curdate())!=YEAR(".$datestr."))
             ) a
             where a.storeid=" .$storeidstr. "
@@ -1692,12 +1761,12 @@ class Mdashboard extends CI_Model
                     group by b.storeid, a.writeoffdate
                 ) d on d.storeid=x.storeid and d.writeoffdate=y.caldate
                 left join (
-                    SELECT a.fromstoreid, a.transferdate, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
+                    SELECT a.storeid, a.transferdate, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
                     join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
                     where a.is_deleted=0 and a.status not in ('DRAFT')
                         and YEAR(a.transferdate)=YEAR(".$datestr.") and MONTH(a.transferdate)=MONTH(".$datestr.")
-                    group by a.fromstoreid, a.transferdate
-                ) f on f.fromstoreid=x.storeid and f.transferdate=y.caldate
+                    group by a.storeid, a.transferdate
+                ) f on f.storeid=x.storeid and f.transferdate=y.caldate
                 where YEAR(y.caldate)=YEAR(".$datestr.") and MONTH(y.caldate)=MONTH(".$datestr.") and y.caldate<=curdate()
             ) a
             where a.storeid=" .$storeidstr. "
@@ -1750,13 +1819,13 @@ class Mdashboard extends CI_Model
                     group by b.storeid, a.writeoffdate
                 ) d on d.storeid=x.storeid and d.writeoffdate=y.caldate
                 left join (
-                    SELECT a.fromstoreid, a.transferdate, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
+                    SELECT a.storeid, a.transferdate, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
                     join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
                     where a.is_deleted=0 and a.status not in ('DRAFT')
                         and datediff(a.transferdate,".$datestr.") >= " .$periodestr. "
                         and datediff(a.transferdate,".$datestr.") < 0
-                    group by a.fromstoreid, a.transferdate
-                ) f on f.fromstoreid=x.storeid and f.transferdate=y.caldate
+                    group by a.storeid, a.transferdate
+                ) f on f.storeid=x.storeid and f.transferdate=y.caldate
                 where datediff(y.caldate,".$datestr.") >= " .$periodestr. " and datediff(y.caldate,".$datestr.") < 0
             ) a
             where a.storeid=" .$storeidstr. "
@@ -1828,12 +1897,12 @@ class Mdashboard extends CI_Model
                     group by b.storeid
                 ) d on d.storeid=x.storeid
                 left join (
-                    SELECT a.fromstoreid, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
+                    SELECT a.storeid, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
                     join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
                     where a.is_deleted=0 and a.status not in ('DRAFT')
                         and YEAR(a.transferdate)=YEAR(".$datestr.")
-                    group by a.fromstoreid
-                ) f on f.fromstoreid=x.storeid
+                    group by a.storeid
+                ) f on f.storeid=x.storeid
                 where x.is_deleted=0
             ";
         }
@@ -1869,12 +1938,12 @@ class Mdashboard extends CI_Model
                     group by b.storeid
                 ) d on d.storeid=x.storeid
                 left join (
-                    SELECT a.fromstoreid, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
+                    SELECT a.storeid, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
                     join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
                     where a.is_deleted=0 and a.status not in ('DRAFT')
                         and YEAR(a.transferdate)=YEAR(".$datestr.") and MONTH(a.transferdate)=MONTH(".$datestr.")
-                    group by a.fromstoreid
-                ) f on f.fromstoreid=x.storeid
+                    group by a.storeid
+                ) f on f.storeid=x.storeid
                 where x.is_deleted=0
             ";
         }
@@ -1916,13 +1985,13 @@ class Mdashboard extends CI_Model
                     group by b.storeid
                 ) d on d.storeid=x.storeid
                 left join (
-                    SELECT a.fromstoreid, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
+                    SELECT a.storeid, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
                     join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
                     where a.is_deleted=0 and a.status not in ('DRAFT')
                         and datediff(a.transferdate,".$datestr.") >= " .$periodestr. "
                         and datediff(a.transferdate,".$datestr.") < 0
-                    group by a.fromstoreid
-                ) f on f.fromstoreid=x.storeid
+                    group by a.storeid
+                ) f on f.storeid=x.storeid
                 where x.is_deleted=0
             ";
         }
@@ -1983,12 +2052,12 @@ class Mdashboard extends CI_Model
                     group by b.storeid
                 ) d on d.storeid=x.storeid
                 left join (
-                    SELECT a.fromstoreid, sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
+                    SELECT a.storeid, sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
                     join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
                     where a.is_deleted=0 and a.status not in ('DRAFT')
                         and YEAR(a.transferdate)=YEAR(".$datestr.")
-                    group by a.fromstoreid
-                ) f on f.fromstoreid=x.storeid
+                    group by a.storeid
+                ) f on f.storeid=x.storeid
                 where x.is_deleted=0 and x.storeid=" .$storeidstr. "
                 ";
         }
@@ -2023,12 +2092,12 @@ class Mdashboard extends CI_Model
                     group by b.storeid
                 ) d on d.storeid=x.storeid
                 left join (
-                    SELECT a.fromstoreid, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
+                    SELECT a.storeid, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
                     join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
                     where a.is_deleted=0 and a.status not in ('DRAFT')
                         and YEAR(a.transferdate)=YEAR(".$datestr.") and MONTH(a.transferdate)=MONTH(".$datestr.")
-                    group by a.fromstoreid
-                ) f on f.fromstoreid=x.storeid
+                    group by a.storeid
+                ) f on f.storeid=x.storeid
                 where x.is_deleted=0 and x.storeid=" .$storeidstr. "
             ";
         }
@@ -2069,13 +2138,13 @@ class Mdashboard extends CI_Model
                     group by b.storeid
                 ) d on d.storeid=x.storeid
                 left join (
-                    SELECT a.fromstoreid, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
+                    SELECT a.storeid, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
                     join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
                     where a.is_deleted=0 and a.status not in ('DRAFT')
                         and datediff(a.transferdate,".$datestr.") >= " .$periodestr. "
                         and datediff(a.transferdate,".$datestr.") < 0
-                    group by a.fromstoreid
-                ) f on f.fromstoreid=x.storeid
+                    group by a.storeid
+                ) f on f.storeid=x.storeid
                 where x.is_deleted=0 and x.storeid=" .$storeidstr. "
             ";
         }
@@ -2293,13 +2362,13 @@ class Mdashboard extends CI_Model
                     group by b.storeid, c.categoryid
                 ) d on d.storeid=x.storeid and d.categoryid=y.categoryid
                 left join (
-                    SELECT a.fromstoreid, c.categoryid, sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
+                    SELECT a.storeid, c.categoryid, sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
                     join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
                     join tcg_item c on c.itemid=b.itemid and c.is_deleted=0
                     where a.is_deleted=0 and a.status not in ('DRAFT')
                         and YEAR(a.transferdate)=YEAR(now())
-                    group by a.fromstoreid, c.categoryid
-                ) f on f.fromstoreid=x.storeid and f.categoryid=y.categoryid
+                    group by a.storeid, c.categoryid
+                ) f on f.storeid=x.storeid and f.categoryid=y.categoryid
                 where y.is_deleted=0
             ) a
             where a.storeid=" .$storeidstr. "
@@ -2349,13 +2418,13 @@ class Mdashboard extends CI_Model
                     group by b.storeid, c.categoryid
                 ) d on d.storeid=x.storeid and d.categoryid=y.categoryid
                 left join (
-                    SELECT a.fromstoreid, c.categoryid, sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
+                    SELECT a.storeid, c.categoryid, sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
                     join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
                     join tcg_item c on c.itemid=b.itemid and c.is_deleted=0
                     where a.is_deleted=0 and a.status not in ('DRAFT')
                         and YEAR(a.transferdate)=YEAR(".$datestr.") and MONTH(a.transferdate)=MONTH(".$datestr.")
-                    group by a.fromstoreid, c.categoryid
-                ) f on f.fromstoreid=x.storeid and f.categoryid=y.categoryid
+                    group by a.storeid, c.categoryid
+                ) f on f.storeid=x.storeid and f.categoryid=y.categoryid
                 where y.is_deleted=0
             ) a
             where a.storeid=" .$storeidstr. "
@@ -2411,14 +2480,14 @@ class Mdashboard extends CI_Model
                     group by b.storeid, c.categoryid
                 ) d on d.storeid=x.storeid and d.categoryid=y.categoryid
                 left join (
-                    SELECT a.fromstoreid, c.categoryid, sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
+                    SELECT a.storeid, c.categoryid, sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
                     join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
                     join tcg_item c on c.itemid=b.itemid and c.is_deleted=0
                     where a.is_deleted=0 and a.status not in ('DRAFT')
                         and datediff(a.transferdate,".$datestr.") >= " .$periodestr. "
                         and datediff(a.transferdate,".$datestr.") < 0
-                    group by a.fromstoreid, c.categoryid
-                ) f on f.fromstoreid=x.storeid and f.categoryid=y.categoryid
+                    group by a.storeid, c.categoryid
+                ) f on f.storeid=x.storeid and f.categoryid=y.categoryid
                 where y.is_deleted=0
             ) a
             where a.storeid=" .$storeidstr. "

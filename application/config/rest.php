@@ -608,4 +608,5 @@ $config['allowed_cors_origins'] = [];
 $config['rest_enable_jwt_token'] = TRUE;
 $config['rest_jwt_key'] = "2wsxZAQ!";
 $config['rest_jwt_expiry_sec'] = 60*60*5;
-$config['rest_enable_crud_api'] = true;
+
+//$config['rest_enable_crud_api'] = true;

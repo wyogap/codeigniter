@@ -22,6 +22,10 @@ class Analisakebutuhan extends CI_Controller
         if (empty($year)) {
             $year = $this->input->get('year');
         }
+        $siteid = $this->input->post('siteid');
+        if (empty($year)) {
+            $siteid = $this->input->get('siteid');
+        }
 
         //default tahun anggaran
         if (empty($year)) {
@@ -31,7 +35,7 @@ class Analisakebutuhan extends CI_Controller
         $json = array();
 
         $this->load->model('disbekal/Manalisakebutuhan');
-        $data = $this->Manalisakebutuhan->get_timeseries($id, $year);
+        $data = $this->Manalisakebutuhan->get_timeseries($id, $siteid, $year);
         if ($data != null) {
             $json['status'] = 1;
             $json['data'] = $data;
@@ -62,6 +66,10 @@ class Analisakebutuhan extends CI_Controller
         if (empty($year)) {
             $year = $this->input->get('year');
         }
+        $siteid = $this->input->post('siteid');
+        if (empty($year)) {
+            $siteid = $this->input->get('siteid');
+        }
 
         //default tahun anggaran
         if (empty($year)) {
@@ -71,7 +79,7 @@ class Analisakebutuhan extends CI_Controller
         $json = array();
 
         $this->load->model('disbekal/Manalisakebutuhan');
-        $data = $this->Manalisakebutuhan->get_demand($id, $year);
+        $data = $this->Manalisakebutuhan->get_demand($id, $siteid, $year);
         if ($data != null) {
             $json['status'] = 1;
             $json['data'] = $data;
@@ -116,7 +124,7 @@ class Analisakebutuhan extends CI_Controller
         $json = array();
 
         $this->load->model('disbekal/Manalisakebutuhan');
-        $data = $this->Manalisakebutuhan->get_po($id, $year);
+        $data = $this->Manalisakebutuhan->get_po($id, null, $year);
         if ($data != null) {
             $json['status'] = 1;
             $json['data'] = $data;
@@ -153,6 +161,10 @@ class Analisakebutuhan extends CI_Controller
         if (empty($year)) {
             $year = $this->input->get('year');
         }
+        $siteid = $this->input->post('siteid');
+        if (empty($year)) {
+            $siteid = $this->input->get('siteid');
+        }
 
         //default tahun anggaran
         if (empty($year)) {
@@ -162,7 +174,7 @@ class Analisakebutuhan extends CI_Controller
         $json = array();
 
         $this->load->model('disbekal/Manalisakebutuhan');
-        $data = $this->Manalisakebutuhan->get_stock($id, $year);
+        $data = $this->Manalisakebutuhan->get_stock($id, $siteid, $year);
         if ($data != null) {
             $json['status'] = 1;
             $json['data'] = $data;

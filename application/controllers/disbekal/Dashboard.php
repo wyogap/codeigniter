@@ -1,39 +1,32 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Dashboard extends CI_Controller {
-    
-    /**
-     * This is default constructor of the class
-     */
-    public function __construct()
-    {
-        parent::__construct();
+require_once(APPPATH.'controllers/system/Base_Json.php');
 
-		$isLoggedIn = $this->session->userdata('is_logged_in');
-		if(!isset($isLoggedIn) || $isLoggedIn != TRUE) {
-			redirect(site_url() .'/auth');
-		}		
+class Dashboard extends Base_Json {
+        
+    public function gissearch() {        
+        $siteid = $this->input->get('f_siteid');
+        $itemtypeid = $this->input->get('f_itemtypeid');
+        $age = $this->input->get('f_age');
+        $str = $this->input->get('q');
+
+        $this->load->model('disbekal/Mdashboard');
+        
+        $json = array();
+        $data = $this->Mdashboard->gissearch($siteid, $itemtypeid, $age, $str);
+        if ($data == null) {
+            $json['status'] = 0;
+            $json['message'] = 'No data';
+        }
+        else {
+            $json['status'] = 1;
+            $json['data'] = $data;
+        }
+
+        echo json_encode($json, JSON_INVALID_UTF8_IGNORE);	
     }
 
-	public function index() {
-		$page_data['page_name']              = 'home';
-		$page_data['page_title']             = 'Home';
-		$page_data['page_icon']              = "mdi-view-dashboard-outline";
-		$page_data['page_description']       = null;
-		$page_data['query_params']           = null;
-
-		$page_data['page_role']           	 = 'admin';
-
-		$this->load->model(array('crud/Mnavigation'));
-		$navigation = $this->Mnavigation->get_navigation($this->session->userdata('role_id'));
-		$page_data['navigation']	 = $navigation;
-
-		$page_data['use_geo'] = 1;
-		
-		$this->smarty->render_theme('disbekal/kadis/dashboard.tpl', $page_data);
-	}
-    
     public function nilaistok()
     {
         $storeid = $this->input->get('s');

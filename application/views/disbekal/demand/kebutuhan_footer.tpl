@@ -148,7 +148,8 @@ function onclick_buatpengadaan(rowIdx, dt, id) {
                 if (response.error !== undefined && response.error !== null && response.error !== '') {
                     msg = response.error;
                 }
-                toastr.error("Tidak berhasil membuat DRAFT Perintah Pengadaan untuk Rencana Kebutuhan " +label+ ". Error: " +msg, 'Error');
+                toastr.error("Tidak berhasil membuat DRAFT Perintah Pengadaan untuk Rencana Kebutuhan " +label)
+                toastr.error(msg)
                 return;
             }
 
@@ -157,7 +158,7 @@ function onclick_buatpengadaan(rowIdx, dt, id) {
             toastr.success("Berhasil membuat DRAFT Perintah Pengadaan untuk Rencana Kebutuhan " +label+ ". Perintah Pengadaan baru telah dibuka di halaman/tab baru.");
         },
         error: function(jqXhr, textStatus, errorMessage) {
-            toastr.error(errorMessage, 'Error');
+            toastr.error(errorMessage)
         }
     });
     {/literal}
@@ -185,7 +186,8 @@ function onclose_demand(rowIdx, dt, id) {
                 if (response.error !== undefined && response.error !== null && response.error !== '') {
                     msg = response.error;
                 }
-                toastr.error("Tidak berhasil mengarsipkan Rencana Kebutuhan " +label+ ". Error: " +msg, 'Error');
+                toastr.error("Tidak berhasil mengarsipkan Rencana Kebutuhan " +label)
+                toastr.error(msg)
                 return;
             }
 
@@ -197,7 +199,7 @@ function onclose_demand(rowIdx, dt, id) {
             toastr.success("Berhasil menutup dan mengarsipkan Rencana Kebutuhan " +label+ ".");
         },
         error: function(jqXhr, textStatus, errorMessage) {
-            toastr.error(errorMessage, 'Error');
+            toastr.error(errorMessage)
         }
     });
     {/literal}
@@ -225,7 +227,8 @@ function onapprove_demand(rowIdx, dt, id) {
                 if (response.error !== undefined && response.error !== null && response.error !== '') {
                     msg = response.error;
                 }
-                toastr.error("Tidak berhasil menyetujui Rencana Kebutuhan " +label+ ". Error: " +msg, 'Error');
+                toastr.error("Tidak berhasil menyetujui Rencana Kebutuhan " +label)
+                toastr.error(msg)
                 return;
             }
 
@@ -238,7 +241,7 @@ function onapprove_demand(rowIdx, dt, id) {
             toastr.success("Berhasil menyetujui Rencana Kebutuhan " +label+ ".");
         },
         error: function(jqXhr, textStatus, errorMessage) {
-            toastr.error(errorMessage, 'Error');
+            toastr.error(errorMessage)
         }
     });
     {/literal}
@@ -251,7 +254,7 @@ function onclick_pengadaan(row, dt, id) {
 
     let url = '';
     if (status == 'DRAFT') {
-        url = "{$site_url}/{$controller}/pengadaan/edit/" + id;
+        url = "{$site_url}{$controller}/pengadaan/edit/" + id;
     }
     else {
         url = "{$site_url}{$controller}/pengadaan/detail/" + id;
@@ -330,6 +333,10 @@ function display_item_doinfo(value, tipe, data) {
     v_itemtypeid = '{if !empty($userdata["itemtypeid"])}{$userdata["itemtypeid"]}{/if}';
     v_siteid = '{if !empty($userdata["siteid"])}{$userdata["siteid"]}{/if}';
     v_year = new Date().getFullYear();
+
+    if (v_itemtypeid!='' && v_itemtypeid!=0) {
+        $("#f_itemtypeid").attr("disabled", true);
+    }
 </script>
 
 {include file="crud/_js-crud-table.tpl" tbl=$crud}
@@ -469,6 +476,26 @@ function display_item_doinfo(value, tipe, data) {
         //     }
         // });
 
+    });
+
+</script>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        editor_tdata_156.on( 'initEdit', function (e, node, data, items, type) {
+            //disable field itemtypeid
+            editor_tdata_156.field('itemtypeid').disable();
+        });
+
+        editor_tdata_156.on( 'initCreate', function (e, node, data, items, type) {
+            //enable field itemtypeid
+            editor_tdata_156.field('itemtypeid').enable();
+
+            if (v_itemtypeid != null && v_itemtypeid != '') {
+                editor_tdata_156.field('itemtypeid').set(v_itemtypeid);
+                editor_tdata_156.field('itemtypeid').disable();
+            }
+        });
     });
 
 </script>

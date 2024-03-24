@@ -24,7 +24,12 @@ class Playground extends CI_Controller {
 		$this->load->view('playground/selecttable');
 	}
 
-    public function usersession() {
+    public function select2()
+	{
+		$this->load->view('playground/select2');
+	}
+
+   public function usersession() {
         $user_id = $this->session->userdata('user_id');
 
         $this->load->model('crud/Msession');

@@ -29,3 +29,30 @@ div.DTE_Field_Type_datatable div.dataTables_wrapper > table {
 .dt-editor-table table {
     border-bottom: 1px solid #ced4da;
 }
+
+/** OPTION DROPDOWN **/
+.select2-container .select-option-level-1 {
+	padding-left: 0px !important;
+}
+
+.select2-container .select-option-level-2 {
+	padding-left: 12px !important;
+}
+
+.select2-container .select-option-level-3 {
+	padding-left: 24px !important;
+}
+
+.select2-container .select-option-level-4 {
+	padding-left: 36px !important;
+}
+
+.select2-container .select-option-level-5 {
+	padding-left: 48px !important;
+}
+
+.select2-container .select-option-group {
+	font-weight: bold !important;
+	color: black;
+}
+/** END OPTION-DROPDOWN **/

@@ -34,10 +34,18 @@
 				conf.attr.compulsory = conf.compulsory;
 			}
 
+			//force editorid
+			if (conf.editorId !== undefined && conf.editorId != null && conf.editorId != "") {
+				conf.attr.editorId = conf.editorId;
+			}
+
 			//some time, just the field name is not safe enough!
 			if (conf.attr.editorId != "") {
 				conf._safeId = conf.attr.editorId + "_" + conf._safeId;
 			};
+
+            //default value
+            conf.val = null;
 
 			// Create the elements to use for the input
 			if (conf.attr.additionalInfo == 'inline') {
@@ -92,7 +100,7 @@
 			let _options = null;
 			if (typeof conf.options !== 'undefined' && conf.options != null && Array.isArray(conf.options) && conf.options.length > 0) {
 				_options = conf.options;
-				tcg_select2.helpers._select2_build(conf._input, _options, conf.attr, conf.def);
+				tcg_select2.helpers._select2_build(conf._input, _options, conf.attr, conf.val);
 			} 
 			else if (typeof conf.attr.ajax !== 'undefined' && conf.attr.ajax != null && conf.attr.ajax != "") {
 				//retrieve list from json
@@ -111,7 +119,8 @@
 						} else {
 							_options = response.data;
 						}
-						tcg_select2.helpers._select2_build(conf._input, _options, conf.attr, conf.def);
+                        //default value is conf.val, the last value set for this control
+						tcg_select2.helpers._select2_build(conf._input, _options, conf.attr, conf.val);
 					},
 					error: function (jqXhr, textStatus, errorMessage) {
 						conf.error = errorMessage;
@@ -119,13 +128,13 @@
 				});
 			} 
 			else {
-				tcg_select2.helpers._select2_build(conf._input, null, conf.attr, conf.def);
+				tcg_select2.helpers._select2_build(conf._input, null, conf.attr, conf.val);
 			}
 			
-			// //cascade change event
-			// conf._select.on('change', function() {
-            //     conf._input.trigger('change');
-            // });
+			//store old value 
+			conf._select.on('change', function() {
+                //conf.val = conf._select.val();;
+            });
 			
 			return conf._input;
 		},
@@ -136,15 +145,22 @@
 		},
 
 		set: function (conf, val) {
-			if (typeof val === 'undefined' || val == null) {
+			if ((typeof val === 'undefined' || val == null) && conf.attr.compulsory) {
 				//set default value
 				val = conf.def;
 			}
 
-			let old_val = conf._select.val();
-			if (old_val !== val) {
-				conf._select.val(val).trigger('change');
+			if (conf.val != val) {
+                //when loading from ajax, select2 might be initialized after the value is set.
+                //so we need to save the val somewhere else!
+                conf.val = val;
 			}
+
+            //set the value
+            let old_val = conf._select.val();
+            if (old_val != val) {
+                conf._select.val(val).trigger('change');
+            }
 		},
 
 		enable: function (conf) {
@@ -560,6 +576,12 @@
 				overlay.addClass("d-none");
 			});
 			
+			_select.on('select2:closing', function (e) {
+				e.stopPropagation();
+				
+				//store value
+
+			});
 
 			return _input;
 		},

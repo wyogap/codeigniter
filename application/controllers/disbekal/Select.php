@@ -80,4 +80,14 @@ class Select extends CI_Controller {
         $json['data'] = $this->Mselect->tipebekal();
         echo json_encode($json, JSON_INVALID_UTF8_IGNORE);	
     }
+
+    public function satuankerja()
+    {
+        $this->load->model('disbekal/Mselect');
+
+        $json = array();
+        $json['status'] = 1;
+        $json['data'] = $this->Mselect->satuankerja();
+        echo json_encode($json, JSON_INVALID_UTF8_IGNORE);	
+    }
 }

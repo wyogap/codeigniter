@@ -11,6 +11,8 @@
 <script src="{$base_url}assets/leaflet/esri/esri-leaflet-geocoder.js" defer></script>
 <script src="{$base_url}assets/leaflet/fullscreen/Leaflet.fullscreen.min.js" defer></script>
 <script src="{$base_url}assets/leaflet/easybutton/easy-button.js" defer></script>
+<script src="{$base_url}assets/leaflet/markercluster/leaflet.markercluster.js" defer></script>
+<script src="{$base_url}assets/leaflet/oms/oms.min.js" defer></script>
 {/if} 
 
 {if !empty($use_select2)}
@@ -124,6 +126,9 @@
 
 <!--- moment -->
 <script src="{$base_url}assets/moment/moment-with-locales.min.js" defer></script>
+
+<!-- accounting -->
+<script src="{$base_url}assets/accounting/accounting.min.js" defer></script>
 
 <!-- third party js -->
 <!-- <script src="{$base_url}assets/backend/js/vendor/Chart.bundle.min.js"></script>

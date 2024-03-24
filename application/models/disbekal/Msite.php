@@ -14,9 +14,75 @@ class Msite extends Mcrud_tablemeta
 
     protected static $SOFT_DELETE = true;
 
+    function get_allowed_siteids() {
+        $user_siteid = $this->session->userdata("siteid");
+
+        if (empty($user_siteid)) {
+            $sql = "select siteid from tcg_site a where a.is_deleted=0";
+        }
+        else {
+            $user_siteid = $this->db->escape($user_siteid);
+            $sql = "
+            select a.siteid 
+            from tcg_site a
+            left join tcg_site b on b.siteid=a.parentid and b.is_deleted=0
+            left join tcg_site c on c.siteid=b.parentid and c.is_deleted=0
+            where a.is_deleted=0
+                and (a.siteid=" .$user_siteid. " or b.siteid=" .$user_siteid. " or c.siteid=" .$user_siteid. ")
+                ";
+        }
+
+        $siteids = array();
+
+        $arr = $this->db->query($sql)->result_array();
+        if ($arr == null) return $siteids;
+
+        foreach($arr as $s) {
+            $siteids[] = $s['siteid'];
+        }
+
+        return $siteids;
+    }
+
+    function check_siteid($siteid) {
+        $user_siteid = $this->session->userdata("siteid");
+
+        if (empty($siteid) && empty($user_siteid))  return null;
+        if (empty($user_siteid) && !empty($siteid)) return $siteid;
+        if (!empty($user_siteid) && empty($siteid)) return $user_siteid;
+        if ($siteid == $user_siteid)    return $siteid;
+
+        //TODO: store list of allowed siteid in session for easy access
+        //check if siteid is below user_siteid
+        $siteid = $this->db->escape($siteid);
+        $user_siteid = $this->db->escape($user_siteid);
+
+        $sql = "
+        select count(*) as cnt
+        from tcg_site a
+        left join tcg_site b on b.siteid=a.parentid and b.is_deleted=0
+        left join tcg_site c on c.siteid=b.parentid and c.is_deleted=0
+        where a.is_deleted=0
+            and a.siteid=" .$siteid. "
+            and (b.siteid=" .$user_siteid. " or c.siteid=" .$user_siteid. ")
+            ";
+
+        $arr = $this->db->query($sql)->row_array();
+
+        if (empty($arr["cnt"])) {
+            //siteid not under user_siteid
+            return $user_siteid;
+        }  
+
+        //siteid under user_siteid
+        return $siteid;
+    }
+
     function list($filter = null, $limit = null, $offset = null, $orderby = null) {
         $this->reset_error();
         
+        //TODO: implement other filters!
+
         $sql = "SELECT a.*, b.sitecode as parentcode, b.name as parentname, c.siteid as kotamaid, c.sitecode as kotamacode, c.name as kotamaname, 
             case when a.level=0 then concat(`a`.`siteid`) 
                 when a.level=1 then concat(`c`.`siteid`,'-',lpad(`a`.`siteid`,3,'0')) 
@@ -51,6 +117,8 @@ class Msite extends Mcrud_tablemeta
     function detail($key, $filter = null) {
         $this->reset_error();
               
+        //TODO: use list() for consistency
+
         $sql = "SELECT a.*, b.sitecode as parentcode, b.name as parentname, c.siteid as kotamaid, c.sitecode as kotamacode, c.name as kotamaname, 
         case when a.level=0 then concat(`a`.`siteid`) 
             when a.level=1 then concat(`c`.`siteid`,'-',lpad(`a`.`siteid`,3,'0')) 
@@ -130,38 +198,87 @@ class Msite extends Mcrud_tablemeta
     function lookup($filter = null) {
         $this->reset_error();
         
-        $orgid = $this->session->userdata('orgid');
-        if (empty($orgid))  $orgid = '';
+        $siteid = $this->session->userdata("siteid");
+        if (!empty($filter['siteid'])) {
+            $this->load->model('disbekal/Msite');
+            $siteid = $this->Msite->check_siteid($filter['siteid']);
+        }
+        unset($filter['siteid']);
 
-        $siteid = $this->session->userdata('siteid');
-        if (empty($siteid)) $siteid = '';
+        $this->db->select("a.siteid as value, a.name as label");
+        if (empty($siteid)) {
+            $this->db->select("a.level");
+        }
+        else {
+            $this->db->select("a.level - coalesce(d.level,0) as level");
+        }
+        $this->db->select("case when a.level=0 then concat(a.orgid,'-',lpad(`a`.`siteid`,3,'0')) 
+                                when a.level=1 then concat(a.orgid,'-',lpad(`b`.`siteid`,3,'0'),'-',lpad(`a`.`siteid`,3,'0')) 
+                                else concat(a.orgid,'-',lpad(`c`.`siteid`,3,'0'),'-',lpad(`b`.`siteid`,3,'0'),'-',lpad(`a`.`siteid`,3,'0')) 
+                            end AS `compname`");
+        $this->db->from("tcg_site a");
+        $this->db->where("a.is_deleted=0");
+        $this->db->join("tcg_site b", "b.siteid=a.parentid and b.is_deleted=0", "LEFT OUTER");
+        $this->db->join("tcg_site c", "c.siteid=b.parentid and c.is_deleted=0", "LEFT OUTER");
 
-        //filter by orgid (only for admin)
-        if (""==$orgid && !empty($filter['orgid']))   $orgid=$filter['orgid'];
+        //clean up non existing filter columns
+        $ci_name = null;
+        foreach($filter as $key => $val) {
+            $ci_name = strtoupper($key);
+            if (false !== array_search($ci_name, $this->columns)) {
+                $this->db->where("a.$key", $val);
+            }
+        }
+        if (!empty($siteid)) {
+            $this->db->join("tcg_site d", "d.siteid=" .$this->db->escape($siteid). " and b.is_deleted=0", "LEFT OUTER");
+            $this->db->group_start();
+            $this->db->where("a.siteid", $siteid);
+            $this->db->or_where("b.siteid", $siteid);
+            $this->db->or_where("c.siteid", $siteid);
+            $this->db->group_end();
+        }
 
-        $orgid = $this->db->escape($orgid);
-        $siteid = $this->db->escape($siteid);
+        $subquery1 = $this->db->get_compiled_select();
 
-        $sql = "SELECT a.*
-        from (
-            SELECT a.siteid as value, a.name as label,  a.level - coalesce(d.level,0) as level,
-                case when a.level=0 then concat(a.orgid,'-',lpad(`a`.`siteid`,3,'0')) 
-                     when a.level=1 then concat(a.orgid,'-',lpad(`c`.`siteid`,3,'0'),'-',lpad(`a`.`siteid`,3,'0')) 
-                     else concat(a.orgid,'-',lpad(`c`.`siteid`,3,'0'),'-',lpad(`b`.`siteid`,3,'0'),'-',lpad(`a`.`siteid`,3,'0')) 
-                     end AS `compname`
-            FROM tcg_site a
-            left join tcg_site b on b.siteid=a.parentid and b.is_deleted=0 and (b.orgid=" .$orgid. " or ''=" .$orgid. ")
-            left join tcg_site c on c.orgid=a.orgid and c.level=0 and c.is_deleted=0 and a.level>0 and (c.orgid=" .$orgid. " or ''=" .$orgid. ")
-            left join tcg_site d on d.siteid=" .$siteid. " and d.is_deleted=0
-            where a.is_deleted=0 and (c.siteid=" .$siteid. " or b.siteid=" .$siteid. " or a.siteid=" .$siteid. " or ''=" .$siteid. ") 
-                and (a.orgid=" .$orgid. " or ''=" .$orgid. ")
-        ) a order by a.compname asc;
-        ";
-
-        $query = $this->db->query($sql);
+        $this->db->reset_query();
+        
+        $query = $this->db->query("select a.* from (" .$subquery1. ") a order by a.compname asc");
         if ($query == null)     return $query;
 
         return $query->result_array();
+
+        // $orgid = $this->session->userdata('orgid');
+        // if (empty($orgid))  $orgid = '';
+
+        // $siteid = $this->session->userdata('siteid');
+        // if (empty($siteid)) $siteid = '';
+
+        // //filter by orgid (only for admin)
+        // if (""==$orgid && !empty($filter['orgid']))   $orgid=$filter['orgid'];
+
+        // $orgid = $this->db->escape($orgid);
+        // $siteid = $this->db->escape($siteid);
+
+        // $sql = "SELECT a.*
+        // from (
+        //     SELECT a.siteid as value, a.name as label,  a.level - coalesce(d.level,0) as level,
+        //         case when a.level=0 then concat(a.orgid,'-',lpad(`a`.`siteid`,3,'0')) 
+        //              when a.level=1 then concat(a.orgid,'-',lpad(`c`.`siteid`,3,'0'),'-',lpad(`a`.`siteid`,3,'0')) 
+        //              else concat(a.orgid,'-',lpad(`c`.`siteid`,3,'0'),'-',lpad(`b`.`siteid`,3,'0'),'-',lpad(`a`.`siteid`,3,'0')) 
+        //              end AS `compname`
+        //     FROM tcg_site a
+        //     left join tcg_site b on b.siteid=a.parentid and b.is_deleted=0 and (b.orgid=" .$orgid. " or ''=" .$orgid. ")
+        //     left join tcg_site c on c.orgid=a.orgid and c.level=0 and c.is_deleted=0 and a.level>0 and (c.orgid=" .$orgid. " or ''=" .$orgid. ")
+        //     left join tcg_site d on d.siteid=" .$siteid. " and d.is_deleted=0
+        //     where a.is_deleted=0 and (c.siteid=" .$siteid. " or b.siteid=" .$siteid. " or a.siteid=" .$siteid. " or ''=" .$siteid. ") 
+        //         and (a.orgid=" .$orgid. " or ''=" .$orgid. ")
+        // ) a order by a.compname asc;
+        // ";
+
+        // $query = $this->db->query($sql);
+        // if ($query == null)     return $query;
+
+        // return $query->result_array();
     }
 }
 

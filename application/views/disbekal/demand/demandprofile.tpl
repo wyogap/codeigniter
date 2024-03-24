@@ -3,6 +3,7 @@
 <script src="{$base_url}assets/highcharts/highcharts.js"></script>
 <script src="{$base_url}assets/highcharts/highcharts-more.js"></script>
 <script src="{$base_url}assets/highcharts/themes/grid-light.js"></script>
+
 <style>
 
 </style>
@@ -79,7 +80,7 @@
 								</div>
 								<div class="form-group col-4 mb-0 mt-1 col-12 col-md-6 col-lg-4">
 									<select id="f_year" name="year" class="form-control filter_select" placeholder="Tahun Anggaran">
-                                        {for $year = date('Y')-5; $year <= date('Y')+5; $year++}
+                                        {for $year = date('Y'); $year <= date('Y')+5; $year++}
                                         <option value="{$year}" data-select2-id="{$year}" {if $year == date('Y')}selected{/if}>TA {$year}</option>
                                         {/for}
 									</select>
@@ -143,6 +144,7 @@
 	</div>
 	<div class="col-12 col-sm-12 col-md-6 col-xl-4">
 		<div class="card widget-inline">
+			<!--  <div class="card-header">Kebutuhan</div> -->
 			<div class="card-body">
 			<div class="row">
 				<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
@@ -165,6 +167,7 @@
 	</div> <!-- end col-->
 	<div class="col-12 col-sm-12 col-md-6 col-xl-4">
 		<div class="card widget-inline">
+			<!-- <div class="card-header">Pengadaan</div> -->
 			<div class="card-body">
 			<div class="row">
 				<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
@@ -188,6 +191,7 @@
 	</div> <!-- end col-->
 	<div class="col-12 col-sm-12 col-md-6 col-xl-4">
 		<div class="card widget-inline">
+			<!-- <div class="card-header">Stok Awal/Gudang</div> -->
 			<div class="card-body">
 			<div class="row">
 				<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
@@ -196,7 +200,7 @@
 							<thead>
 								<tr>
 									<th class="text-center" data-priority="1">Gudang</th>
-									<th class="text-center" data-priority="1">Stok Awal Tahun</th>
+									<th class="text-center" data-priority="1">Stok</th>
 								</tr>
 							</thead>
 						</table>
@@ -219,64 +223,6 @@
 
 </script>
 
-<script type="text/javascript">
-
-	$(document).ready(function() {
-
-		let _attr = {
-				multiple: false,
-				minimumResultsForSearch: 25,
-			};
-
-		$.ajax({
-			url: "{$site_url}{$controller}/satuankerja/lookup",
-			type: 'GET',
-			dataType: 'json',
-			beforeSend: function(request) {
-				request.setRequestHeader("Content-Type", "application/json");
-			},
-			success: function(response) {
-				if (response.data === null) {} else if (typeof response.error !==
-					'undefined' && response.error !== null && response
-					.error != "") {} else {
-					_options = response.data;
-				}
-				select2_build($('#f_siteid'), '-- Satuan Kerja --', '', '', _options, _attr);
-
-				// select_build($('#edit-korwil'), _options, _attr);
-				// $('#edit-korwil').val(korwil);
-			},
-			error: function(jqXhr, textStatus, errorMessage) {
-				select2_build($('#f_siteid'), '-- Satuan Kerja --', '', '', null, _attr);
-				// select_build($('#edit-korwil'), _options, _attr);
-			}
-		});
-
-		$.ajax({
-			url: "{$site_url}disbekal/select/tipebekal",
-			type: 'GET',
-			dataType: 'json',
-			beforeSend: function(request) {
-				request.setRequestHeader("Content-Type", "application/json");
-			},
-			success: function(response) {
-				if (response !== null && response.length > 0) {
-					select2_build($('#f_itemtypeid'), '-- Tipe Bekal --', '', '', response, _attr);
-				}
-
-				// select_build($('#edit-korwil'), _options, _attr);
-				// $('#edit-korwil').val(korwil);
-			},
-			error: function(jqXhr, textStatus, errorMessage) {
-				select2_build($('#f_itemtypeid'), '-- Tipe Bekal --', '', '', null, _attr);
-				// select_build($('#edit-korwil'), _options, _attr);
-			}
-		});
-
-	});
-
-</script>
-
 {if $crud.filter || $crud.search}
 {include file='crud/_js-crud-filter.tpl'}
 {/if}
@@ -286,6 +232,10 @@
     v_itemtypeid = '{if !empty($userdata["itemtypeid"])}{$userdata["itemtypeid"]}{/if}';
     v_siteid = '{if !empty($userdata["siteid"])}{$userdata["siteid"]}{/if}';
     v_year = new Date().getFullYear();
+
+    if (v_itemtypeid!='' && v_itemtypeid!=0) {
+        $("#f_itemtypeid").attr("disabled", true);
+    }
 </script>
 
 <script type="text/javascript" defer>
@@ -296,7 +246,6 @@
 	var dt_tstock = null;
 	var v_itemid = null;
 	var v_itemlabel = null;
-	//var v_year = null;
 
     $(document).ready(function() {
         $.fn.dataTable.ext.errMode = 'throw';
@@ -732,7 +681,7 @@
                 orderable: true,
                 render: function(data, type, row) {
                     if (data == null || data == '') {
-                        data = row['targetdate'];
+                        data = row['targetdeliverydate'];
                     }
 
 					if (data == null || data == '')		return data;
@@ -877,15 +826,16 @@
 			v_itemlabel = data['itemid_label'];
 			v_itemid = data['itemid'];
 			v_year = $("#f_year").val();
+			v_siteid = $("#f_siteid").val();
 
 			$('.item-name').html(v_itemlabel.toUpperCase()); 
-			load_demandprofile(v_itemid, v_itemlabel, v_year);
+			load_demandprofile(v_itemid, v_itemlabel, v_year, v_siteid);
 
-			dt_tdemand.ajax.url("{$base_url}disbekal/analisakebutuhan/demand?id=" +v_itemid+ "&year=" +v_year);
+			dt_tdemand.ajax.url("{$base_url}disbekal/analisakebutuhan/demand?id=" +v_itemid+ "&year=" +v_year+ "&siteid=" +v_siteid);
 			dt_tdemand.ajax.reload(tdemand_post_load, false);
-			dt_tpo.ajax.url("{$base_url}disbekal/analisakebutuhan/po?id=" +v_itemid+ "&year=" +v_year);
+			dt_tpo.ajax.url("{$base_url}disbekal/analisakebutuhan/po?id=" +v_itemid+ "&year=" +v_year+ "&siteid=" +v_siteid);
 			dt_tpo.ajax.reload(tpo_post_load, false);
-			dt_tstock.ajax.url("{$base_url}disbekal/analisakebutuhan/stock?id=" +v_itemid+ "&year=" +v_year);
+			dt_tstock.ajax.url("{$base_url}disbekal/analisakebutuhan/stock?id=" +v_itemid+ "&year=" +v_year+ "&siteid=" +v_siteid);
 			dt_tstock.ajax.reload(tstock_post_load, false);
 		}
 	}
@@ -966,10 +916,10 @@
 	});
 	{/literal}
 
-	function load_demandprofile(id, label, year) {
+	function load_demandprofile(id, label, year, siteid) {
        	//retrieve list from json
 	   	$.ajax({
-            url: "{$base_url}disbekal/analisakebutuhan/timeseries?id=" +id+ "&year=" +year,
+            url: "{$base_url}disbekal/analisakebutuhan/timeseries?id=" +id+ "&year=" +year+ "&siteid=" +siteid,
             type: 'GET',
             dataType: 'json',
             beforeSend: function(request) {

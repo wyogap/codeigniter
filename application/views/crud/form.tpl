@@ -13,8 +13,10 @@
                             <button class="btn btn-primary crud-form-submit" data-table-id="{$crud.table_id}">{__('Tambah')}</button>
                             {/if}
                             {elseif $form_mode=='edit'}
-                            {if $detail && $crud.table_actions.edit}
+                            {if $crud.table_actions.add}
                             <button class="btn btn-primary crud-form-add" data-table-id="{$crud.table_id}">{__('Baru')}</button>
+                            {/if}
+                            {if $detail && $crud.table_actions.edit}
                             <button class="btn btn-primary crud-form-submit" data-table-id="{$crud.table_id}">{__('Simpan')}</button>
                             {/if}
                             {elseif $form_mode=='detail'}

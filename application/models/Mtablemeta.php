@@ -44,7 +44,9 @@ class Mtablemeta extends CI_Model
         'custom_js' => '',
         'detail_template' => '',
         'edit_template' => '',
-        'readonly' => false
+        'readonly' => false,
+        'show_paging_options' => false,
+        'multi_edit' => false,
     );
     
     public static $COLUMN = array (

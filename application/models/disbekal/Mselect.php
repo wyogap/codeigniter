@@ -27,6 +27,29 @@ class Mselect extends CI_Model
         $query = $this->db->query($sql);
         return $query->result_array();
     }
+
+    function satuankerja() {
+
+        $sql = "SELECT a.*
+        from (
+            SELECT a.siteid as value, a.name as label,  a.level as level,
+                case when a.level=0 then concat(a.orgid,'-',lpad(`a`.`siteid`,3,'0')) 
+                     when a.level=1 then concat(a.orgid,'-',lpad(`c`.`siteid`,3,'0'),'-',lpad(`a`.`siteid`,3,'0')) 
+                     else concat(a.orgid,'-',lpad(`c`.`siteid`,3,'0'),'-',lpad(`b`.`siteid`,3,'0'),'-',lpad(`a`.`siteid`,3,'0')) 
+                     end AS `compname`
+            FROM tcg_site a
+            left join tcg_site b on b.siteid=a.parentid and b.is_deleted=0 
+            left join tcg_site c on c.orgid=a.orgid and c.level=0 and c.is_deleted=0 and a.level>0
+            where a.is_deleted=0 
+        ) a order by a.compname asc;
+        ";
+
+        $query = $this->db->query($sql);
+        if ($query == null)     return $query;
+
+        return $query->result_array();
+    }
+
 }
 
   

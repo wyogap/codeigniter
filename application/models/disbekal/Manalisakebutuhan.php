@@ -5,25 +5,47 @@ require_once(APPPATH.'models/Mcrud_tablemeta.php');
 class Manalisakebutuhan extends Mcrud_tablemeta
 {
 
-    function get_timeseries($itemid, $year) {
+    function get_timeseries($itemid, $siteid, $year) {
         $itemid = $this->db->escape($itemid);
 
         if (empty($year))   $year = date('Y');
         $year = $this->db->escape($year);
 
+        if (empty($siteid)) {
+            $siteid = $this->session->userdata("siteid");
+        }
+
         $series = array();
 
         //demand
         $data = [ 0,0,0,0,0,0,0,0,0,0,0,0 ];
-        $sql = "
-        select month(a.demanddate) as `month`, sum(b.count) as cnt 
-        from rpt_demandinstance a
-        join rpt_demandinstanceitem b on b.demandinstanceid=a.demandinstanceid and b.is_deleted=0
-        where a.is_deleted=0
-            and b.itemid=" .$itemid. " 
-            and year(a.demanddate)=" .$year. "
-        group by month(a.demanddate)
-        ";
+        if (empty($siteid)) {
+            $sql = "
+            select month(a.demanddate) as `month`, sum(b.count) as cnt 
+            from rpt_demandinstance a
+            join rpt_demandinstanceitem b on b.demandinstanceid=a.demandinstanceid and b.is_deleted=0
+            where a.is_deleted=0
+                and b.itemid=" .$itemid. " 
+                and year(a.demanddate)=" .$year. "
+            group by month(a.demanddate)
+            ";
+        } 
+        else {
+            $sql = "
+            select month(a.demanddate) as `month`, sum(b.count) as cnt 
+            from rpt_demandinstance a
+            join rpt_demandinstanceitem b on b.demandinstanceid=a.demandinstanceid and b.is_deleted=0
+            join tcg_demand c on c.demandid=a.demandid and c.is_deleted=0
+            join tcg_site x on x.siteid=c.siteid and x.is_deleted=0
+			left join tcg_site y on y.siteid=x.parentid and y.is_deleted=0
+			left join tcg_site z on z.siteid=y.parentid and z.is_deleted=0
+            where a.is_deleted=0
+                and b.itemid=" .$itemid. " 
+                and year(a.demanddate)=" .$year. "
+                and (x.siteid=" .$siteid. " or y.siteid=" .$siteid. " or z.siteid=" .$siteid. ")
+            group by month(a.demanddate)
+            ";
+        }
 
         $result = $this->db->query($sql)->result_array();
         if ($result != null) {
@@ -47,33 +69,71 @@ class Manalisakebutuhan extends Mcrud_tablemeta
 
         //po
         $data = [ 0,0,0,0,0,0,0,0,0,0,0,0 ];
-        $sql = "
-        select a.`month`, sum(a.cnt) as cnt
-        from (
-            select month(a.targetdate) as `month`, sum(b.count) as cnt
-            from tcg_po a
-            join tcg_poitem b on b.poid=a.poid and b.is_deleted=0
-            where a.status in ('APPR','TENDER') 
-                and a.is_deleted=0
-                and b.itemid=" .$itemid. "
-                and a.financial_year=" .$year. " and year(a.targetdate)=" .$year. "
-            group by month(a.targetdate)
+        if (empty($siteid)) {
+            $sql = "
+            select a.`month`, sum(a.cnt) as cnt
+            from (
+                select month(a.targetdeliverydate) as `month`, sum(b.count) as cnt
+                from tcg_po a
+                join tcg_poitem b on b.poid=a.poid and b.is_deleted=0
+                where a.status in ('APPR','TENDER') 
+                    and a.is_deleted=0
+                    and b.itemid=" .$itemid. "
+                    and a.financial_year=" .$year. " and year(a.targetdeliverydate)=" .$year. "
+                group by month(a.targetdeliverydate)
 
-            union all
-            
-            select month(coalesce(a.deliverydate,c.targetdeliverydate)) as `month`, sum(b.count) as cnt
-            from tcg_po a
-            join tcg_contract c on c.poid=a.poid and c.is_deleted=0
-            join tcg_contractitem b on b.contractid=c.contractid and b.is_deleted=0
-            where a.status not in ('DRAFT','APPR','TENDER')
-                and a.is_deleted=0
-                and b.itemid=" .$itemid. "
-                and a.financial_year=" .$year. " and year(coalesce(a.deliverydate,coalesce(c.targetdeliverydate, a.targetdate)))=" .$year. "
-            group by month(coalesce(a.deliverydate,c.targetdeliverydate))
-        ) a
-        group by a.`month`
-        ";
+                union all
+                
+                select month(coalesce(a.deliverydate,coalesce(c.targetdeliverydate, a.targetdeliverydate))) as `month`, sum(b.count) as cnt
+                from tcg_po a
+                join tcg_contract c on c.poid=a.poid and c.is_deleted=0
+                join tcg_contractitem b on b.contractid=c.contractid and b.is_deleted=0
+                where a.status not in ('DRAFT','APPR','TENDER')
+                    and a.is_deleted=0
+                    and b.itemid=" .$itemid. "
+                    and a.financial_year=" .$year. " and year(coalesce(a.deliverydate,coalesce(c.targetdeliverydate, a.targetdeliverydate)))=" .$year. "
+                group by month(coalesce(a.deliverydate,coalesce(c.targetdeliverydate, a.targetdeliverydate)))
+            ) a
+            group by a.`month`
+            ";
+        } 
+        else {
+            $sql = "
+            select a.`month`, sum(a.cnt) as cnt
+            from (
+                select month(a.targetdeliverydate) as `month`, sum(b.count) as cnt
+                from tcg_po a
+                join tcg_poitem b on b.poid=a.poid and b.is_deleted=0
+                join tcg_site x on x.siteid=a.siteid and x.is_deleted=0
+                left join tcg_site y on y.siteid=x.parentid and y.is_deleted=0
+                left join tcg_site z on z.siteid=y.parentid and z.is_deleted=0
+                    where a.status in ('APPR','TENDER') 
+                    and a.is_deleted=0
+                    and b.itemid=" .$itemid. "
+                    and a.financial_year=" .$year. " and year(a.targetdeliverydate)=" .$year. "
+                    and (x.siteid=" .$siteid. " or y.siteid=" .$siteid. " or z.siteid=" .$siteid. ")
+                group by month(a.targetdeliverydate)
 
+                union all
+                
+                select month(coalesce(a.deliverydate,coalesce(c.targetdeliverydate, a.targetdeliverydate))) as `month`, sum(b.count) as cnt
+                from tcg_po a
+                join tcg_contract c on c.poid=a.poid and c.is_deleted=0
+                join tcg_contractitem b on b.contractid=c.contractid and b.is_deleted=0
+                join tcg_site x on x.siteid=a.siteid and x.is_deleted=0
+                left join tcg_site y on y.siteid=x.parentid and y.is_deleted=0
+                left join tcg_site z on z.siteid=y.parentid and z.is_deleted=0
+                    where a.status not in ('DRAFT','APPR','TENDER')
+                    and a.is_deleted=0
+                    and b.itemid=" .$itemid. "
+                    and a.financial_year=" .$year. " and year(coalesce(a.deliverydate,coalesce(c.targetdeliverydate, a.targetdeliverydate)))=" .$year. "
+                    and (x.siteid=" .$siteid. " or y.siteid=" .$siteid. " or z.siteid=" .$siteid. ")
+                group by month(coalesce(a.deliverydate,coalesce(c.targetdeliverydate, a.targetdeliverydate)))
+            ) a
+            group by a.`month`
+            ";
+        }
+        
         $result = $this->db->query($sql)->result_array();
         if ($result != null) {
             foreach($result as $key=>$arr) {
@@ -97,12 +157,27 @@ class Manalisakebutuhan extends Mcrud_tablemeta
         //stock
         $data = [ 0,0,0,0,0,0,0,0,0,0,0,0 ];
         $stock = 0;
-        $sql = "
-        select sum(a.availableamount) as stock
-        from rpt_invsnapshot a
-        where a.snapshotdate=concat(" .$year. ",'-01-01') and a.is_deleted=0
-            and a.itemid=" .$itemid. "
-        ";
+        if (empty($siteid)) {
+            $sql = "
+            select sum(a.availableamount) as stock
+            from rpt_invsnapshot a
+            where a.snapshotdate=concat(" .$year. ",'-01-01') and a.is_deleted=0
+                and a.itemid=" .$itemid. "
+            ";
+        } 
+        else {
+            $sql = "
+            select sum(a.availableamount) as stock
+            from rpt_invsnapshot a
+            join tcg_store b on b.storeid=a.storeid and a.is_deleted=0
+            join tcg_site x on x.siteid=c.siteid and x.is_deleted=0
+			left join tcg_site y on y.siteid=x.parentid and y.is_deleted=0
+			left join tcg_site z on z.siteid=y.parentid and z.is_deleted=0
+            where a.snapshotdate=concat(" .$year. ",'-01-01') and a.is_deleted=0
+                and a.itemid=" .$itemid. "
+                and (x.siteid=" .$siteid. " or y.siteid=" .$siteid. " or z.siteid=" .$siteid. ")
+            ";
+        }
 
         $result = $this->db->query($sql)->row_array();
         if ($result != null) {
@@ -118,20 +193,40 @@ class Manalisakebutuhan extends Mcrud_tablemeta
         return $series;
     }
 
-    function get_po($itemid, $year) {
+    function get_po($itemid, $siteid, $year) {
         $itemid = $this->db->escape($itemid);
 
         if (empty($year))   $year = date('Y');
         $year = $this->db->escape($year);
 
-        $sql = "
-        select a.*, b.count
-        from tcg_po a
-        join tcg_poitem b on b.poid=a.poid and b.is_deleted=0
-        where a.status != 'DRAFT' and a.is_deleted=0
-            and a.financial_year=" .$year. "
-            and b.itemid=" .$itemid. "
-        ";
+        if (empty($siteid)) {
+            $siteid = $this->session->userdata("siteid");
+        }
+
+        if (empty($siteid)) {
+            $sql = "
+            select a.*, b.count
+            from tcg_po a
+            join tcg_poitem b on b.poid=a.poid and b.is_deleted=0
+            where a.status != 'DRAFT' and a.is_deleted=0
+                and a.financial_year=" .$year. "
+                and b.itemid=" .$itemid. "
+            ";
+        } 
+        else {
+            $sql = "
+            select a.*, b.count
+            from tcg_po a
+            join tcg_poitem b on b.poid=a.poid and b.is_deleted=0
+            join tcg_site x on x.siteid=a.siteid and x.is_deleted=0
+			left join tcg_site y on y.siteid=x.parentid and y.is_deleted=0
+			left join tcg_site z on z.siteid=y.parentid and z.is_deleted=0
+            where a.status != 'DRAFT' and a.is_deleted=0
+                and a.financial_year=" .$year. "
+                and b.itemid=" .$itemid. "
+                and (x.siteid=" .$siteid. " or y.siteid=" .$siteid. " or z.siteid=" .$siteid. ")
+            ";
+        }
 
         $arr = $this->db->query($sql)->result_array();
         if ($arr == null)       return $arr;
@@ -139,20 +234,40 @@ class Manalisakebutuhan extends Mcrud_tablemeta
         return $arr;
     }
 
-    function get_demand($itemid, $year) {
+    function get_demand($itemid, $siteid, $year) {
         $itemid = $this->db->escape($itemid);
 
         if (empty($year))   $year = date('Y');
         $year = $this->db->escape($year);
 
-        $sql = "
-        select c.*, a.demanddate, b.count
-        from rpt_demandinstance a
-        join rpt_demandinstanceitem b on b.demandinstanceid=a.demandinstanceid and b.is_deleted=0
-        join tcg_demand c on c.demandid=a.demandid
-        where year(a.demanddate)=" .$year. " and a.is_deleted=0
-            and b.itemid=" .$itemid. "
-        ";
+        if (empty($siteid)) {
+            $siteid = $this->session->userdata("siteid");
+        }
+
+        if (empty($siteid)) {
+            $sql = "
+            select c.*, a.demanddate, b.count
+            from rpt_demandinstance a
+            join rpt_demandinstanceitem b on b.demandinstanceid=a.demandinstanceid and b.is_deleted=0
+            join tcg_demand c on c.demandid=a.demandid
+            where year(a.demanddate)=" .$year. " and a.is_deleted=0
+                and b.itemid=" .$itemid. "
+            ";
+        } 
+        else {
+            $sql = "
+            select c.*, a.demanddate, b.count
+            from rpt_demandinstance a
+            join rpt_demandinstanceitem b on b.demandinstanceid=a.demandinstanceid and b.is_deleted=0
+            join tcg_demand c on c.demandid=a.demandid
+            join tcg_site x on x.siteid=c.siteid and x.is_deleted=0
+			left join tcg_site y on y.siteid=x.parentid and y.is_deleted=0
+			left join tcg_site z on z.siteid=y.parentid and z.is_deleted=0
+            where year(a.demanddate)=" .$year. " and a.is_deleted=0
+                and b.itemid=" .$itemid. "
+                and (x.siteid=" .$siteid. " or y.siteid=" .$siteid. " or z.siteid=" .$siteid. ")
+            ";
+        }
 
         $arr = $this->db->query($sql)->result_array();
         if ($arr == null)       return $arr;
@@ -160,21 +275,40 @@ class Manalisakebutuhan extends Mcrud_tablemeta
         return $arr;
     }
 
-    function get_stock($itemid, $year) {
+    function get_stock($itemid, $siteid, $year) {
         $itemid = $this->db->escape($itemid);
 
         if (empty($year))   $year = date('Y');
         $year = $this->db->escape($year);
 
-        $sql = "
-        select b.storeid, b.storecode, b.description as siteid_label, sum(a.availableamount) as count
-        from rpt_invsnapshot a
-        join tcg_store b on b.storeid=a.storeid and b.is_deleted=0
-        join tcg_site c on c.siteid=b.siteid and c.is_deleted=0
-        where a.snapshotdate=concat(" .$year. ",'-01-01') and a.is_deleted=0
-            and a.itemid=" .$itemid. "
-        group by a.storeid, b.storecode, b.description
-        ";
+        if (empty($siteid)) {
+            $siteid = $this->session->userdata("siteid");
+        }
+
+        if (empty($siteid)) {
+            $sql = "
+            select b.storeid, b.storecode, b.description as storeid_label, sum(a.availableamount) as count
+            from rpt_invsnapshot a
+            join tcg_store b on b.storeid=a.storeid and b.is_deleted=0
+            where a.snapshotdate=concat(" .$year. ",'-01-01') and a.is_deleted=0
+                and a.itemid=" .$itemid. "
+            group by a.storeid, b.storecode, b.description
+            ";
+        } 
+        else {
+            $sql = "
+            select b.storeid, b.storecode, b.description as storeid_label, sum(a.availableamount) as count
+            from rpt_invsnapshot a
+            join tcg_store b on b.storeid=a.storeid and b.is_deleted=0
+            join tcg_site x on x.siteid=b.siteid and x.is_deleted=0
+			left join tcg_site y on y.siteid=x.parentid and y.is_deleted=0
+			left join tcg_site z on z.siteid=y.parentid and z.is_deleted=0
+            where a.snapshotdate=concat(" .$year. ",'-01-01') and a.is_deleted=0
+                and a.itemid=" .$itemid. "
+                and (x.siteid=" .$siteid. " or y.siteid=" .$siteid. " or z.siteid=" .$siteid. ")
+            group by a.storeid, b.storecode, b.description
+            ";
+        }
 
         $arr = $this->db->query($sql)->result_array();
         if ($arr == null)       return $arr;
@@ -192,6 +326,11 @@ class Manalisakebutuhan extends Mcrud_tablemeta
         $itemtypeid = null;
         $itemid = null;
 
+        //default
+        if (empty($filter['siteid'])) {
+            $filter['siteid'] = $this->session->userdata("siteid");
+        }
+
         if ($filter!=null) {
             if (!empty($filter['year']))        $year = $this->db->escape($filter['year']);
             if (!empty($filter['siteid']))      $siteid = $this->db->escape($filter['siteid']);
@@ -200,10 +339,11 @@ class Manalisakebutuhan extends Mcrud_tablemeta
         }
         
         $sql = "";
-        if ($siteid == null) {
+        if (empty($siteid)) {
             $sql = "
             select
-                " .$year. " as `year`, a.itemid, x.description as itemid_label, y.categoryid, x.description as categoryid_label
+                " .$year. " as `year`, a.itemid, x.description as itemid_label
+                , y.categoryid, x.description as categoryid_label
                 , z.typeid as itemtypeid, z.typecode as itemtypeid_label
                 , a.demand, coalesce(c.stock,0) as stock, coalesce(d.po,0) as po
                 , coalesce(c.stock,0)+coalesce(d.po,0)-a.demand as remaining

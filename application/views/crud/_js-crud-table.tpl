@@ -49,7 +49,7 @@ $(document).ready(function() {
                 {if !isset($col.editor)} {continue} {/if}
                 {$col = $col.editor}
                 {
-                    label: "{$col.edit_label} {if $col.edit_label && $col.edit_compulsory}<span class='text-danger font-weight-bold'>*</span>{/if}",
+                    label: "{$col.edit_label}{if $col.edit_label && $col.edit_compulsory}<span class='text-danger font-weight-bold'>*</span>{/if}",
                     {if 1==0}
                     {* Since we use template, we already apply edit_css in the template *}
                     {if count($tbl.column_groupings) <= 1}
@@ -66,7 +66,7 @@ $(document).ready(function() {
                     {else if $col.edit_field|@count>1}
                     name: "{$col.name}",
                     {/if}
-
+                    
                     {if $col.edit_type == 'js'}
                     type: 'hidden',
                     {else if $col.edit_type == 'tcg_currency'}
@@ -101,12 +101,8 @@ $(document).ready(function() {
                     {/if}
                     {/if}
 
-                    {if $col.edit_type=='tcg_upload'}
-                    ajax: "{$tbl.ajax}",
-                    {/if}
-
                     {if !empty($col.edit_info)}
-                    fieldInfo:  "{$col.edit_info}",
+                    fieldInfo:  "{$col.edit_info|regex_replace:'/\r*\n/':'<br>'}",
                     {/if}
 
                     {if $col.edit_readonly}
@@ -117,6 +113,16 @@ $(document).ready(function() {
 
                     {if isset($col.edit_def_value) && $col.edit_def_value != null}
                     def:  "{$col.edit_def_value}",
+                    {/if}
+
+                    {if $col.edit_type=='tcg_upload'}
+                    ajax: "{$tbl.ajax}",
+                    {/if}
+
+                    {* If using select2, always apply editorId. Otherwise if more than 2 editors have the same name, only 1 will succeed. *}
+                    {if $col.edit_type=='tcg_select2'}
+                    //TODO: fix it in tcg_select2
+                    editorId: "{$tbl.table_id}",
                     {/if}
 
                     {if $col.edit_type=='upload' || $col.edit_type=='image'}
@@ -303,8 +309,8 @@ $(document).ready(function() {
         editor_{$tbl.table_id}.on( 'open' , function ( e, type ) {
             let data = this.s.editData;
             let url = '';
-            let col = '';
-            let val = '';
+            let col = '', str = "";
+            let val = '', el = null;
 
             {foreach $tbl.columns as $col}
                 {if !isset($col.editor)} {continue} {/if}
@@ -321,43 +327,79 @@ $(document).ready(function() {
                 {if !empty($col.options_data_url) && $col.edit_type=='tcg_select2'}
                 {if $col.options_data_url_params|@count>0}
                 url = "{$site_url}{$col.options_data_url}";
+                params = {$col.options_data_url_params|json_encode};
 
-                {foreach $col.options_data_url_params as $param}
-                if (typeof data != 'undefined') {
-                    col = "{$param}";
-                    val = data[col];
-                    if (typeof val !== 'undefined' && val !== null) {
-                        //just get the first value (in case multiple value)
-                        let idx = Object.keys(val)[0];
-                        val = val[ idx ];
-                        if (val !== undefined && val !== null && val != '' && val != 0) {
-                            col = "{literal}{{{/literal}" + col + "{literal}}}{/literal}";
-                            url = url.replace(col, val);
+                params.forEach((p) => {
+                    {if !empty($tbl.filters)}
+                    if (p.substr(0,2) == 'f_') {
+                        //get filter value
+                        el = $("#" +p);
+                        if (el.length>0) {
+                            val = el.val();
+                            if (val !== undefined && val !== null) {
+                                str = "{literal}{{{/literal}" +p+ "{literal}}}{/literal}";
+                                url = url.replace(str, val);
+                                return;
+                            }
                         }
                     }
-                }
+                    {/if}
 
-                {if !empty($fsubtable)}
+                    if (p.substr(0,2) == 'e_') {
+                        //get cascading edit field
+                        fname = p.substr(2);
+                        try {
+                            field = editor_{$tbl.table_id}.field(fname);
+                        } catch (err) {
+                            field = null;
+                        }
+                        if (field !== undefined && field !== null) {
+                            val = field.val();
+                            if (val !== undefined && val !== null) {
+                                str = "{literal}{{{/literal}" +p+ "{literal}}}{/literal}";
+                                url = url.replace(str, val);
+                                return;
+                            }
+                         }
+                    }
+
+                    //get data value
+                    if (data !== undefined && data !== null) {
+                        val = data[p];
+                        if (val !== undefined && val !== null) {
+                            //just get the first value (in case multiple value)
+                            let idx = Object.keys(val)[0];
+                            val = val[ idx ];
+                            if (val !== undefined && val !== null && val != '' && val != 0) {
+                                str = "{literal}{{{/literal}" +p+ "{literal}}}{/literal}";
+                                url = url.replace(str, val);
+                                return;
+                            }
+                        }
+                    }  
+
+                    {if !empty($fsubtable)}
                     //subtable -> parent key
-                    if ("{$param}" == fkey_column_{$tbl.table_id}) {
+                    if (p == fkey_column_{$tbl.table_id}) {
                         val = fkey_value_{$tbl.table_id};
                         if (typeof val !== 'undefined' && val !== null && val != '') {
-                            col = "{literal}{{{/literal}{$param}{literal}}}{/literal}";
-                            url = url.replace(col, val);
+                            str = "{literal}{{{/literal}" +p+ "{literal}}}{/literal}";
+                            url = url.replace(str, val);
+                            return;
                         }
                     }
                     //subtable -> try to get parent data
                     data = fdata_{$tbl.table_id};
                     if (typeof data != 'undefined' && data !== null) {
-                        col = "{$param}";
-                        val = data[col];
+                        val = data[p];
                         if (typeof val !== 'undefined' && val !== null && val != '' && val != 0) {
-                            col = "{literal}{{{/literal}" + col + "{literal}}}{/literal}";
-                            url = url.replace(col, val);
+                            str = "{literal}{{{/literal}" +p+ "{literal}}}{/literal}";
+                            url = url.replace(str, val);
+                            return;
                         }
                     }
-                {/if}
-                {/foreach}
+                    {/if}                    
+                });
 
                 if (url.length > 0) {
                     this.field("{$col.edit_field[0]}").ajax(url);
@@ -500,11 +542,30 @@ $(document).ready(function() {
             }
             {/if}
 
+            //only reload the table if the value as specified by the filters has changed
             {if count($tbl.filters) > 0}
-            //if there is some filter, reload. In case the changes are in the filter column. Retain the paging
-            dt_{$tbl.table_id}.ajax.reload(null, false);
-            {/if}            
-            
+            if (action=="edit") {
+                let needreload = 0, key = null;
+                let olddata=null, newdata=null;
+                if(json !== undefined && json !== null && json.data !== undefined && json.data !== null) {
+                    for(i=0; i<json.data.length; i++) {
+                        newdata = json.data[i];
+                        key = newdata["{$tbl.key_column}"];
+                        olddata = dt_{$tbl.table_id}.rows("#" +key).data()[0];
+                        {foreach $tbl.filters as $f}
+                        if (olddata !== undefined && olddata["{$f.name}"] !== undefined && newdata["{$f.name}"] != olddata["{$f.name}"]) {
+                            needreload = 1;
+                            break;
+                        }
+                        {/foreach}
+                    }
+                }
+
+                if (needreload) {
+                    dt_{$tbl.table_id}.ajax.reload(null, false);
+                }
+            }
+            {/if} 
         });
 
         var onchange_flag = false;
@@ -681,16 +742,24 @@ $(document).ready(function() {
         fixedHeader: true,
         {if !empty($tbl.page_size)}
         "pageLength": {$tbl.page_size},
+        "lengthMenu": [
+            [{$tbl.page_size}, 25, 50, 100, -1],
+            [{$tbl.page_size}, 25, 50, 100, "All"]
+        ],
         {else}
         "pageLength": 25,
-        {/if}
         "lengthMenu": [
             [25, 50, 100, -1],
             [25, 50, 100, "All"]
         ],
+        {/if}
         "paging": true,
         "pagingType": "numbers",
+        {if !empty($tbl.show_paging_options)}
+        dom: "<'row'<'col-sm-12 col-md-7 dt-action-buttons'B><'col-sm-12 col-md-5'fr>>t<'row'<'col-sm-12 col-md-8'i><'col-sm-12 col-md-4'lp>>",
+        {else}
         dom: "<'row'<'col-sm-12 col-md-7 dt-action-buttons'B><'col-sm-12 col-md-5'fr>>t<'row'<'col-sm-12 col-md-8'i><'col-sm-12 col-md-4'p>>",
+        {/if}
         {if $tbl.multi_row_selection}
         select: true,
         {else}
@@ -707,14 +776,14 @@ $(document).ready(function() {
                     className: 'btn-sm'
                 },
                 {/if}
-                {if isset($tbl.table_actions) && $tbl.table_actions.edit && !$tbl.edit_row_action}
+                {if isset($tbl.table_actions) && $tbl.table_actions.edit && ($tbl.multi_edit || !$tbl.edit_row_action)}
                 {
                     extend: "edit",
                     editor: editor_{$tbl.table_id},
                     className: 'btn-sm btn-info'
                 },
                 {/if}
-                {if isset($tbl.table_actions) && $tbl.table_actions.delete && !$tbl.delete_row_action}
+                {if isset($tbl.table_actions) && $tbl.table_actions.delete && ($tbl.multi_edit || !$tbl.delete_row_action)}
                 {
                     extend: "remove",
                     editor: editor_{$tbl.table_id},
@@ -928,7 +997,7 @@ $(document).ready(function() {
                 },
                 {else if isset($x.type) && $x.type=="tcg_toggle"}
                 render: function ( data, type, row ) {
-                    if (type == "display") {
+                    // if (type == "display") {
                         if (typeof data === 'undefined' || data === null || data == "" ) {
                             data = "";
                         }
@@ -939,8 +1008,8 @@ $(document).ready(function() {
                             data = '{__("Tdk")}';
                         }
                         return data;
-                    }  
-                    return data;
+                    // }  
+                    // return data;
                 },
                 {else if $x.display_format_js}
                 render: function ( data, type, row ) {
@@ -1384,7 +1453,7 @@ $(document).ready(function() {
                     action: function ( e, dt, node, conf ) {
                         {$x.onclick_js}(e, dt, node, conf);
                     },
-                    className: 'btn-sm mb-1 {$x.css}'
+                    className: 'btn-sm {$x.css}'
                 },
                 {/foreach}
             ]

@@ -100,6 +100,10 @@ function conditional_close(data, row, meta) {
     v_itemtypeid = '{if !empty($userdata["itemtypeid"])}{$userdata["itemtypeid"]}{/if}';
     v_siteid = '{if !empty($userdata["siteid"])}{$userdata["siteid"]}{/if}';
     v_year = new Date().getFullYear();
+
+    if (v_itemtypeid!='' && v_itemtypeid!=0) {
+        $("#f_itemtypeid").attr("disabled", true);
+    }
 </script>
 
 {include file="crud/_js-crud-table.tpl" tbl=$crud}
