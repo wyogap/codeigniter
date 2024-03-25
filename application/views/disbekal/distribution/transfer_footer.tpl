@@ -118,6 +118,16 @@ $(document).ready(function() {
             // $('#edit-korwil').val(korwil);
         },
         error: function(jqXhr, textStatus, errorMessage) {
+            if (jqXhr.status == 403 || errorMessage == 'Forbidden' || 
+                (jqXhr.responseJSON !== undefined && jqXhr.responseJSON != null 
+                    && jqXhr.responseJSON.error != undefined && jqXhr.responseJSON.error == 'not-login')
+                ) {
+                //login ulang
+                window.location.href = "{$site_url}" +'auth';
+            }
+            //send toastr message
+            toastr.error(errorMessage);
+            //build select2 with default options
             select2_build($('#f_siteid'), '-- Satuan Kerja --', '', '', null, _attr);
             // select_build($('#edit-korwil'), _options, _attr);
         }
@@ -139,6 +149,16 @@ $(document).ready(function() {
             // $('#edit-korwil').val(korwil);
         },
         error: function(jqXhr, textStatus, errorMessage) {
+            if (jqXhr.status == 403 || errorMessage == 'Forbidden' || 
+                (jqXhr.responseJSON !== undefined && jqXhr.responseJSON != null 
+                    && jqXhr.responseJSON.error != undefined && jqXhr.responseJSON.error == 'not-login')
+                ) {
+                //login ulang
+                window.location.href = "{$site_url}" +'auth';
+            }
+            //send toastr message
+            toastr.error(errorMessage);
+            //build select2 with options
             select2_build($('#f_itemtypeid'), '-- Tipe Bekal --', '', '', null, _attr);
             // select_build($('#edit-korwil'), _options, _attr);
         }

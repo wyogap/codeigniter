@@ -172,6 +172,16 @@
                     {/if}
                 },
                 error: function(jqXhr, textStatus, errorMessage) {
+                    if (jqXhr.status == 403 || errorMessage == 'Forbidden' || 
+                        (jqXhr.responseJSON !== undefined && jqXhr.responseJSON != null 
+                         && jqXhr.responseJSON.error != undefined && jqXhr.responseJSON.error == 'not-login')
+                        ) {
+                        //login ulang
+                        window.location.href = "{$site_url}" +'auth';
+                    }
+                    //send toastr message
+                    toastr.error(errorMessage);
+                    //rebuild select2 with default options
                     {if $f.type == 'tcg_select2'}
                     select2_build($('#f_{$f.name}'), "-- {$f.label} --", "", v_{$f.name}, _options, _attr, null);
                     {else}

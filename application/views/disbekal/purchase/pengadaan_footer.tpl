@@ -424,7 +424,15 @@
                 toastr.success("Berhasil menutup dan mengarsipkan Pengadaan " +label+ ".");
             },
             error: function(jqXhr, textStatus, errorMessage) {
-                toastr.error(errorMessage)
+                if (jqXhr.status == 403 || errorMessage == 'Forbidden' || 
+                    (jqXhr.responseJSON !== undefined && jqXhr.responseJSON != null 
+                        && jqXhr.responseJSON.error != undefined && jqXhr.responseJSON.error == 'not-login')
+                    ) {
+                    //login ulang
+                    window.location.href = "{$site_url}" +'auth';
+                }
+                //send toastr message
+                toastr.error(errorMessage);
             }
         });
         {/literal}
@@ -488,7 +496,15 @@
                                     onselect_pengadaan(dt, null, null);
                                 },
                                 error: function(jqXhr, textStatus, errorMessage) {
-                                    toastr.error(textStatus);
+                                    if (jqXhr.status == 403 || errorMessage == 'Forbidden' || 
+                                        (jqXhr.responseJSON !== undefined && jqXhr.responseJSON != null 
+                                            && jqXhr.responseJSON.error != undefined && jqXhr.responseJSON.error == 'not-login')
+                                        ) {
+                                        //login ulang
+                                        window.location.href = "{$site_url}" +'auth';
+                                    }
+                                    //send toastr message
+                                    toastr.error(errorMessage);
                                 }
                             });
                         }
@@ -634,7 +650,15 @@
                                     onselect_pengadaan(dt, null, null);
                                 },
                                 error: function(jqXhr, textStatus, errorMessage) {
-                                    toastr.error(textStatus)
+                                    if (jqXhr.status == 403 || errorMessage == 'Forbidden' || 
+                                        (jqXhr.responseJSON !== undefined && jqXhr.responseJSON != null 
+                                            && jqXhr.responseJSON.error != undefined && jqXhr.responseJSON.error == 'not-login')
+                                        ) {
+                                        //login ulang
+                                        window.location.href = "{$site_url}" +'auth';
+                                    }
+                                    //send toastr message
+                                    toastr.error(errorMessage);
                                 }
                             });
                         }
@@ -766,7 +790,15 @@
                                     onselect_pengadaan(dt, null, null);
                                 },
                                 error: function(jqXhr, textStatus, errorMessage) {
-                                    toastr.error(textStatus)
+                                    if (jqXhr.status == 403 || errorMessage == 'Forbidden' || 
+                                        (jqXhr.responseJSON !== undefined && jqXhr.responseJSON != null 
+                                            && jqXhr.responseJSON.error != undefined && jqXhr.responseJSON.error == 'not-login')
+                                        ) {
+                                        //login ulang
+                                        window.location.href = "{$site_url}" +'auth';
+                                    }
+                                    //send toastr message
+                                    toastr.error(errorMessage);
                                 }
                             });
                         }
@@ -833,7 +865,15 @@
                                     onselect_pengadaan(dt, null, null);
                                 },
                                 error: function(jqXhr, textStatus, errorMessage) {
-                                    toastr.error(textStatus)
+                                    if (jqXhr.status == 403 || errorMessage == 'Forbidden' || 
+                                        (jqXhr.responseJSON !== undefined && jqXhr.responseJSON != null 
+                                            && jqXhr.responseJSON.error != undefined && jqXhr.responseJSON.error == 'not-login')
+                                        ) {
+                                        //login ulang
+                                        window.location.href = "{$site_url}" +'auth';
+                                    }
+                                    //send toastr message
+                                    toastr.error(errorMessage);
                                 }
                             });
                         }
@@ -843,44 +883,75 @@
 
     }
 
-    function onclick_buatdarikebutuhan(e, dt, node, conf) {
-        let demandid = 0;
-        let tahun = 0;
-        let label = '';     //label demandid
-        let url = "{$site_url}disbekal/kebutuhan/buatpengadaan";
+    function onclick_createpofromdemand(e, dt, node, conf) {
 
-        {literal}
-        $.ajax({
-            url: url,
-            type: 'POST',
-            data: {id: demandid, year: tahun},
-            dataType: 'json',
-            beforeSend: function(request) {
-                request.setRequestHeader("Content-Type", "application/json");
-            },
-            success: function(response) {
-                if (response.status === null || response.status == 0 || (response.error !== undefined && response.error !== null && response.error !== '')) {
-                    //error
-                    let msg = "Tidak spesifik";
-                    if (response.error !== undefined && response.error !== null && response.error !== '') {
-                        msg = response.error;
-                    }
-                    toastr.error("Tidak berhasil membuat DRAFT Perintah Terima untuk Pengadaan " +label)
-                    toastr.error(msg)
-                    return;
-                }
+        let itemtypeid = $("f_itemtypeid").val();
+        let siteid = $("f_siteid").val();
+        let url = "{$site_url}{$controller}/kebutuhan/lookup?itemtypeid=" +itemtypeid+ "&siteid=" +siteid;
+        editor_pofromdemand.field('demandid').ajax(url);
+        editor_pofromdemand.field('demandid').reload();
 
-                //successful - reload
-                dt.ajak.reload();
-                toastr.success("Berhasil membuat DRAFT Pengadaan dari Rencana Kebutuhan " +label+ ".");
-            },
-            error: function(jqXhr, textStatus, errorMessage) {
-                toastr.error(errorMessage)
+        editor_pofromdemand
+        .buttons({
+            label: 'Simpan',
+            className: "btn-primary",
+            fn: function () {
+                this.submit();
             }
-        });
-        {/literal}
+        })
+        .create()
+        .title('Buat Perintah Pengadaan');
 
+        return;
     }
+
+
+    // function onclick_buatdarikebutuhan(e, dt, node, conf) {
+    //     let demandid = 0;
+    //     let tahun = 0;
+    //     let label = '';     //label demandid
+    //     let url = "{$site_url}disbekal/kebutuhan/buatpengadaan";
+
+    //     {literal}
+    //     $.ajax({
+    //         url: url,
+    //         type: 'POST',
+    //         data: {id: demandid, year: tahun},
+    //         dataType: 'json',
+    //         beforeSend: function(request) {
+    //             request.setRequestHeader("Content-Type", "application/json");
+    //         },
+    //         success: function(response) {
+    //             if (response.status === null || response.status == 0 || (response.error !== undefined && response.error !== null && response.error !== '')) {
+    //                 //error
+    //                 let msg = "Tidak spesifik";
+    //                 if (response.error !== undefined && response.error !== null && response.error !== '') {
+    //                     msg = response.error;
+    //                 }
+    //                 toastr.error("Tidak berhasil membuat DRAFT Perintah Terima untuk Pengadaan " +label)
+    //                 toastr.error(msg)
+    //                 return;
+    //             }
+
+    //             //successful - reload
+    //             dt.ajak.reload();
+    //             toastr.success("Berhasil membuat DRAFT Pengadaan dari Rencana Kebutuhan " +label+ ".");
+    //         },
+    //         error: function(jqXhr, textStatus, errorMessage) {
+    //             if (jqXhr.status == 403 || errorMessage == 'Forbidden' || 
+    //                 (jqXhr.responseJSON !== undefined && jqXhr.responseJSON != null 
+    //                     && jqXhr.responseJSON.error != undefined && jqXhr.responseJSON.error == 'not-login')
+    //                 ) {
+    //                 //login ulang
+    //                 window.location.href = "{$site_url}" +'auth';
+    //             }
+    //             //send toastr message
+    //             toastr.error(errorMessage);
+    //         }
+    //     });
+    //     {/literal}
+
+    // }
 
     function update_wf_images(status, istender=1) {
 
@@ -1125,8 +1196,9 @@
     var editor_tenderfrompo;
     var editor_completetender;
     var editor_contractfrompo;
-    var editor_contractfromtender;
+    //var editor_contractfromtender;
     var editor_dofrompo;
+    var editor_pofromdemand;
 
     $(document).ready(function() {
         editor_tenderfrompo = new $.fn.dataTable.Editor({
@@ -1751,6 +1823,121 @@
             editor_dofrompo.field('contractid').set(contractid);
 
             editor_dofrompo.field('dodate').set(moment.utc().local().format('YYYY-MM-DD'));
+        });
+
+        editor_pofromdemand = new $.fn.dataTable.Editor({
+            ajax: "{$site_url}disbekal/wfpengadaan/createpofromdemand",
+            //idSrc: "poid",
+            fields: [
+            {
+                label: "Rencana Kebutuhan <span class='text-danger font-weight-bold'>*</span>",
+                compulsory: true,
+                name: "demandid",
+                type: 'tcg_select2',
+                //ajax: "{$site_url}{$controller}/kebutuhan/lookup",
+            }, {
+                label: "Tahun Anggaran <span class='text-danger font-weight-bold'>*</span>",
+                compulsory: true,
+                name: "year",
+                type: 'tcg_number',
+                attr: {
+                    min: 2000
+                }
+            }, {
+                label: "Nomer Perintah Pengadaan",
+                compulsory: true,
+                name: "ponum",
+                type: 'tcg_text',
+           }, ],
+            formOptions: {
+                main: {
+                    submit: 'all'
+                }
+            },
+            i18n: {
+                create: {
+                    button: "Baru",
+                    title: "Perintah Pengadaan",
+                    submit: "Simpan"
+                },
+                error: {
+                    system: "System error. Hubungi system administrator."
+                },
+                datetime: {
+                    previous: "Sebelum",
+                    next: "Setelah",
+                    months: ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Augustus", "September", "Oktober", "November", "Desember"],
+                    weekdays: ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"],
+                    hour: "Jam",
+                    minute: "Menit"
+                }
+            }
+        });
+
+        editor_pofromdemand.on('preSubmit', function(e, o, action) {
+            if (action === 'create' || action === 'edit') {
+                let field = null;
+                let hasError = false;
+
+                field = this.field('demandid');
+                if (!field.isMultiValue()) {
+                    hasError = false;
+                    if (!field.val() || field.val() == 0) {
+                        hasError = true;
+                        field.error('Harus diisi');
+                    }
+                }
+                field = this.field('year');
+                if (!field.isMultiValue()) {
+                    hasError = false;
+                    if (!field.val() || field.val() == 0) {
+                        hasError = true;
+                        field.error('Harus diisi');
+                    }
+                }
+                /* If any error was reported, cancel the submission so it can be corrected */
+                if (this.inError()) {
+                    this.error('Data wajib belum diisi atau tidak berhasil divalidasi');
+                    return false;
+                }
+            }
+
+        });
+
+        editor_pofromdemand.on('postSubmit', function(e, json, data, action, xhr) {
+
+            if (json === null || json.status === null || json.status == 0 || (json.error !== undefined && json.error !== null && json.error !== '')) {
+                //error
+                let msg = "Tidak spesifik";
+                if (json === null) {
+                    msg = "Internal system error";
+                }
+                else if (json.error !== undefined && json.error !== null && json.error !== '') {
+                    msg = json.error;
+                }
+                toastr.error("Tidak berhasil membuat Perintah Pengadaan baru")
+                toastr.error(msg)
+                return;
+            }
+
+            //successful - reload
+            if (json.data !== undefined && json.data !== null) {
+                row.data(json.data[0]);
+            }
+            
+            toastr.success("Berhasil membuat Perintah Pengadaan baru");
+
+            onselect_pengadaan(v_dt, null, null);
+
+        });
+
+        editor_pofromdemand.on( 'open' , function ( e, type ) {
+            let year = $("f_year").val();
+            if (year == null || year == 0) {
+                year = new Date().getFullYear();
+            }
+            editor_pofromdemand.field('year').set(year);
+            editor_pofromdemand.disable();
         });
 
     });

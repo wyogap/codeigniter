@@ -158,7 +158,15 @@ function onclick_buatpengadaan(rowIdx, dt, id) {
             toastr.success("Berhasil membuat DRAFT Perintah Pengadaan untuk Rencana Kebutuhan " +label+ ". Perintah Pengadaan baru telah dibuka di halaman/tab baru.");
         },
         error: function(jqXhr, textStatus, errorMessage) {
-            toastr.error(errorMessage)
+            if (jqXhr.status == 403 || errorMessage == 'Forbidden' || 
+                (jqXhr.responseJSON !== undefined && jqXhr.responseJSON != null 
+                    && jqXhr.responseJSON.error != undefined && jqXhr.responseJSON.error == 'not-login')
+                ) {
+                //login ulang
+                window.location.href = "{$site_url}" +'auth';
+            }
+            //send toastr message
+            toastr.error(errorMessage);
         }
     });
     {/literal}
@@ -199,7 +207,15 @@ function onclose_demand(rowIdx, dt, id) {
             toastr.success("Berhasil menutup dan mengarsipkan Rencana Kebutuhan " +label+ ".");
         },
         error: function(jqXhr, textStatus, errorMessage) {
-            toastr.error(errorMessage)
+            if (jqXhr.status == 403 || errorMessage == 'Forbidden' || 
+                (jqXhr.responseJSON !== undefined && jqXhr.responseJSON != null 
+                    && jqXhr.responseJSON.error != undefined && jqXhr.responseJSON.error == 'not-login')
+                ) {
+                //login ulang
+                window.location.href = "{$site_url}" +'auth';
+            }
+            //send toastr message
+            toastr.error(errorMessage);
         }
     });
     {/literal}
@@ -241,7 +257,15 @@ function onapprove_demand(rowIdx, dt, id) {
             toastr.success("Berhasil menyetujui Rencana Kebutuhan " +label+ ".");
         },
         error: function(jqXhr, textStatus, errorMessage) {
-            toastr.error(errorMessage)
+            if (jqXhr.status == 403 || errorMessage == 'Forbidden' || 
+                (jqXhr.responseJSON !== undefined && jqXhr.responseJSON != null 
+                    && jqXhr.responseJSON.error != undefined && jqXhr.responseJSON.error == 'not-login')
+                ) {
+                //login ulang
+                window.location.href = "{$site_url}" +'auth';
+            }
+            //send toastr message
+            toastr.error(errorMessage);
         }
     });
     {/literal}

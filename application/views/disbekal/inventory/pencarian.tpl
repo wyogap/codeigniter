@@ -712,7 +712,7 @@
             success: function(response) {
                 markers.clearLayers();
 
-                if (typeof response.error !== 'undefined' && response.error !== null && response.error != "") {
+                if (response.error !== undefined && response.error !== null && response.error != "") {
                     if (response.error=="not-login") {
                         //login ulang
                         window.location.href = "{$site_url}" +'auth';
@@ -746,7 +746,15 @@
                 });
             },
             error: function(jqXhr, textStatus, errorMessage) {
-                //TODO: send toastr message
+                if (jqXhr.status == 403 || errorMessage == 'Forbidden' || 
+                        (jqXhr.responseJSON !== undefined && jqXhr.responseJSON != null 
+                         && jqXhr.responseJSON.error != undefined && jqXhr.responseJSON.error == 'not-login')
+                    ) {
+                    //login ulang
+                    window.location.href = "{$site_url}" +'auth';
+                }
+                //send toastr message
+                toastr.error(errorMessage);
             }
         });
         
@@ -944,6 +952,16 @@
                 select2_build($('#f_itemtypeid'), "-- Tipe Bekal --", "", v_itemtypeid, _options, _attr, null);
             },
             error: function(jqXhr, textStatus, errorMessage) {
+                if (jqXhr.status == 403 || errorMessage == 'Forbidden' || 
+                    (jqXhr.responseJSON !== undefined && jqXhr.responseJSON != null 
+                        && jqXhr.responseJSON.error != undefined && jqXhr.responseJSON.error == 'not-login')
+                    ) {
+                    //login ulang
+                    window.location.href = "{$site_url}" +'auth';
+                }
+                //send toastr message
+                toastr.error(errorMessage);
+                //build select2 with default options
                 select2_build($('#f_itemtypeid'), "-- Tipe Bekal --", "", v_itemtypeid, _options, _attr, null);
             }
         });
@@ -987,6 +1005,16 @@
                 select2_build($('#f_siteid'), "-- Satuan Kerja --", "", v_siteid, _options, _attr, null);
             },
             error: function(jqXhr, textStatus, errorMessage) {
+                if (jqXhr.status == 403 || errorMessage == 'Forbidden' || 
+                    (jqXhr.responseJSON !== undefined && jqXhr.responseJSON != null 
+                        && jqXhr.responseJSON.error != undefined && jqXhr.responseJSON.error == 'not-login')
+                    ) {
+                    //login ulang
+                    window.location.href = "{$site_url}" +'auth';
+                }
+                //send toastr message
+                toastr.error(errorMessage);
+                //build select2 with default options
                 select2_build($('#f_siteid'), "-- Satuan Kerja --", "", v_siteid, _options, _attr, null);
             }
         });
@@ -1035,7 +1063,15 @@
                 items = response.data;
             },
             error: function(jqXhr, textStatus, errorMessage) {
-                //TODO: put toastr message
+                if (jqXhr.status == 403 || errorMessage == 'Forbidden' || 
+                    (jqXhr.responseJSON !== undefined && jqXhr.responseJSON != null 
+                        && jqXhr.responseJSON.error != undefined && jqXhr.responseJSON.error == 'not-login')
+                    ) {
+                    //login ulang
+                    window.location.href = "{$site_url}" +'auth';
+                }
+                //send toastr message
+                toastr.error(errorMessage);
             }
         });
     }

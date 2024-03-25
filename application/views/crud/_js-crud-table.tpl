@@ -1571,7 +1571,15 @@ function dt_{$tbl.table_id}_ajax_load(data) {
                 });
             },
             error: function(jqXhr, textStatus, errorMessage) {
-                alert("{__('Gagal mengambil data via ajax')}");
+                if (jqXhr.status == 403 || errorMessage == 'Forbidden' || 
+                        (jqXhr.responseJSON !== undefined && jqXhr.responseJSON != null 
+                         && jqXhr.responseJSON.error != undefined && jqXhr.responseJSON.error == 'not-login')
+                    ) {
+                    //login ulang
+                    window.location.href = "{$site_url}" +'auth';
+                }
+                //send toastr message
+                toastr.error("{__('Gagal mengambil data via ajax')}");
                 resolve({
                     data: [],
                 });

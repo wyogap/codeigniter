@@ -631,11 +631,19 @@
 
                 },
                 error: function(jqXhr, textStatus, errorMessage) {
+                    if (jqXhr.status == 403 || errorMessage == 'Forbidden' || 
+                        (jqXhr.responseJSON !== undefined && jqXhr.responseJSON != null 
+                         && jqXhr.responseJSON.error != undefined && jqXhr.responseJSON.error == 'not-login')
+                        ) {
+                        //login ulang
+                        window.location.href = "{$site_url}" +'auth';
+                    }
+                    //send toastr message
                     if (errorMessage === undefined || errorMessage === null || errorMessage == "") {
                         errorMessage = textStatus;
                     }
                     form.trigger('crud.error', textStatus, errorMessage, form_data);
-                    toastr.error("Ajax error: " +textStatus);
+                    toastr.error("Ajax error: " +errorMessage);
                 }    
             }); 
 

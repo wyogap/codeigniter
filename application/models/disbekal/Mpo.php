@@ -196,6 +196,30 @@ class Mpo extends Mcrud_tablemeta
         return $this->detail($id);
     }
 
+    function createfromdemand($demandid, $year, $ponum) {
+        $userid = $this->session->userdata('user_id');
+      
+        //call sp
+        $tag = uniqid();
+        $sql = "call usp_po_createfromdemand(?, ?, ?, ?, ?)";
+
+        $arr = $this->db->query($sql, array($demandid, $year, $ponum, $tag, $userid));
+        if ($arr == null)    return $arr;
+ 
+        $id = $this->_get_poid_bytag($tag);
+
+        return $this->detail($id);
+    }
+
+    function _get_poid_bytag($tag) {
+        $sql = "select poid from tcg_po where tag=?";
+
+        $arr = $this->db->query($sql, array($tag))->row_result();
+        if ($arr == null)   return 0;
+
+        return $arr['poid'];
+    }
+
     function list($filter = null, $limit = null, $offset = null, $orderby = null) {
         $this->reset_error();
 

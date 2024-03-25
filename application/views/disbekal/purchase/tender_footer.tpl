@@ -108,22 +108,281 @@ function conditional_close(data, row, meta) {
 {include file="crud/_js-crud-table.tpl" tbl=$crud}
 
 <script type="text/javascript">
+
+    var editor_tenderfrompo;
+
+    function onclick_tender(rowIdx, dt, id) {
+        let row = dt.row("#"+id);
+        let data = row.data();
+        let label = data['ponum'];
+
+        //clear selection
+        //dt.rows().deselect();
+        row.select();
+
+        //easy access
+        v_dt = dt; v_dtIdx = rowIdx; v_id = id;
+
+        editor_tenderfrompo
+        .buttons({
+            label: 'Simpan',
+            className: "btn-primary",
+            fn: function () {
+                this.submit();
+            }
+        })
+        .edit(id)
+        .title('Masukan Data Tender LPSE');
+
+        return;
+    }
+
+    function onclick_completetender(rowIdx, dt, id) {
+        let row = dt.row("#"+id);
+        let data = row.data();
+        let label = data['ponum'];
+
+        //clear selection
+        //dt.rows().deselect();
+        row.select();
+
+        //easy access
+        v_dt = dt; v_dtIdx = rowIdx; v_id = id; v_tenderid = data['tenderid'];
+
+        editor_completetender
+        .buttons({
+            label: 'Simpan',
+            className: "btn-primary",
+            fn: function () {
+                this.submit();
+            }
+        })
+        .edit(v_id)
+        .title('Data Pemenang Tender');
+
+        return;
+    }
+
     $(document).ready(function() {
-        // editor_tdata_150.on( 'initEdit', function (e, node, data, items, type) {
-        //     //disable field itemtypeid
-        //     editor_tdata_150.field('itemtypeid').disable();
-        // });
+        editor_tenderfrompo = new $.fn.dataTable.Editor({
+            ajax: "{$site_url}disbekal/wfpengadaan/createtender",
+            //idSrc: "poid",
+            fields: [
+            {
+                name: "poid",
+                type: "hidden"
+            },
+            {
+                label: "LPSE Tender Number <span class='text-danger font-weight-bold'>*</span>",
+                compulsory: true,
+                name: "tendernum",
+                type: 'tcg_text',
+            }, {
+                label: "Tanggal Mulai Tender <span class='text-danger font-weight-bold'>*</span>",
+                compulsory: true,
+                name: "startdate",
+                type: 'tcg_date',
+            }, {
+                label: "Tanggal Selesai Tender",
+                compulsory: false,
+                name: "enddate",
+                type: 'tcg_date',
+            }, ],
+            formOptions: {
+                main: {
+                    submit: 'all'
+                }
+            },
+            i18n: {
+                create: {
+                    button: "Baru",
+                    title: "Data Tender LPSE",
+                    submit: "Simpan"
+                },
+                error: {
+                    system: "System error. Hubungi system administrator."
+                },
+                datetime: {
+                    previous: "Sebelum",
+                    next: "Setelah",
+                    months: ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Augustus", "September", "Oktober", "November", "Desember"],
+                    weekdays: ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"],
+                    hour: "Jam",
+                    minute: "Menit"
+                }
+            }
+        });
 
-        // editor_tdata_150.on( 'initCreate', function (e, node, data, items, type) {
-        //     //enable field itemtypeid
-        //     editor_tdata_150.field('itemtypeid').enable();
+        editor_tenderfrompo.on('preSubmit', function(e, o, action) {
+            if (action === 'create' || action === 'edit') {
+                let field = null;
+                let hasError = false;
 
-        //     if (v_itemtypeid != null && v_itemtypeid != '') {
-        //         editor_tdata_150.field('itemtypeid').set(v_itemtypeid);
-        //         editor_tdata_150.field('itemtypeid').disable();
-        //     }
-        // });
-    });
+                field = this.field('tendernum');
+                if (!field.isMultiValue()) {
+                    hasError = false;
+                    if (!field.val() || field.val() == 0) {
+                        hasError = true;
+                        field.error('Harus diisi');
+                    }
+                }
+                field = this.field('startdate');
+                if (!field.isMultiValue()) {
+                    hasError = false;
+                    if (!field.val() || field.val() == 0) {
+                        hasError = true;
+                        field.error('Harus diisi');
+                    }
+                }
+                /* If any error was reported, cancel the submission so it can be corrected */
+                if (this.inError()) {
+                    this.error('Data wajib belum diisi atau tidak berhasil divalidasi');
+                    return false;
+                }
+            }
+
+        });
+        
+        editor_tenderfrompo.on('postSubmit', function(e, json, data, action, xhr) {
+            let row = v_dt.row("#" +v_id);
+            let value = row.data();
+            let label = value['ponum'];
+
+            if (json === null || json.status === null || json.status == 0 || (json.error !== undefined && json.error !== null && json.error !== '')) {
+                //error
+                let msg = "Tidak spesifik";
+                if (json === null) {
+                    msg = "Internal system error";
+                }
+                else if (json.error !== undefined && json.error !== null && json.error !== '') {
+                    msg = json.error;
+                }
+                toastr.error("Tidak berhasil membuat Kontrak untuk Pengadaan " +label)
+                toastr.error(msg)
+                return;
+            }
+
+            //successful - reload
+            if (json.data !== undefined && json.data !== null) {
+                row.data(json.data[0]);
+            }
+            
+            toastr.success("Berhasil memasukkan Tender untuk Pengadaan " +label+ ".");
+
+            onselect_pengadaan(v_dt, null, null);
+
+        });
+
+        editor_tenderfrompo.on( 'open' , function ( e, type ) {
+            editor_tenderfrompo.field('startdate').set(moment.utc().local().format('YYYY-MM-DD'));
+        });
+
+        editor_completetender = new $.fn.dataTable.Editor({
+            ajax: "{$site_url}disbekal/wfpengadaan/completetender",
+            //idSrc: "poid",
+            fields: [
+            {
+                name: "tenderid",
+                type: "hidden"
+            }, {
+                label: "Mitra Yang Ditunjuk <span class='text-danger font-weight-bold'>*</span>",
+                compulsory: true,
+                //TODO: if 2 select2 field has the same value, one of them will fail to init.
+                name: "vendorid",
+                type: 'tcg_select2',
+                ajax: "{$site_url}{$controller}/mitra/lookup",
+                editorId: "tender",
+            }, {
+                label: "Nilai Penawaran <span class='text-danger font-weight-bold'>*</span>",
+                compulsory: true,
+                name: "quotationvalue",
+                type: 'tcg_mask',
+                mask: "#.##0",
+            }, ],
+            formOptions: {
+                main: {
+                    submit: 'all'
+                }
+            },
+            i18n: {
+                create: {
+                    button: "Baru",
+                    title: "Pemenang Tender LPSE",
+                    submit: "Simpan"
+                },
+                error: {
+                    system: "System error. Hubungi system administrator."
+                },
+            }
+        });
+
+        editor_completetender.on('preSubmit', function(e, o, action) {
+            if (action === 'create' || action === 'edit') {
+                let field = null;
+                let hasError = false;
+
+                field = this.field('vendorid');
+                if (!field.isMultiValue()) {
+                    hasError = false;
+                    if (!field.val() || field.val() == 0) {
+                        hasError = true;
+                        field.error('Harus diisi');
+                    }
+                }
+                field = this.field('quotationvalue');
+                if (!field.isMultiValue()) {
+                    hasError = false;
+                    if (!field.val() || field.val() == 0) {
+                        hasError = true;
+                        field.error('Harus diisi');
+                    }
+                }
+                /* If any error was reported, cancel the submission so it can be corrected */
+                if (this.inError()) {
+                    this.error('Data wajib belum diisi atau tidak berhasil divalidasi');
+                    return false;
+                }
+            }
+
+        });
+
+        editor_completetender.on('postSubmit', function(e, json, data, action, xhr) {
+
+            let row = v_dt.row("#" +v_id);
+            let value = row.data();
+            let label = value['ponum'];
+
+            if (json === null || json.status === null || json.status == 0 || (json.error !== undefined && json.error !== null && json.error !== '')) {
+                //error
+                let msg = "Tidak spesifik";
+                if (json === null) {
+                    msg = "Internal system error";
+                }
+                else if (json.error !== undefined && json.error !== null && json.error !== '') {
+                    msg = json.error;
+                }
+                toastr.error("Tidak berhasil membuat Kontrak untuk Pengadaan " +label)
+                toastr.error(msg)
+                return;
+            }
+
+            //successful - reload
+            if (json.data !== undefined && json.data !== null) {
+                row.data(json.data[0]);
+            }
+            
+            toastr.success("Berhasil memasukkan pemenang Tender untuk Pengadaan " +label+ ".");
+
+            onselect_pengadaan(v_dt, null, null);
+
+
+        });
+
+        editor_completetender.on( 'open' , function ( e, type ) {
+            editor_completetender.field('tenderid').set(v_tenderid);
+        });
+
+     });
 
 </script>
 

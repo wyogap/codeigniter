@@ -5,6 +5,35 @@ require_once(APPPATH.'controllers/system/Base_Json.php');
 
 class Wfpengadaan extends Base_Json {
 
+    public function createpofromdemand() {
+        $values = $this->input->post("data");
+        if (empty($values)) {
+            $this->json_invalid_page();
+        }
+
+        $this->load->model(array('disbekal/Mpo'));
+
+        $json = array();
+        $json['data'] = array();
+        $json['status'] = 1;
+
+        $valuepair = $values[0];
+        $demandid = $valuepair['demandid'];
+        $year = (empty($valuepair['year']) ? date('Y') : $valuepair['year']);
+        $ponum = (empty($valuepair['ponum']) ? '' : $valuepair['ponum']);
+    
+        $data = $this->Mpo->createfromdemand($demandid, $year, $ponum);
+        if ($data == null || $data == 0) {
+            $json['status'] = 0;
+            $json['error'] = $this->Mpo->get_error_message(). ". ";
+        }
+        else {
+            $json['data'][] = $data;
+        }
+
+        echo json_encode($json, JSON_INVALID_UTF8_IGNORE);	
+    }
+
     public function approvepo() {
         $id = $this->input->post("id");
         if (empty($id)) {

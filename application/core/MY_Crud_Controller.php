@@ -1300,7 +1300,7 @@ abstract class MY_Crud_Controller extends CI_Controller {
 
     protected function json_not_implemented() {
         $data['error'] = 'not-implemented';
-        $this->json_response($data, self::HTTP_FORBIDDEN);
+        $this->json_response($data, self::HTTP_OK);
     }
 
     protected function json_invalid_page() {

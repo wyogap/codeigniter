@@ -561,7 +561,15 @@ border-right-color: #3c8dbc !important;
 
             },
             error: function(jqXhr, textStatus, errorMessage) {
-				//TODO
+                if (jqXhr.status == 403 || errorMessage == 'Forbidden' || 
+                    (jqXhr.responseJSON !== undefined && jqXhr.responseJSON != null 
+                        && jqXhr.responseJSON.error != undefined && jqXhr.responseJSON.error == 'not-login')
+                    ) {
+                    //login ulang
+                    window.location.href = "{$site_url}" +'auth';
+                }
+                //send toastr message
+                toastr.error(errorMessage);
 			}
         });
 
@@ -584,7 +592,15 @@ border-right-color: #3c8dbc !important;
 
             },
             error: function(jqXhr, textStatus, errorMessage) {
-				//TODO
+                if (jqXhr.status == 403 || errorMessage == 'Forbidden' || 
+                    (jqXhr.responseJSON !== undefined && jqXhr.responseJSON != null 
+                        && jqXhr.responseJSON.error != undefined && jqXhr.responseJSON.error == 'not-login')
+                    ) {
+                    //login ulang
+                    window.location.href = "{$site_url}" +'auth';
+                }
+                //send toastr message
+                toastr.error(errorMessage);
 			}
         });
 
@@ -608,7 +624,15 @@ border-right-color: #3c8dbc !important;
 
             },
             error: function(jqXhr, textStatus, errorMessage) {
-				//TODO
+                if (jqXhr.status == 403 || errorMessage == 'Forbidden' || 
+                    (jqXhr.responseJSON !== undefined && jqXhr.responseJSON != null 
+                        && jqXhr.responseJSON.error != undefined && jqXhr.responseJSON.error == 'not-login')
+                    ) {
+                    //login ulang
+                    window.location.href = "{$site_url}" +'auth';
+                }
+                //send toastr message
+                toastr.error(errorMessage);
 			}
         });
 
@@ -1202,7 +1226,15 @@ border-right-color: #3c8dbc !important;
 				hstokpergudang.redraw();
             },
             error: function(jqXhr, textStatus, errorMessage) {
-				//TODO
+                if (jqXhr.status == 403 || errorMessage == 'Forbidden' || 
+                    (jqXhr.responseJSON !== undefined && jqXhr.responseJSON != null 
+                        && jqXhr.responseJSON.error != undefined && jqXhr.responseJSON.error == 'not-login')
+                    ) {
+                    //login ulang
+                    window.location.href = "{$site_url}" +'auth';
+                }
+                //send toastr message
+                toastr.error(errorMessage);
             }
         });
 
@@ -1244,7 +1276,15 @@ border-right-color: #3c8dbc !important;
 				hstokperkategori.redraw();
             },
             error: function(jqXhr, textStatus, errorMessage) {
-				//TODO
+                if (jqXhr.status == 403 || errorMessage == 'Forbidden' || 
+                    (jqXhr.responseJSON !== undefined && jqXhr.responseJSON != null 
+                        && jqXhr.responseJSON.error != undefined && jqXhr.responseJSON.error == 'not-login')
+                    ) {
+                    //login ulang
+                    window.location.href = "{$site_url}" +'auth';
+                }
+                //send toastr message
+                toastr.error(errorMessage);
             }
         });
 
@@ -1281,7 +1321,15 @@ border-right-color: #3c8dbc !important;
 				hkadaluarsapergudang.redraw();
             },
             error: function(jqXhr, textStatus, errorMessage) {
-				//TODO
+                if (jqXhr.status == 403 || errorMessage == 'Forbidden' || 
+                    (jqXhr.responseJSON !== undefined && jqXhr.responseJSON != null 
+                        && jqXhr.responseJSON.error != undefined && jqXhr.responseJSON.error == 'not-login')
+                    ) {
+                    //login ulang
+                    window.location.href = "{$site_url}" +'auth';
+                }
+                //send toastr message
+                toastr.error(errorMessage);
             }
         });
 
@@ -1318,7 +1366,15 @@ border-right-color: #3c8dbc !important;
 
 			},
             error: function(jqXhr, textStatus, errorMessage) {
-				//TODO
+                if (jqXhr.status == 403 || errorMessage == 'Forbidden' || 
+                    (jqXhr.responseJSON !== undefined && jqXhr.responseJSON != null 
+                        && jqXhr.responseJSON.error != undefined && jqXhr.responseJSON.error == 'not-login')
+                    ) {
+                    //login ulang
+                    window.location.href = "{$site_url}" +'auth';
+                }
+                //send toastr message
+                toastr.error(errorMessage);
             }
         });
 
@@ -1354,7 +1410,15 @@ border-right-color: #3c8dbc !important;
 				hrusakpergudang.redraw();
             },
             error: function(jqXhr, textStatus, errorMessage) {
-				//TODO
+                if (jqXhr.status == 403 || errorMessage == 'Forbidden' || 
+                    (jqXhr.responseJSON !== undefined && jqXhr.responseJSON != null 
+                        && jqXhr.responseJSON.error != undefined && jqXhr.responseJSON.error == 'not-login')
+                    ) {
+                    //login ulang
+                    window.location.href = "{$site_url}" +'auth';
+                }
+                //send toastr message
+                toastr.error(errorMessage);
             }
         });
 
@@ -1390,7 +1454,15 @@ border-right-color: #3c8dbc !important;
 				hrusakperkategori.redraw();
             },
             error: function(jqXhr, textStatus, errorMessage) {
-				//TODO
+                if (jqXhr.status == 403 || errorMessage == 'Forbidden' || 
+                    (jqXhr.responseJSON !== undefined && jqXhr.responseJSON != null 
+                        && jqXhr.responseJSON.error != undefined && jqXhr.responseJSON.error == 'not-login')
+                    ) {
+                    //login ulang
+                    window.location.href = "{$site_url}" +'auth';
+                }
+                //send toastr message
+                toastr.error(errorMessage);
             }
         });
 
@@ -1427,7 +1499,15 @@ border-right-color: #3c8dbc !important;
 				hperkiraankadaluarsa.redraw();
             },
             error: function(jqXhr, textStatus, errorMessage) {
-				//TODO
+                if (jqXhr.status == 403 || errorMessage == 'Forbidden' || 
+                    (jqXhr.responseJSON !== undefined && jqXhr.responseJSON != null 
+                        && jqXhr.responseJSON.error != undefined && jqXhr.responseJSON.error == 'not-login')
+                    ) {
+                    //login ulang
+                    window.location.href = "{$site_url}" +'auth';
+                }
+                //send toastr message
+                toastr.error(errorMessage);
             }
         });
 
@@ -1471,7 +1551,15 @@ border-right-color: #3c8dbc !important;
 				hbarangmasukperwaktu.redraw();
             },
             error: function(jqXhr, textStatus, errorMessage) {
-				//TODO
+                if (jqXhr.status == 403 || errorMessage == 'Forbidden' || 
+                    (jqXhr.responseJSON !== undefined && jqXhr.responseJSON != null 
+                        && jqXhr.responseJSON.error != undefined && jqXhr.responseJSON.error == 'not-login')
+                    ) {
+                    //login ulang
+                    window.location.href = "{$site_url}" +'auth';
+                }
+                //send toastr message
+                toastr.error(errorMessage);
             }
         });
 
@@ -1507,7 +1595,15 @@ border-right-color: #3c8dbc !important;
 				hbarangmasukpergudang.redraw();
             },
             error: function(jqXhr, textStatus, errorMessage) {
-				//TODO
+                if (jqXhr.status == 403 || errorMessage == 'Forbidden' || 
+                    (jqXhr.responseJSON !== undefined && jqXhr.responseJSON != null 
+                        && jqXhr.responseJSON.error != undefined && jqXhr.responseJSON.error == 'not-login')
+                    ) {
+                    //login ulang
+                    window.location.href = "{$site_url}" +'auth';
+                }
+                //send toastr message
+                toastr.error(errorMessage);
             }
         });
 
@@ -1543,7 +1639,15 @@ border-right-color: #3c8dbc !important;
 				hbarangmasukperkategori.redraw();
             },
             error: function(jqXhr, textStatus, errorMessage) {
-				//TODO
+                if (jqXhr.status == 403 || errorMessage == 'Forbidden' || 
+                    (jqXhr.responseJSON !== undefined && jqXhr.responseJSON != null 
+                        && jqXhr.responseJSON.error != undefined && jqXhr.responseJSON.error == 'not-login')
+                    ) {
+                    //login ulang
+                    window.location.href = "{$site_url}" +'auth';
+                }
+                //send toastr message
+                toastr.error(errorMessage);
             }
         });
 
@@ -1587,7 +1691,15 @@ border-right-color: #3c8dbc !important;
 				hbarangkeluarperwaktu.redraw();
             },
             error: function(jqXhr, textStatus, errorMessage) {
-				//TODO
+                if (jqXhr.status == 403 || errorMessage == 'Forbidden' || 
+                    (jqXhr.responseJSON !== undefined && jqXhr.responseJSON != null 
+                        && jqXhr.responseJSON.error != undefined && jqXhr.responseJSON.error == 'not-login')
+                    ) {
+                    //login ulang
+                    window.location.href = "{$site_url}" +'auth';
+                }
+                //send toastr message
+                toastr.error(errorMessage);
             }
         });
 
@@ -1623,7 +1735,15 @@ border-right-color: #3c8dbc !important;
 				hbarangkeluarpergudang.redraw();
             },
             error: function(jqXhr, textStatus, errorMessage) {
-				//TODO
+                if (jqXhr.status == 403 || errorMessage == 'Forbidden' || 
+                    (jqXhr.responseJSON !== undefined && jqXhr.responseJSON != null 
+                        && jqXhr.responseJSON.error != undefined && jqXhr.responseJSON.error == 'not-login')
+                    ) {
+                    //login ulang
+                    window.location.href = "{$site_url}" +'auth';
+                }
+                //send toastr message
+                toastr.error(errorMessage);
             }
         });
 
@@ -1659,7 +1779,15 @@ border-right-color: #3c8dbc !important;
 				hbarangkeluarperkategori.redraw();
             },
             error: function(jqXhr, textStatus, errorMessage) {
-				//TODO
+                if (jqXhr.status == 403 || errorMessage == 'Forbidden' || 
+                    (jqXhr.responseJSON !== undefined && jqXhr.responseJSON != null 
+                        && jqXhr.responseJSON.error != undefined && jqXhr.responseJSON.error == 'not-login')
+                    ) {
+                    //login ulang
+                    window.location.href = "{$site_url}" +'auth';
+                }
+                //send toastr message
+                toastr.error(errorMessage);
             }
         });
 
@@ -1695,7 +1823,15 @@ border-right-color: #3c8dbc !important;
 				hhapusbuku.redraw();
             },
             error: function(jqXhr, textStatus, errorMessage) {
-				//TODO
+                if (jqXhr.status == 403 || errorMessage == 'Forbidden' || 
+                    (jqXhr.responseJSON !== undefined && jqXhr.responseJSON != null 
+                        && jqXhr.responseJSON.error != undefined && jqXhr.responseJSON.error == 'not-login')
+                    ) {
+                    //login ulang
+                    window.location.href = "{$site_url}" +'auth';
+                }
+                //send toastr message
+                toastr.error(errorMessage);
             }
         });
 

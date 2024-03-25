@@ -15,21 +15,59 @@ class Mdemand extends Mcrud_tablemeta
     protected static $SOFT_DELETE = true;
 
     function approve($id) {
-        //TODO
-        return 1;
+        $userid = $this->session->userdata('user_id');
 
+        //call sp
+        $sql = "call usp_demand_approve(?, ?)";
+
+        $arr = $this->db->query($sql, array($id, $userid));
+        if ($arr == null)    return $arr;
+ 
+        $detail = $this->detail($id);
+        if ($detail['status'] != 'APPR') {
+            return null;
+        }
+
+        return $detail;
     }
 
     function close($id) {
-        //TODO
-        return 0;
+        $userid = $this->session->userdata('user_id');
 
+        //call sp
+        $sql = "call usp_demand_close(?, ?)";
+
+        $query = $this->db->query($sql, array($id, $userid));
+        if ($query == null)    return $query;
+ 
+        $detail = $this->detail($id);
+        if ($detail['status'] != 'CLOSED') {
+            return null;
+        }
+
+        return $detail;
     }
 
-    function buatpengadaan($id, $year) {
-        //TODO
-        return 0;
+    function buatpengadaan($id, $year, $ponum) {
+        $userid = $this->session->userdata('user_id');
+      
+        //call sp
+        $tag = uniqid();
+        $sql = "call usp_po_createfromdemand(?, ?, ?, ?, ?)";
 
+        $arr = $this->db->query($sql, array($id, $year, $ponum, $tag, $userid));
+        if ($arr == null)    return $arr;
+ 
+        return $this->_get_poid_bytag($tag);
+    }
+
+    function _get_poid_bytag($tag) {
+        $sql = "select poid from tcg_po where tag=?";
+
+        $arr = $this->db->query($sql, array($tag))->row_result();
+        if ($arr == null)   return 0;
+
+        return $arr['poid'];
     }
 
     function list($filter = null, $limit = null, $offset = null, $orderby = null) {
@@ -262,6 +300,11 @@ class Mdemand extends Mcrud_tablemeta
         if (!empty($typeid)) {
             //enforce
             $valuepair['typeid'] = $typeid;
+        }
+
+        //default
+        if (empty($valuepair['demandnum'])) {
+            $valuepair['demandnum'] = 'RB0000';
         }
 
         $id = parent::add($valuepair, $enforce_edit_columns);

@@ -71,6 +71,10 @@ class Kebutuhan extends Base_Crud {
         }
 
         $id = $this->input->post('id');
+        $ponum = $this->input->post('ponum');
+        if (empty($ponum)) {
+            $ponum = "";
+        }
         $year = $this->input->post('year');
         if (empty($year)) {
             $year = date('Y');
