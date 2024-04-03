@@ -26,11 +26,12 @@ class Mcrud_tablemeta extends CI_Model
     protected $table_name = '';
     protected $initialized = false;
     
+    /* Data Structure */
     protected $table_metas = null;
-    protected $column_metas = null;
-    protected $editor_metas = null;
-    protected $filter_metas = null;
-    protected $sorting_metas = null;
+    protected $column_metas = null;     //equivalent to table_metas.columns
+    protected $editor_metas = null;     //equivalent to table_metas.editor_columns. also stored directly in table_metas.column.editor
+    protected $filter_metas = null;     //equivalent to table_metas.filter_columns
+    protected $sorting_metas = null;    //equivalent to table_metas.sorting_columns
 
     protected $join_tables = null;
 
@@ -38,13 +39,13 @@ class Mcrud_tablemeta extends CI_Model
     protected $row_actions = null;
     protected $custom_actions = null;
 
-    protected $columns = null;
-    protected $edit_columns = null;
-    protected $select_columns = null;
-    //protected $filter_columns = null;
-    protected $search_columns = null;
-    protected $sorting_columns = null;
-    protected $filters = null;
+    /* Raw list/array */
+    protected $columns = null;                  //list of column names
+    protected $edit_columns = null;             //list of editable column names
+    protected $select_columns = null;           //list of select column names
+    protected $filter_columns = null;           //list of filter fields (NOT filterable columns!!!)
+    protected $search_columns = null;           //list of searchable column names
+    protected $sorting_columns = null;          //list of sorting column names
  
     protected $lookup_columns = null;
 
@@ -349,6 +350,7 @@ class Mcrud_tablemeta extends CI_Model
         $this->table_metas['multi_row_selection'] = ($arr['multi_row_selection'] == 1);
         $this->table_metas['show_paging_options'] = ($arr['show_paging_options'] == 1);
         $this->table_metas['multi_edit'] = ($arr['multi_edit'] == 1);
+        $this->table_metas['inline_edit'] = ($arr['inline_edit'] == 1);
 
         $this->table_metas['client_side_query'] = ($arr['client_side_query'] == 1);
         $this->table_metas['client_side_filter'] = ($arr['client_side_filter'] == 1);
@@ -360,6 +362,7 @@ class Mcrud_tablemeta extends CI_Model
         $this->table_metas['on_edit_custom_js'] = $arr['on_edit_custom_js'];
         $this->table_metas['on_delete_custom_js'] = $arr['on_delete_custom_js'];
         $this->table_metas['on_select_custom_js'] = $arr['on_select_custom_js'];
+        $this->table_metas['on_submit_custom_js'] = $arr['on_submit_custom_js'];
 
         $this->table_metas['export_custom_js'] = $arr['export_custom_js'];
         $this->table_metas['import_custom_js'] = $arr['import_custom_js'];
@@ -706,14 +709,10 @@ class Mcrud_tablemeta extends CI_Model
                     }
 
                     //search column -> search lookup
+                    //var_dump($col['allow_search']);
                     if (!empty($col['allow_search']) && $row['edit_type'] == 'tcg_select2') {
                         $this->search_columns[] = $ref['reference_alias'].".".$ref['reference_lookup_column'];
                     }
-    
-                    // //force select2
-                    // if (!empty($col['options'])) {
-                    //     $col['type'] = 'tcg_select2';
-                    // }
                 }
 
                 if ($this->table_metas['edit'] && ($col['allow_insert'] || $col['allow_edit'])) {
@@ -741,8 +740,8 @@ class Mcrud_tablemeta extends CI_Model
                     $editor['edit_bubble'] = ($row['edit_bubble'] == 1);
                     $editor['edit_vertical'] = ($row['edit_vertical'] == 1);
 
-                    $editor['edit_readonly'] = !$col['allow_edit'];
-                    //$editor['edit_readonly'] = ($row['edit_readonly'] == 1);
+                    //$editor['edit_readonly'] = !$col['allow_edit'];
+                    $editor['edit_readonly'] = ($row['edit_readonly'] == 1);
 
                     //store in column metas
                     $col['edit_bubble'] = $editor['edit_bubble'];
@@ -760,13 +759,7 @@ class Mcrud_tablemeta extends CI_Model
                     }
 
                     if (!empty($row['edit_attr_array'])) {
-                        //echo ($row['edit_attr_array']);
-                        //$row['edit_attr_array'] = '{"a": true,"b":2,"c":3,"d":4,"e":5}';
-                        //echo ($row['edit_attr_array']);
-                        $editor['edit_attr'] = json_decode($row['edit_attr_array'], true);
-                        //TODO: append base url for ajax parameter
-                        //var_dump($editor['edit_attr']);
- 
+                        $editor['edit_attr'] = json_decode($row['edit_attr_array'], true); 
                         //force readonly if necessary
                         if (!empty($editor['edit_attr']['readonly'])) {
                             $col["readonly"] = true;
@@ -843,6 +836,7 @@ class Mcrud_tablemeta extends CI_Model
                     $col["editor"] = $editor;
                 }
 
+                // 2024-03-25: FILTER is now moved to separate table
                 // if ($this->table_metas['filter'] && $col['allow_filter']) {
                 //     $filter = Mtablemeta::$FILTER;
                 //     $filter['name'] = $row['name'];
@@ -905,6 +899,7 @@ class Mcrud_tablemeta extends CI_Model
                 }
                 $this->columns[] = $col['ci_name'];
 
+                // 2024-03-25: upload column is now implemented as a single column. Metainfo is stored in dbo_uploads table
                 // //if type=upload, add related columns
                 // if ($col['type'] == "tcg_upload") {
                 //     $col_name = $col['name'];
@@ -1091,7 +1086,7 @@ class Mcrud_tablemeta extends CI_Model
 
         //filters
         $this->filter_metas = array();
-        $this->filters = array();
+        $this->filter_columns = array();
 
         do {
             $this->db->select('a.*, b.name as column_name');
@@ -1106,7 +1101,7 @@ class Mcrud_tablemeta extends CI_Model
                 $name = trim($row['name']);
 
                 //if already exist, ignore. prevent duplicate
-                if (false !== array_search($name, $this->filters)) {
+                if (false !== array_search($name, $this->filter_columns)) {
                     continue;
                  }
   
@@ -1199,7 +1194,7 @@ class Mcrud_tablemeta extends CI_Model
                 }
                  
                 $this->filter_metas[] = $filter;
-                $this->filters[] = $name;
+                $this->filter_columns[] = $name;
             }                    
         } 
         while (false);
@@ -1218,22 +1213,23 @@ class Mcrud_tablemeta extends CI_Model
             if ($arr == null) {
                 break;
             }
-    
+
             foreach($arr as $row) {
                 $name = trim($row['name']);
 
                 //if already exist, ignore. prevent duplicate
-                if (false !== array_search($name, $this->sorting_columns))   continue;
+                $col_idx = array_search($name, $this->sorting_columns);
+                if (false !== $col_idx)   continue;
 
                 //search in select columns
-                $col_idx = array_search($name, $this->columns);
+                $col_idx = array_search(strtoupper($name), $this->columns);
                 if (false === $col_idx) continue;
 
                 $sort = Mtablemeta::$SORTING;
                 $sort['name'] = $name;
                 $sort['column_no'] = $col_idx;
-                $sort['sort_no'] = $row['sort_no'];;
-                $sort['sort_asc'] = ($row['sort_asc'] == 1);;
+                $sort['sort_no'] = $row['order_no'];
+                $sort['sort_asc'] = ($row['ascending'] == 1);;
 
                 $this->sorting_metas[] = $sort;
                 $this->sorting_columns[] = $name;
@@ -1303,29 +1299,30 @@ class Mcrud_tablemeta extends CI_Model
             }
         }
 
-        //if no sorting defined, sort based on key column
+        //if no sorting defined, sort based on key column (only if it is visible))
         if (count($this->sorting_metas) == 0) {
             $ci_name = strtoupper($this->table_metas['key_column']);
 
             $col_idx = array_search($ci_name, $this->columns);
             if (false !== $col_idx) {
-                //add to sorting column
-                $sort = Mtablemeta::$SORTING;
-                $sort['name'] = $ci_name;
-                $sort['column_no'] = $col_idx;
-                $sort['sort_no'] = 1;
-                $sort['sort_asc'] = true;
+                $col = $this->column_metas[$col_idx];
+                if ($col['visible']) {
+                    //add to sorting column
+                    $sort = Mtablemeta::$SORTING;
+                    $sort['name'] = $ci_name;
+                    $sort['column_no'] = $col_idx;
+                    $sort['sort_no'] = 1;
+                    $sort['sort_asc'] = true;
 
-                $this->sorting_metas[] = $sort;
-                $this->sorting_columns[] = $ci_name;                
+                    $this->sorting_metas[] = $sort;
+                    $this->sorting_columns[] = $ci_name;                
+                }
             }
         }
 
         $this->table_metas['columns'] = $this->column_metas;
-        //2024-03-14: editor_columns now stored directly in column.editor
-        //$this->table_metas['editor_columns'] = $this->editor_metas;
-        //2024-03-14: filter_columns now stored in table.filters
-        //$this->table_metas['filter_columns'] = $this->filter_metas;
+        //2024-03-14: editor_columns is now also stored directly in table.column.editor
+        $this->table_metas['editor_columns'] = $this->editor_metas;
         $this->table_metas['table_actions'] = $this->table_actions;
         $this->table_metas['custom_actions'] = $this->custom_actions;
         $this->table_metas['row_actions'] = $this->row_actions;
@@ -1347,7 +1344,12 @@ class Mcrud_tablemeta extends CI_Model
         // if no filter -> always autoload
         if (!$this->table_metas['filter'])  $this->table_metas['initial_load'] = true;
 
+        // list of filters
+        $this->table_metas['filter_columns'] = $this->filter_metas;
+
         //disable search if no search columns
+        // var_dump($this->table_metas['search']);
+        // var_dump($this->search_columns); exit;
         if (count($this->search_columns) == 0) {
             $this->table_metas['search'] = false;
         }
@@ -1358,9 +1360,6 @@ class Mcrud_tablemeta extends CI_Model
 
         //table default sorting
         $this->table_metas['sorting_columns'] = $this->sorting_metas;
-
-        //filters
-        $this->table_metas['filters'] = $this->filter_metas;
 
         //TODO: re-calculate column-idx both in $this->column_metas and in $this->sorting_metas
 
@@ -1390,11 +1389,12 @@ class Mcrud_tablemeta extends CI_Model
 
         //initialized the distinct filter options
         //must be performed after initialization is completed
-        foreach ($this->table_metas['filters'] as $key => $row) {
+        foreach ($this->table_metas['filter_columns'] as $key => $row) {
             if($row['type'] != 'distinct')   continue;
 
-            ($this->table_metas['filters'])[$key]['options'] = $this->distinct_lookup($row['column_name']);
+            ($this->table_metas['filter_columns'])[$key]['options'] = $this->distinct_lookup($row['column_name']);
         }
+
         return true;
     }
 
@@ -1423,7 +1423,7 @@ class Mcrud_tablemeta extends CI_Model
 
     function filter_columns() {
         //return $this->filter_columns;
-        return $this->filters;
+        return $this->filter_columns;
     }
 
     function distinct_lookup($column, $filter = null) {
@@ -2019,13 +2019,13 @@ class Mcrud_tablemeta extends CI_Model
         $filepath = $data['filepath'];
 
         //create temporary table
-        $temp_table_name = "temp_" .$table_name;
-        $data = $this->__create_temp_table($temp_table_name, $columns);
+        $data = $this->__create_temp_table($table_name, $columns);
         if ($data == null) {
             $sql = "update dbo_imports set status='" .$this->error_message. "' where id=?";
             $this->db->query($sql, array($import_id));
             return 0;
         }
+        $temp_table_name = $data['temp_table_name'];
         $export_columns = $data['export'];
         $import_columns = $data['import'];
         $column_types = $data['type'];
@@ -2046,26 +2046,48 @@ class Mcrud_tablemeta extends CI_Model
         // var_dump($join_tables); exit();
 
         //import xls
-        $status = $this->__import_xls($filepath, $temp_table_name, $export_columns, $column_types);
+        $status = $this->__import_xls($filepath, $import_id, $temp_table_name, $export_columns, $column_types);
         if($status == 0) {
-            $sql = "update dbo_imports set status='" .$this->error_message. "' where id=?";
+            $sql = "update dbo_imports set status='" .$this->error_message. "', processing_finish_on=now() where id=?";
             $this->db->query($sql, array($import_id));
             return 0;
         }
 
+        //check if it is an update
+        $sql = "update " .$temp_table_name. " a join " .$table_name. " b on b." .$key_col_name. "=a." .$key_col_name. " set a._update_=1";
+        //enforce level1 filter if any
+        if (!empty($this->level1_filter) && count($this->level1_filter) > 0) {
+            $level1_filter = '';
+            foreach($this->level1_filter as $key => $val) {
+                if ($level1_filter == '') {
+                    $level1_filter = "b.$key=$val";
+                }
+                else {
+                    $level1_filter .= " AND b.$key=$val";
+                }
+            }
+            $sql .= ' where ' .$level1_filter; 
+        }
+        $this->db->query($sql);
+        
         //custom processing
         $this->__update_custom_column($temp_table_name);
 
-        //intermediate process
-        if (count($upload_columns)) {
-            $this->__update_upload_columns($temp_table_name, $upload_columns);
-        }
+        // 2024-04-01: There is no point of importing via xls the upload file
+        // //intermediate process
+        // if (count($upload_columns)) {
+        //     $this->__update_upload_columns($temp_table_name, $upload_columns);
+        // }
 
         //process import
         $this->__process_import($table_name, $key_col_name, $temp_table_name, $import_columns, $join_tables);
 
         //drop temporary table
         $this->db->query("DROP TEMPORARY TABLE $temp_table_name;");
+
+        //update status
+        $sql = "update dbo_imports set status='completed', processing_finish_on=now() where id=?";
+        $this->db->query($sql, array($import_id));
 
         //audit trail
         audittrail_trail($table_name, $import_id, "IMPORT", "Import from file " .$filepath);
@@ -2104,9 +2126,9 @@ class Mcrud_tablemeta extends CI_Model
 
         //copy to dbo_imports
         $import_id = 0;
-        $sql = "insert into dbo_imports(table_id, filename, file_path, web_path, thumbnail_path, status) " .
-                "select ?, filename, path, web_path, thumbnail_path, ? from dbo_uploads where is_deleted=0 and id=?";
-        $query = $this->db->query($sql, array($table_id, "not-started", $upload_id));
+        $sql = "insert into dbo_imports(table_id, filename, file_path, web_path, thumbnail_path, status, processing_start_on) " .
+                "select ?, filename, path, web_path, thumbnail_path, ?, now() from dbo_uploads where is_deleted=0 and id=?";
+        $query = $this->db->query($sql, array($table_id, "started", $upload_id));
         if ($query) {
             $import_id = $this->db->insert_id();
         } 
@@ -2128,11 +2150,13 @@ class Mcrud_tablemeta extends CI_Model
         return $retval;
     }
 
-    protected function __create_temp_table($temp_table_name, $columns) {
+    protected function __create_temp_table($table_name, $columns) {
         $this->reset_error();
 
         //Note: Ideally, all editable columns (regardless visible or not) should be exported and can be imported.
         //      But since, we are using internal datatable export function, we can only export visible columns.
+
+        $temp_table_name = "temp_" .$table_name;
 
         $column_def = array();
         $column_names = array();
@@ -2144,6 +2168,9 @@ class Mcrud_tablemeta extends CI_Model
         
         //id column
         $column_def[] = "__id__ int(11) NOT NULL AUTO_INCREMENT";
+
+        //import id
+        $column_def[] = "__import_id__ int(11) NOT NULL";
 
         foreach($columns as $key => $col) {
             if ($col['visible'] == 0 && $col['export'] == 0)    continue;
@@ -2242,6 +2269,7 @@ class Mcrud_tablemeta extends CI_Model
         }
 
         $retval = array(
+            'temp_table_name'   => $temp_table_name,
             'export'    => $export_columns,
             'type'      => $column_type,
             'import'    => $import_columns,
@@ -2250,7 +2278,7 @@ class Mcrud_tablemeta extends CI_Model
         return $retval;
     }
 
-    protected function __import_xls($file, $temp_table_name, $export_columns, $column_types) {
+    protected function __import_xls($file, $import_id, $temp_table_name, $export_columns, $column_types) {
 
         $this->reset_error();
 		$reader = null;
@@ -2325,6 +2353,11 @@ class Mcrud_tablemeta extends CI_Model
             if ( empty( trim($row[0]) ) && empty( trim($row[1]) ) && empty( trim($row[2]) ) && empty( trim($row[3]) ) && empty( trim($row[4])))   continue;
 
             $value = array();
+
+            //import id
+            $value['__import_id__'] = $import_id;
+
+            //actual value
             foreach($export_columns as $idx => $col) {
                 //for date, convert to string
                 if ($column_types[$idx] == 'tcg_date') {
@@ -2411,107 +2444,79 @@ class Mcrud_tablemeta extends CI_Model
 
     }
 
-    /**
-     * Update upload column
-     * 
-     * One upload column definition must be implemented as 4 separate column in the database table:
-     * - <column_name>              : the main upload column. contains list of upload_id in table tcg_uploads.
-     *                                The informastion related individual uploaded file is stored in table tcg_uploads
-     * - <column_name>_filename     : contains list of file names of uploaded file
-     * - <column_name>_web_path     : contains list of url to access the uploaded file
-     * - <column_name>_thumbnail_path   : contains list of url to access thumbnail of uploaded file
-     * 
-     * The informastion related individual uploaded file is stored in table tcg_uploads  
-     */
-    protected function __update_upload_columns($temp_table_name, $upload_columns) {
-        //create secondary temp table for subquery because we cannot open temporary table > 1 in the same query
-        //this issue should be fixed in MariaDb 10.2
+    // /**
+    //  * Update upload column
+    //  * 
+    //  * One upload column definition must be implemented as 4 separate column in the database table:
+    //  * - <column_name>              : the main upload column. contains list of upload_id in table tcg_uploads.
+    //  *                                The informastion related individual uploaded file is stored in table tcg_uploads
+    //  * - <column_name>_filename     : contains list of file names of uploaded file
+    //  * - <column_name>_web_path     : contains list of url to access the uploaded file
+    //  * - <column_name>_thumbnail_path   : contains list of url to access thumbnail of uploaded file
+    //  * 
+    //  * The informastion related individual uploaded file is stored in table tcg_uploads  
+    //  */
+    // protected function __update_upload_columns($temp_table_name, $upload_columns) {
+    //     //create secondary temp table for subquery because we cannot open temporary table > 1 in the same query
+    //     //this issue should be fixed in MariaDb 10.2
 
-        $upload_table_name = $temp_table_name .'_v';
+    //     $upload_table_name = $temp_table_name .'_v';
 
-        //always drop first
-        $this->db->query("DROP TEMPORARY TABLE IF EXISTS $upload_table_name;");
+    //     //always drop first
+    //     $this->db->query("DROP TEMPORARY TABLE IF EXISTS $upload_table_name;");
 
-        $sql = "create temporary table " .$upload_table_name. " (__id__ int, col_name varchar(1000), upload_id varchar(1000), filename longtext, web_path longtext, thumbnail_path longtext)";
-        $this->db->query($sql);
+    //     $sql = "create temporary table " .$upload_table_name. " (__id__ int, col_name varchar(1000), upload_id varchar(1000), filename longtext, web_path longtext, thumbnail_path longtext)";
+    //     $this->db->query($sql);
 
-        foreach($upload_columns as $col_name) {
-            $this->db->query("truncate table " .$upload_table_name);
+    //     foreach($upload_columns as $col_name) {
+    //         $this->db->query("truncate table " .$upload_table_name);
 
-            $sql = "
-            insert into ".$upload_table_name." (__id__, col_name, upload_id, filename, web_path, thumbnail_path)
-            select
-                c.id,
-                c." .$col_name. ",
-                group_concat(x.id separator ',') as upload_id,
-                group_concat(x.filename separator ';') as filename,
-                group_concat(x.web_path separator ';') as web_path,
-                group_concat(x.thumbnail_path separator ';') as thumbnail_path
-            from " .$temp_table_name. " c
-            left join dbo_uploads x on x.is_deleted=0 and find_in_set(x.id, c." .$col_name. ") > 0
-            where 
-                c." .$col_name. " is not null and c." .$col_name. " != '' and c." .$col_name. " != 0
-            group by c.id
-            ";
+    //         $sql = "
+    //         insert into ".$upload_table_name." (__id__, col_name, upload_id, filename, web_path, thumbnail_path)
+    //         select
+    //             c.id,
+    //             c." .$col_name. ",
+    //             group_concat(x.id separator ',') as upload_id,
+    //             group_concat(x.filename separator ';') as filename,
+    //             group_concat(x.web_path separator ';') as web_path,
+    //             group_concat(x.thumbnail_path separator ';') as thumbnail_path
+    //         from " .$temp_table_name. " c
+    //         left join dbo_uploads x on x.is_deleted=0 and find_in_set(x.id, c." .$col_name. ") > 0
+    //         where 
+    //             c." .$col_name. " is not null and c." .$col_name. " != '' and c." .$col_name. " != 0
+    //         group by c.id
+    //         ";
 
-            $this->db->query($sql);
+    //         $this->db->query($sql);
 
-            $sql = "
-            update " .$temp_table_name. " a 
-            join " .$upload_table_name. " b on b.__id__=a.id
-            set
-                a." .$col_name. " = b.upload_id,
-                a." .$col_name. "_filename = b.filename,
-                a." .$col_name. "_path = b.web_path,
-                a." .$col_name. "_thumbnail = b.thumbnail_path
-            where 
-                a." .$col_name. " is not null and a." .$col_name. " != '' and a." .$col_name. " != 0
-            ";
+    //         $sql = "
+    //         update " .$temp_table_name. " a 
+    //         join " .$upload_table_name. " b on b.__id__=a.id
+    //         set
+    //             a." .$col_name. " = b.upload_id,
+    //             a." .$col_name. "_filename = b.filename,
+    //             a." .$col_name. "_path = b.web_path,
+    //             a." .$col_name. "_thumbnail = b.thumbnail_path
+    //         where 
+    //             a." .$col_name. " is not null and a." .$col_name. " != '' and a." .$col_name. " != 0
+    //         ";
 
-            $this->db->query($sql);
-        }
+    //         $this->db->query($sql);
+    //     }
 
-        $this->db->query("DROP TEMPORARY TABLE $upload_table_name;");
-    }
+    //     $this->db->query("DROP TEMPORARY TABLE $upload_table_name;");
+    // }
 
     protected function __update_custom_column($temp_table_name) {
         //nothing to do
     }
 
-    protected function __process_import($table_name, $key_column_name, $temp_table_name, $import_columns, $join_tables) {
-        // $sql = "
-        //     select * from " .$temp_table_name. " a
-        //     where 
-        //         a.no_aset='12010010012000683'
-        // ";
-
-        // $query = $this->db->query($sql);
-
-        // var_dump($query->result_array());
-        
-        //check for duplicate key
-        $sql = "update " .$temp_table_name. " a join " .$table_name. " b on b." .$key_column_name. "=a." .$key_column_name. " set a._update_=1";
-
-        //enforce level1 filter if any
-        if (!empty($this->level1_filter) && count($this->level1_filter) > 0) {
-            $level1_filter = '';
-            foreach($this->level1_filter as $key => $val) {
-                if ($level1_filter == '') {
-                    $level1_filter = "b.$key=$val";
-                }
-                else {
-                    $level1_filter .= " AND b.$key=$val";
-                }
-            }
-            $sql .= ' where ' .$level1_filter; 
-        }
-
-        $this->db->query($sql);
+    protected function __process_import($table_name, $key_column_name, $temp_table_name, $import_columns, $join_tables) {        
 
         //match foreign key
         foreach($join_tables as $idx => $tbl) {
             //use left join here so that those that cannot find the reference will be set to null
-            $sql = "update " .$temp_table_name. " a left join " .$tbl['reference_table_name']. " b on lower(b." .$tbl['reference_lookup_column']. ")=lower(a." .$tbl['name']. ") set a." .$tbl['name']. "=b." .$tbl['reference_key_column'];
+            $sql = "update " .$temp_table_name. " a left join " .$tbl['reference_table_name']. " b on lower(b." .$tbl['reference_lookup_column']. ")=lower(a." .$tbl['name']. ") and b.is_deleted=0 set a." .$tbl['name']. "=b." .$tbl['reference_key_column'];
             $this->db->query($sql);
         }
 

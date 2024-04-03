@@ -55,20 +55,25 @@ class Mitem extends Mcrud_tablemeta
             $typeid = empty($filter['typeid']) ? null : $filter['typeid'];
         }
         unset($filter['typeid']);
+
+        $fastmoving = (!isset($filter['fastmoving']) || $filter['fastmoving'] == null || $filter['fastmoving'] == '') ? null : $filter['fastmoving'];
+        unset($filter['fastmoving']);
         
         $this->db->select("a.*");
         $this->db->select("b.name as manufacturerid_label");
         $this->db->select("c.description as categoryid_label");
-        $this->db->select("d.typeid, d.description as typeid_label");
+        $this->db->select("d.typecode as typeid_label");
         $this->db->select("e.name as preferredvendorid_label");
-        //$this->db->from("tcg_po a");
+        $this->db->select("f.label as issueunit_label, g.label as orderunit_label");
+        //$this->db->from("tcg_item a");
         $this->db->join("tcg_manufacturer b", "b.manufacturerid=a.manufacturerid AND b.is_deleted=0", "LEFT OUTER");
         $this->db->join("tcg_itemcategory c", "c.categoryid=a.categoryid AND c.is_deleted=0", "LEFT OUTER");
-        $this->db->join("tcg_itemtype d", "d.typeid=c.typeid AND d.is_deleted=0", "LEFT OUTER");
+        $this->db->join("tcg_itemtype d", "d.typeid=a.typeid AND d.is_deleted=0", "LEFT OUTER");
         $this->db->join("tcg_vendor e", "e.vendorid=a.preferredvendorid AND e.is_deleted=0", "LEFT OUTER");
+        $this->db->join("lk_unit f", "f.unit=a.issueunit AND f.is_deleted=0", "LEFT OUTER");
+        $this->db->join("lk_unit g", "g.unit=a.orderunit AND g.is_deleted=0", "LEFT OUTER");
 
         //filter
-        //var_dump($filter);
         //clean up non existing filter columns
         $ci_name = null;
         foreach($filter as $key => $val) {
@@ -80,7 +85,10 @@ class Mitem extends Mcrud_tablemeta
             }
         }
         if (!empty($typeid)) {
-            $this->db->where("d.typeid", $typeid);
+            $this->db->where("a.typeid", $typeid);
+        }
+        if ($fastmoving != null) {
+            $this->db->where("a.fastmoving", $fastmoving);
         }
 
         //soft delete
@@ -125,10 +133,10 @@ class Mitem extends Mcrud_tablemeta
         // $this->db->select("c.description as categoryid_label");
         // $this->db->select("d.typeid, d.description as typeid_label");
         // $this->db->select("e.name as preferredvendorid_label");
-        // //$this->db->from("tcg_po a");
+        // //$this->db->from("tcg_item a");
         // $this->db->join("tcg_manufacturer b", "b.manufacturerid=a.manufacturerid AND b.is_deleted=0", "LEFT OUTER");
         // $this->db->join("tcg_itemcategory c", "c.categoryid=a.categoryid AND c.is_deleted=0", "LEFT OUTER");
-        // $this->db->join("tcg_itemtype d", "d.typeid=c.typeid AND d.is_deleted=0", "LEFT OUTER");
+        // $this->db->join("tcg_itemtype d", "d.typeid=a.typeid AND d.is_deleted=0", "LEFT OUTER");
         // $this->db->join("tcg_vendor e", "e.vendorid=a.preferredvendorid AND e.is_deleted=0", "LEFT OUTER");
 
         // //filter
@@ -206,11 +214,14 @@ class Mitem extends Mcrud_tablemeta
         }
         unset($filter['typeid']);
 
+        $fastmoving = (!isset($filter['fastmoving']) || $filter['fastmoving'] == null || $filter['fastmoving'] == '') ? null : $filter['fastmoving'];
+        unset($filter['fastmoving']);
+
         $this->db->select("a.itemid as value, a.description as label, c.categoryid, d.typeid as itemtypeid");
-        //$this->db->from("tcg_po a");
+        //$this->db->from("tcg_item a");
         $this->db->join("tcg_manufacturer b", "b.manufacturerid=a.manufacturerid AND b.is_deleted=0", "LEFT OUTER");
         $this->db->join("tcg_itemcategory c", "c.categoryid=a.categoryid AND c.is_deleted=0", "LEFT OUTER");
-        $this->db->join("tcg_itemtype d", "d.typeid=c.typeid AND d.is_deleted=0", "LEFT OUTER");
+        $this->db->join("tcg_itemtype d", "d.typeid=a.typeid AND d.is_deleted=0", "LEFT OUTER");
         $this->db->join("tcg_vendor e", "e.vendorid=a.preferredvendorid AND e.is_deleted=0", "LEFT OUTER");
 
         //clean up non existing filter columns
@@ -224,7 +235,10 @@ class Mitem extends Mcrud_tablemeta
             }
         }
         if (!empty($typeid)) {
-            $this->db->where("d.typeid", $typeid);
+            $this->db->where("a.typeid", $typeid);
+        }
+        if ($fastmoving != null) {
+            $this->db->where("a.fastmoving", $fastmoving);
         }
 
         //soft delete

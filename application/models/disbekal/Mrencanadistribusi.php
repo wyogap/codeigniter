@@ -460,7 +460,7 @@ class Mrencanadistribusi extends Mcrud_tablemeta
             ) e on e.itemid=a.itemid
             join tcg_item x on x.itemid=a.itemid and x.is_deleted=0
             join tcg_itemcategory y on y.categoryid=x.categoryid and y.is_deleted=0
-            join tcg_itemtype z on z.typeid=y.typeid and z.is_deleted=0
+            join tcg_itemtype z on z.typeid=x.typeid and z.is_deleted=0
             where 1=1
             ";
 
@@ -530,7 +530,7 @@ class Mrencanadistribusi extends Mcrud_tablemeta
             ) e on e.itemid=a.itemid
             join tcg_item x on x.itemid=a.itemid and x.is_deleted=0
             join tcg_itemcategory y on y.categoryid=x.categoryid and y.is_deleted=0
-            join tcg_itemtype z on z.typeid=y.typeid and z.is_deleted=0
+            join tcg_itemtype z on z.typeid=x.typeid and z.is_deleted=0
             where 1=1
             ";
 

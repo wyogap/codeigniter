@@ -64,11 +64,24 @@ div.DTE_Field_Type_tcg_toggle div.DTE_Field_InputControl .switch.readonly input:
     background-color: var(--blue);
 }
 
+div.DTE_Bubble .DTE_Field_Type_tcg_toggle label[data-dte-e="label"] {
+    -ms-flex: 0 0 66.666667% !important;
+    flex: 0 0 66.666667% !important;
+    max-width: 66.666667% !important;
+}
+
+div.DTE_Bubble .DTE_Field_Type_tcg_toggle div[data-dte-e="input"] {
+    -ms-flex: 0 0 33.333333% !important;
+    flex: 0 0 33.333333% !important;
+    max-width: 33.333333% !important;
+    text-align: right !important;
+}
+
 @media screen and (max-width: 767px) {
-	div.DTE_Field_Type_tcg_toggle {
-		padding-top: 0.5rem;
-	}
-	
+	/* div.DTE_Field_Type_tcg_toggle {
+		padding-top: 8px;
+	} */
+	 
 	/*
 	.crud-form div.DTE_Field_Type_tcg_toggle .form-label {
 	    float: left;
@@ -80,13 +93,7 @@ div.DTE_Field_Type_tcg_toggle div.DTE_Field_InputControl .switch.readonly input:
 	}
 	*/
 	
-	div.DTE_Field_Type_tcg_toggle label[data-dte-e='label'] {
-	    float: left;
-		/* display: inline-grid; */
-		position: absolute;
-	}
-	
-	div.DTE_Field_Type_tcg_toggle div[data-dte-e='input'] {
+	/* div.DTE_Field_Type_tcg_toggle div[data-dte-e='input'] {
 		text-align: right;
-	}
+	} */
 }

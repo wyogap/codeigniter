@@ -1,8 +1,8 @@
 <?php if(!defined('BASEPATH')) exit('No direct script access allowed');
 
-require_once(APPPATH.'models/Mcrud_tablemeta.php');
+require_once(APPPATH.'models/Mcrud_ext.php');
 
-class Mpo extends Mcrud_tablemeta
+class Mpo extends Mcrud_ext
 {
     protected static $TABLE_NAME = "tcg_po";
     protected static $PRIMARY_KEY = "poid";
@@ -31,8 +31,7 @@ class Mpo extends Mcrud_tablemeta
         //call sp
         $sql = "call usp_po_approve(?, ?)";
 
-        $arr = $this->db->query($sql, array($id, $userid));
-        if ($arr == null)    return $arr;
+        $this->db->query($sql, array($id, $userid));
  
         $detail = $this->detail($id);
         if ($detail['status'] != 'APPR') {
@@ -48,8 +47,7 @@ class Mpo extends Mcrud_tablemeta
         //call sp
         $sql = "call usp_po_close(?, ?)";
 
-        $arr = $this->db->query($sql, array($id, $userid));
-        if ($arr == null)    return $arr;
+        $this->db->query($sql, array($id, $userid));
  
         $detail = $this->detail($id);
         if ($detail['status'] != 'CLOSED') {
@@ -65,8 +63,7 @@ class Mpo extends Mcrud_tablemeta
         //call sp
         $sql = "call usp_po_reset(?, ?, ?)";
 
-        $arr = $this->db->query($sql, array($id, $state, $userid));
-        if ($arr == null)    return $arr;
+        $this->db->query($sql, array($id, $state, $userid));
  
         $detail = $this->detail($id);
         if ($detail['status'] != $state) {
@@ -82,8 +79,7 @@ class Mpo extends Mcrud_tablemeta
         //call sp
         $sql = "call usp_tender_createfrompo(?, ?, ?, ?, ?)";
 
-        $arr = $this->db->query($sql, array($id, $tendernum, $startdate, $enddate, $userid));
-        if ($arr == null)    return $arr;
+        $this->db->query($sql, array($id, $tendernum, $startdate, $enddate, $userid));
  
         $detail = $this->detail($id);
         if ($detail['status'] != 'TENDER') {
@@ -99,8 +95,7 @@ class Mpo extends Mcrud_tablemeta
         //call sp
         $sql = "call usp_tender_complete(?, ?, ?, ?)";
 
-        $arr = $this->db->query($sql, array($tenderid, $vendorid, $quotationvalue, $userid));
-        if ($arr == null)    return $arr;
+        $this->db->query($sql, array($tenderid, $vendorid, $quotationvalue, $userid));
  
         $detail = $this->detail($id);
         if ($detail['status'] != 'TENDER' || $detail['tenderid_status'] != 'COMP') {
@@ -116,8 +111,7 @@ class Mpo extends Mcrud_tablemeta
         //call sp
         $sql = "call usp_contract_createfrompo(?, ?, ?, ?, ?, ?)";
 
-        $arr = $this->db->query($sql, array($id, $contractnum, $contractdate, $vendorid, $quotationvalue, $userid));
-        if ($arr == null)    return $arr;
+        $this->db->query($sql, array($id, $contractnum, $contractdate, $vendorid, $quotationvalue, $userid));
  
         $detail = $this->detail($id);
         if ($detail['status'] != 'CONTRACT') {
@@ -134,9 +128,8 @@ class Mpo extends Mcrud_tablemeta
         //call sp
         $sql = "call usp_contract_createfromtender(?, ?, ?, ?)";
 
-        $arr = $this->db->query($sql, array($tenderid, $contractnum, $contractdate, $userid));
-        if ($arr == null)    return $arr;
- 
+        $this->db->query($sql, array($tenderid, $contractnum, $contractdate, $userid));
+  
         $detail = $this->detail($id);
         if ($detail['status'] != 'CONTRACT') {
             return null;
@@ -151,8 +144,7 @@ class Mpo extends Mcrud_tablemeta
         //call sp
         $sql = "call usp_contract_approve(?, ?)";
 
-        $arr = $this->db->query($sql, array($contractid, $userid));
-        if ($arr == null)    return $arr;
+        $this->db->query($sql, array($contractid, $userid));
  
         $detail = $this->detail($id);
         if ($detail['status'] != 'CONTRACT' && $detail['contractid_status'] != 'APPR') {
@@ -168,8 +160,7 @@ class Mpo extends Mcrud_tablemeta
         //call sp
         $sql = "call usp_do_createfromcontract(?, ?, ?, ?, ?, ?)";
 
-        $arr = $this->db->query($sql, array($contractid, $donum, $dodate, $storeid, $targetdeliverydate, $userid));
-        if ($arr == null)    return $arr;
+        $this->db->query($sql, array($contractid, $donum, $dodate, $storeid, $targetdeliverydate, $userid));
  
         $detail = $this->detail($id);
         if ($detail['status'] != 'DELIVR') {
@@ -185,8 +176,7 @@ class Mpo extends Mcrud_tablemeta
         //call sp
         $sql = "call usp_do_approve(?, ?)";
 
-        $arr = $this->db->query($sql, array($doid, $userid));
-        if ($arr == null)    return $arr;
+        $this->db->query($sql, array($doid, $userid));
  
         $status = $this->_get_do_status($doid);
         if ($status != 'APPR') {
@@ -203,8 +193,7 @@ class Mpo extends Mcrud_tablemeta
         $tag = uniqid();
         $sql = "call usp_po_createfromdemand(?, ?, ?, ?, ?)";
 
-        $arr = $this->db->query($sql, array($demandid, $year, $ponum, $tag, $userid));
-        if ($arr == null)    return $arr;
+        $this->db->query($sql, array($demandid, $year, $ponum, $tag, $userid));
  
         $id = $this->_get_poid_bytag($tag);
 
@@ -214,7 +203,10 @@ class Mpo extends Mcrud_tablemeta
     function _get_poid_bytag($tag) {
         $sql = "select poid from tcg_po where tag=?";
 
-        $arr = $this->db->query($sql, array($tag))->row_result();
+        $query = $this->db->query($sql, array($tag));
+        if ($query == null) return 0;
+        
+        $arr = $query->row_array();
         if ($arr == null)   return 0;
 
         return $arr['poid'];
@@ -482,6 +474,23 @@ class Mpo extends Mcrud_tablemeta
             $valuepair['typeid'] = $typeid;
         }
 
+        $siteid = $this->session->userdata("siteid");
+        if (!empty($valuepair['siteid'])) {
+            $this->load->model('disbekal/Msite');
+            $siteid = $this->Msite->check_siteid($valuepair['siteid']);
+        }
+        if (!empty($siteid)) {
+            //enforce
+            $valuepair['siteid'] = $siteid;
+        }
+
+        $valuepair['status'] = 'DRAFT';
+
+        //default
+        if (empty($valuepair['ponum'])) {
+            $valuepair['ponum'] = 'PO0000';
+        }
+
         $id = parent::add($valuepair, $enforce_edit_columns);
 
         if ($id > 0) {
@@ -503,6 +512,17 @@ class Mpo extends Mcrud_tablemeta
             $valuepair['typeid'] = $typeid;
         }
 
+        $siteid = $this->session->userdata("siteid");
+        if (!empty($valuepair['siteid'])) {
+            $this->load->model('disbekal/Msite');
+            $siteid = $this->Msite->check_siteid($valuepair['siteid']);
+        }
+        if (!empty($siteid)) {
+            //enforce
+            $filter['siteid'] = $siteid;
+            $valuepair['siteid'] = $siteid;
+        }
+
         $result = parent::update($id, $valuepair, $filter, $enforce_edit_columns);
 
         if ($result > 0) {
@@ -515,7 +535,11 @@ class Mpo extends Mcrud_tablemeta
     }   
 
     function delete($id, $filter = null) {
+
+        //TODO: check against userdata('typeid') and userdata('siteid')
+        
         parent::delete($id, $filter);
+
         //run data consistency
         $pengguna_id = $this->session->userdata("user_id");
         $this->db->query("call usp_po_dataconsistency(?,?)", array($id,$pengguna_id));

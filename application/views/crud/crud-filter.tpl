@@ -32,7 +32,7 @@
 </style>
 
 {assign var=num_visible_filter value=0 }
-{foreach $crud.filters as $f} 
+{foreach $crud.filter_columns as $f} 
     {if $f.type != "js"}
         {assign var=num_visible_filter value=$num_visible_filter+1 }
     {/if}
@@ -65,7 +65,7 @@
                         </div>
                         {if $num_visible_filter}
                         <div class="adv-search-box" style="display: none;">
-                        {foreach $crud.filters as $f} 
+                        {foreach $crud.filter_columns as $f} 
                             {if $f.type != 'js'}
                             <div class="form-group col-4 mb-0 mt-1 {$f.css}">
                                 {if $f.type == 'select' || $f.type == 'tcg_select2'}
@@ -127,7 +127,7 @@
                         {/if}
                         {else if $crud.filter}
                         <div class="row">
-                        {foreach $crud.filters as $f} 
+                        {foreach $crud.filter_columns as $f} 
                             {if $f.type != 'js'}
                             <div class="form-group col-4 mb-0 mt-1 {$f.css}">
                                  {if $f.type == 'select' || $f.type == 'tcg_select2'}

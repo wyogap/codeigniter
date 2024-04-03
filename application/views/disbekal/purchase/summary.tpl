@@ -133,6 +133,8 @@
 
 </style>
 
+{include file="disbekal/css.tpl"}
+
 <div class="content-header">
     <div class="container-fluid">
         <div class="row ">

@@ -1,6 +1,6 @@
 
 <!-- bootstrap. bundle includes popper.js -->
-<script src="{$base_url}assets/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="{$base_url}assets/bootstrap-4.6.2/js/bootstrap.bundle.min.js"></script>
 
 <script src="{$base_url}assets/bootstrap-datepicker/js/bootstrap-datepicker.min.js" defer></script>
 
@@ -22,6 +22,7 @@
 
 {if !empty($use_datatable)}
 <!-- datatables -->
+
 <script src="{$base_url}assets/datatables/DataTables-1.10.20/js/jquery.dataTables.min.js" defer></script>
 <script src="{$base_url}assets/datatables/DataTables-1.10.20/js/dataTables.bootstrap4.min.js" defer></script>
 <script src="{$base_url}assets/datatables/Responsive-2.2.3/js/dataTables.responsive.min.js" defer></script>
@@ -33,11 +34,7 @@
 <script src="{$base_url}assets/datatables/Buttons-1.6.1/js/buttons.bootstrap4.min.js" defer></script>
 <script src="{$base_url}assets/datatables/Buttons-1.6.1/js/buttons.html5.min.js" defer></script>
 <script src="{$base_url}assets/datatables/JSZip-2.5.0/jszip.min.js" defer></script>
-<!--
-<script src="{$base_url}assets/datatables/Buttons-1.6.1/js/buttons.flash.min.js" defer></script>
-<script src="{$base_url}assets/datatables/Buttons-1.6.1/js/buttons.print.min.js" defer></script> -->
 
-<!-- datatables : spreadsheet like key -->
 <script src="{$base_url}assets/datatables/KeyTable-2.5.1/js/dataTables.keyTable.min.js" defer></script>
 <script src="{$base_url}assets/datatables/KeyTable-2.5.1/js/keyTable.bootstrap4.min.js" defer></script>
 

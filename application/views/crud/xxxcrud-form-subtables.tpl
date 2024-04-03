@@ -2,8 +2,9 @@
 
     <ul class="nav nav-pills nav-justified">
         {assign var=is_active value=true}
+        {var_dump($subtables)}
         {foreach $subtables as $subtbl}
-        <li class="nav-item">
+        <li class="nav-item{if !empty($subtbl.css)} {$subtbl.css}{/if}">
             <a class="nav-link {if $is_active}active{/if}" href="#pane_{$subtbl.subtable_id}" data-toggle="tab">{$subtbl.label}</a>
         </li>
         {assign var=is_active value=false}
@@ -12,7 +13,7 @@
     <div class="tab-content" style="margin-top: 16px;">
         {assign var=is_active value=true}
         {foreach $subtables as $subtbl}
-        <div id="pane_{$subtbl.subtable_id}" class="tab-pane {if $is_active}active{/if}">
+        <div id="pane_{$subtbl.subtable_id}" class="tab-pane{if $is_active} active{/if}{if !empty($subtbl.css)} {$subtbl.css}{/if}">
             <div class="row" style="flex-grow: 1;"><div class="col-12">
                 <div class="card widget-inline">
                     <div class="card-body">

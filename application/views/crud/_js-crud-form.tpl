@@ -1,8 +1,8 @@
 
 <script id="crud-form-row" type="text/template">
     <div class="form-group row DTE_Field DTE_Field_Type_{literal}{{type}}{/literal} DTE_Field_Name_{literal}{{name}}{/literal}" id="DTE_Field_{literal}{{name}}{/literal}" data-id="{literal}{{name}}{/literal}">
-        <label data-dte-e="label" for="DTE_Field_{literal}{{name}}{/literal}" class="col-md-3 col-form-label form-label"></label>
-        <div data-dte-e="input-group" class="col-md-9 form-input">
+        <label data-dte-e="label" for="DTE_Field_{literal}{{name}}{/literal}" class="col-md-4 col-form-label form-label"></label>
+        <div data-dte-e="input-group" class="col-md-8 form-input">
             <div data-dte-e="input" id="{literal}{{name}}{/literal}_input_control" class="DTE_Field_InputControl form-input-control" style="display: block;">
                 <!-- actual input field here -->
                 <div data-dte-e="msg-error" class="form-text text-danger small d-none"></div>
@@ -18,8 +18,8 @@
 
 <script id="crud-detail-row" type="text/template">
     <div class="form-group row DTE_Field DTE_Field_Type_{literal}{{type}}{/literal} DTE_Field_Name_{literal}{{name}}{/literal}" id="DTE_Field_{literal}{{name}}{/literal}" data-id="{literal}{{name}}{/literal}">
-        <label data-dte-e="label" data-dte-col="{literal}{{name}}{/literal}" class="col-md-3 col-form-label form-label"></label>
-        <div data-dte-e="value-group" class="col-md-9 col-form-label">
+        <label data-dte-e="label" data-dte-col="{literal}{{name}}{/literal}" class="col-md-4 col-form-label form-label"></label>
+        <div data-dte-e="value-group" class="col-md-8 col-form-label">
             <div data-dte-e="value" data-dte-col="{literal}{{name}}{/literal}"
                 id="{literal}{{name}}{/literal}_value" class="DTE_Field_InputControl form-input-control" style="display: block;">
                 <!-- actual input field here -->
@@ -144,7 +144,7 @@
                 {/if}
 
                 {if !empty($editor.edit_info)}
-                "fieldInfo":  "{$col.edit_info}",
+                "fieldInfo":  "{$editor.edit_info}",
                 {/if}
 
                 {if isset($editor.edit_options)}
@@ -226,6 +226,8 @@
                 "mask": "#{$currency_thousand_separator}##0",
                 {else if $editor.edit_field|@count>1}
                 "type": "tcg_readonly",
+                {else if empty($editor.edit_type)}
+                "type": "tcg_text",
                 {else}
                 "type": '{$editor.edit_type}',
                 {/if}
@@ -250,14 +252,14 @@
                 {/if}
 
                 {if !empty($editor.edit_info)}
-                "fieldInfo":  "{$col.edit_info}",
+                "fieldInfo":  "{$editor.edit_info}",
                 {/if}
 
                 {if isset($editor.edit_def_value) && $editor.edit_def_value != null}
                 "def":  "{$editor.edit_def_value}",
                 {/if}
 
-                {if $editor.edit_type=='tcg_readonly' || (!empty($editor.edit_attr) && !empty($editor.edit_attr.readonly))}
+                {if $editor.edit_readonly || $editor.edit_type=='tcg_readonly' || (!empty($editor.edit_attr) && !empty($editor.edit_attr.readonly))}
                 "readonly": true,
                 {else}
                 "readonly": false,
@@ -330,7 +332,7 @@
             {/if}
 
             {foreach $tbl.columns as $col}
-            {if empty($col.editor) || empty($col.allow_edit)} {continue} {/if}
+            {if empty($col.editor) || empty($col.allow_insert)} {continue} {/if}
             {$editor = $col.editor}
 
             {       
@@ -349,6 +351,8 @@
                 "mask": "#{$currency_thousand_separator}##0",
                 {elseif $editor.edit_field|@count>1}
                 "type": "tcg_readonly",
+                {else if empty($editor.edit_type)}
+                "type": "tcg_text",
                 {else}
                 "type": '{$editor.edit_type}',
                 {/if}
@@ -373,14 +377,14 @@
                 {/if}
 
                 {if !empty($editor.edit_info)}
-                "fieldInfo":  "{$col.edit_info}",
+                "fieldInfo":  "{$editor.edit_info}",
                 {/if}
 
                 {if isset($editor.edit_def_value) && $editor.edit_def_value != null}
                 "def":  "{$editor.edit_def_value}",
                 {/if}
 
-                {if $editor.edit_type=='tcg_readonly' || (!empty($editor.edit_attr) && !empty($editor.edit_attr.readonly))}
+                {if empty($col.allow_edit) || $editor.edit_type=='tcg_readonly' || (!empty($editor.edit_attr) && !empty($editor.edit_attr.readonly))}
                 "readonly": true,
                 {else}
                 "readonly": false,
@@ -539,7 +543,7 @@
                 field.addClass("d-none");
 
                 //check for compulsory field
-                if (conf.compulsory && (val === undefined || val === null || val == "")) {
+                if (conf.compulsory && (val === undefined || val === null || val === "")) {
                     field.html("{__('Harus diisi')}");
                     field.removeClass("d-none");
                     error = true;

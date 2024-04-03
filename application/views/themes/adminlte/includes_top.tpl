@@ -3,7 +3,7 @@
 <!-- <link rel="shortcut icon" href="http://localhost/academy/uploads/system/favicon.png"> -->
 
 <!-- bootstrap -->
-<link href="{$base_url}assets/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+<link href="{$base_url}assets/bootstrap-4.6.2/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
 
 <link href="{$base_url}assets/bootstrap-datepicker/css/bootstrap-datepicker.min.css" rel="stylesheet" type="text/css" />
 
@@ -128,137 +128,174 @@
 
 <style>
 
-.modal-content.DTE_Action_Remove {
-    margin-left: auto;
-    margin-right: auto;
-}
+    /* change bootstrap default font size */
+    html {
+        font-size: 14px;
+    }
 
-#toast-container>div {
-    opacity: 1;
-}
+    /* Hack: editor popup must be over the popover modal */
+    .modal.DTED.show {
+        z-index: 1070 !important;
+    }
 
-.toast {
-    background-color: var(--primary) !important;
-}
-
-.toast-success {
-    background-color: var(--success) !important;
-}
-
-.toast-error {
-    background-color: var(--danger) !important;
-}
-
-.toast-info {
-    background-color: var(--info) !important;
-}
-
-.toast-warning {
-    background-color: var(--warning) !important;
-}
-
-.form-group label .required {
-    color: var(--danger);
-}
-
-/* hack */
-.select2-container--default .select2-results__option[aria-selected=true] {
-    background-color: #ddd;
-    color: #313a46;
-}
-
-.nav-tabs .nav-item {
-    min-width: 100px;
-    text-align: center;
-    margin-bottom: -1px;
-}
-
-table.dataTable.nowrap th, table.dataTable.nowrap td {
-    white-space: normal;
-}
-
-@media (min-width: 576px) {
-    .modal-dialog {
-        max-width: 500px;
-        margin: 1.75rem auto;
-    }    
-
+    /* Hack: set remove popup to center */
     .modal-content.DTE_Action_Remove {
-        max-width: 500px;
-    }
-}
-
-@media (min-width: 768px) { 
-    .modal-dialog {
-        max-width: 700px;
-        margin: 1.75rem auto;
-    }    
-}
-
-@media (min-width: 992px) { 
-    .modal-dialog {
-        max-width: 900px;
-        margin: 1.75rem auto;
-    }    
-}
-
-// Extra large devices (large desktops, 1200px and up)
-@media (min-width: 1200px) { 
-
-}
-
-@media only screen and (max-width: 767px) {
-
-    .container-fluid {
-        padding-right: 0px;
-        padding-left: 0px;
+        margin-left: auto;
+        margin-right: auto;
     }
 
-    .container-fluid.header {
-        padding-right: 8px;
-        padding-left: 8px;
+    #toast-container>div {
+        opacity: 1;
+    }
+
+    .toast {
+        background-color: var(--primary) !important;
+    }
+
+    .toast-success {
+        background-color: var(--success) !important;
+    }
+
+    .toast-error {
+        background-color: var(--danger) !important;
+    }
+
+    .toast-info {
+        background-color: var(--info) !important;
+    }
+
+    .toast-warning {
+        background-color: var(--warning) !important;
+    }
+
+    .form-group label .required {
+        color: var(--danger);
+    }
+
+    /* hack */
+    .select2-container--default .select2-results__option[aria-selected=true] {
+        background-color: #ddd;
+        color: #313a46;
     }
 
     .nav-tabs .nav-item {
-        width: 100%;
+        min-width: 100px;
         text-align: center;
         margin-bottom: -1px;
     }
 
-    .nav-tabs .nav-item .nav-link {
-        border-color: #dee2e6;
-        border-radius: .25rem;
-    }
-
-    .btn-icon-circle {
-        width: 28px !important;
-        height: 28px !important;
-        margin: 0px 2px 2px !important;
-    }
-
-    .btn-icon-circle .fa {
-        font-size: .75em !important;
-    }
-
-    .btn-dropdown {
-        width: 28px !important;
-        height: 28px !important;
-    }
-
-    .btn-dropdown .fa {
-        font-size: .75em !important;
-    }
-
-    div.dataTables_wrapper div.dataTables_info {
+    table.dataTable.nowrap th, table.dataTable.nowrap td {
         white-space: normal;
     }
-}
+
+    @media (min-width: 576px) {
+        .modal-dialog {
+            max-width: 500px;
+            margin: 1.75rem auto;
+        }    
+
+        .modal-content.DTE_Action_Remove {
+            max-width: 500px;
+        }
+    }
+
+    @media (min-width: 768px) { 
+        .modal-dialog {
+            max-width: 700px;
+            margin: 1.75rem auto;
+        }    
+    }
+
+    @media (min-width: 992px) { 
+        .modal-dialog {
+            max-width: 900px;
+            margin: 1.75rem auto;
+        }    
+    }
+
+    /* Extra large devices (large desktops, 1200px and up) */
+    @media (min-width: 1200px) { 
+
+    }
+
+    @media only screen and (max-width: 767px) {
+
+        .container-fluid {
+            padding-right: 0px;
+            padding-left: 0px;
+        }
+
+        .container-fluid.header {
+            padding-right: 8px;
+            padding-left: 8px;
+        }
+
+        .nav-tabs .nav-item {
+            width: 100%;
+            text-align: center;
+            margin-bottom: -1px;
+        }
+
+        .nav-tabs .nav-item .nav-link {
+            border-color: #dee2e6;
+            border-radius: .25rem;
+        }
+
+        .btn-icon-circle {
+            width: 28px !important;
+            height: 28px !important;
+            margin: 0px 2px 2px !important;
+        }
+
+        .btn-icon-circle .fa {
+            font-size: .75em !important;
+        }
+
+        .btn-dropdown {
+            width: 28px !important;
+            height: 28px !important;
+        }
+
+        .btn-dropdown .fa {
+            font-size: .75em !important;
+        }
+
+        div.dataTables_wrapper div.dataTables_info {
+            white-space: normal;
+        }
+    }
 
 </style>
 
 <style>
+    /* 
     .os-theme-light>.os-scrollbar>.os-scrollbar-track>.os-scrollbar-handle {
         background-color: rgba(0, 0, 0, 0.15) !important;
+    } 
+    */
+
+    .os-theme-dark>.os-scrollbar>.os-scrollbar-track>.os-scrollbar-handle, 
+    .os-theme-light>.os-scrollbar>.os-scrollbar-track>.os-scrollbar-handle, 
+    .os-theme-dark>.os-scrollbar>.os-scrollbar-track, 
+    .os-theme-light>.os-scrollbar>.os-scrollbar-track  {
+        background-color: transparent !important;
+    }  
+
+    .os-padding {
+        margin-bottom: 16px;
+    }
+
+    .main-sidebar {
+        border-bottom-right-radius: 15px;
+        border-top-right-radius: 15px;
+    }
+
+    .os-padding .os-viewport {
+        overflow-y: auto;
+    }
+
+    .wrapper {
+        overflow-x: hidden;
     }
 
     /** OPTION DROPDOWN **/

@@ -1,6 +1,6 @@
 <script type="text/javascript">
 
-    {foreach $crud.filters as $f} 
+    {foreach $crud.filter_columns as $f} 
         {if $f.type == 'js'}{continue}{/if}
         {if isset($userdata['f_$f.name'])}
         var v_{$f.name} = "{$userdata['f_$f.name']}";
@@ -41,7 +41,7 @@
             todayHighlight: true
         });
 
-        {foreach $crud.filters as $f} 
+        {foreach $crud.filter_columns as $f} 
             {if $f.type == 'js'}{continue}{/if}
 
             {if ($f.type == 'select' || $f.type == 'tcg_select2')}
@@ -76,7 +76,7 @@
                 _onfilterchanging = true;
 
                 {* reset cascading filter if necessary *}
-                {foreach $crud.filters as $cascading}
+                {foreach $crud.filter_columns as $cascading}
                     {* check if it is cascading filter*}
                     {$flag = 0}
                     {foreach $cascading.cascading_filters as $param}
@@ -89,7 +89,7 @@
 
                 do_filter();
 
-                {foreach $crud.filters as $cascading}
+                {foreach $crud.filter_columns as $cascading}
                     {* check if it is cascading filter*}
                     {$flag = 0}
                     {foreach $cascading.cascading_filters as $param}
@@ -109,12 +109,12 @@
             do_filter();
         });
 
-        {foreach $crud.filters as $f} 
+        {foreach $crud.filter_columns as $f} 
 
         {/foreach}
     });
 
-    {foreach $crud.filters as $f} 
+    {foreach $crud.filter_columns as $f} 
     {if ($f.type == 'select' || $f.type == 'tcg_select2')}
     function populate_filter_{$f.name}() {
         let _options = [];
@@ -165,6 +165,18 @@
                         _options = response.data;
                     }
 
+                    if(_options.length == 0) {
+                        v_{$f.name} = null;
+                        $('#f_{$f.name}').attr("disabled", true);
+                    }
+                    else if(_options.length == 1) {
+                        v_{$f.name} = _options[0]['value'];
+                        $('#f_{$f.name}').attr("disabled", true);
+                    }
+                    else {
+                        $('#f_{$f.name}').attr("disabled", false);
+                    }
+
                     {if $f.type == 'tcg_select2'}
                     select2_build($('#f_{$f.name}'), "-- {$f.label} --", "", v_{$f.name}, _options, _attr, null);
                     {else}
@@ -180,7 +192,7 @@
                         window.location.href = "{$site_url}" +'auth';
                     }
                     //send toastr message
-                    toastr.error(errorMessage);
+                    toastr.error(textStatus);
                     //rebuild select2 with default options
                     {if $f.type == 'tcg_select2'}
                     select2_build($('#f_{$f.name}'), "-- {$f.label} --", "", v_{$f.name}, _options, _attr, null);
@@ -201,7 +213,7 @@
     function do_filter() {
 
         let flag = true;
-        {foreach $crud.filters as $f} 
+        {foreach $crud.filter_columns as $f} 
             {if $f.type == 'js' || !$f.is_required} {continue} {/if}
 
             if (v_{$f.name} == '' || v_{$f.name} == 0 || v_{$f.name} == null) {

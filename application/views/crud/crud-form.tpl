@@ -24,7 +24,7 @@
     {$tbl.editor_template}
 </div>
 {elseif count($tbl.column_groupings) > 1}
-<div id="{if $form_mode=='editor'}{$tbl.table_id}-editor-layout{else}{$tbl.table_id}-detail-layout{/if}" class="editor-layout">
+<div id="{if $form_mode=='edit'}{$tbl.table_id}-editor-layout{else}{$tbl.table_id}-detail-layout{/if}" class="editor-layout">
     <ul class="nav nav-pills nav-justified" id="{$tbl.table_id}-editor-tabs">
         {foreach from=$tbl.column_groupings key=i item=grp}
         <li class="nav-item">
@@ -40,9 +40,9 @@
         <div class="tab-pane {if $i==0}active{/if}" id="{$tbl.table_id}-{$grp.id}">
             <div class="row" style="flex-grow: 1;"><div class="col-12">
             <div class="card widget-inline">
-                <div class="card-body">
+                <div class="card-body row">
             {foreach from=$grp.editors key=j item=col}
-            <div class="form-group {$col.edit_css}" data-editor-template="{$col.name}"></div>
+            <div class="form-field col-12 {$col.edit_css}" data-editor-template="{$col.name}"></div>
             {/foreach}
                 </div>
             </div>
@@ -52,14 +52,16 @@
     </div>
 </div>
 {else}
-<div id="{if $form_mode=='editor'}{$tbl.table_id}-editor-layout{else}{$tbl.table_id}-detail-layout{/if}" class="row" style="flex-grow: 1;"><div class="col-12">
+<div id="{if $form_mode=='edit'}{$tbl.table_id}-editor-layout{else}{$tbl.table_id}-detail-layout{/if}" class="row" style="flex-grow: 1;"><div class="col-12">
 <div class="card widget-inline">
-    <div class="card-body">
+    <div class="card-body row">
     {if !empty($level1_column)}
-        <div class="form-group d-none" data-editor-template="{$level1_column}"></div>
+        <div class="form-field d-none" data-editor-template="{$level1_column}"></div>
     {/if}
     {foreach $tbl.columns as $col}
-        <div class="form-group {$col.css}" data-editor-template="{$col.name}"></div>
+        {if empty($col.editor)}{continue}{/if}
+        {$col=$col.editor}
+        <div class="form-field col-12 {$col.edit_css}" data-editor-template="{$col.name}"></div>
     {/foreach}
     </div>
 </div>

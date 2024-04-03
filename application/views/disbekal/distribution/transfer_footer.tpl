@@ -2,95 +2,245 @@
 
 <script type="text/javascript">
 
-// function onchange_demandtype(field, oldvalue, newvalue, editor) {
-//     if (newvalue == "0") {
-//         editor.field('frequency').hide();
-//         editor.field('frequencyunit').hide();
-//         editor.field('enddate').hide();
-//     } else {
-//         editor.field('frequency').show();
-//         editor.field('frequencyunit').show();
-//         editor.field('enddate').show();
-//     }
-// }
+    // function onchange_demandtype(field, oldvalue, newvalue, editor) {
+    //     if (newvalue == "0") {
+    //         editor.field('frequency').hide();
+    //         editor.field('frequencyunit').hide();
+    //         editor.field('enddate').hide();
+    //     } else {
+    //         editor.field('frequency').show();
+    //         editor.field('frequencyunit').show();
+    //         editor.field('enddate').show();
+    //     }
+    // }
 
-function onselect_perintahtransfer(dt, api, table_name) {
-    let cnt = dt.rows('.selected').data().length;
+    function onselect_perintahtransfer(dt, api, table_name) {
+        let cnt = dt.rows('.selected').data().length;
 
-    if (cnt == 0) {
-        $("#tdata_148_wrapper .dt-action-buttons .dt-buttons").hide();
+        if (cnt == 0) {
+            $("#tdata_148_wrapper .dt-action-buttons .dt-buttons").hide();
 
-    }
-    else if (cnt == 1){
-        $("#tdata_148_wrapper .dt-action-buttons .dt-buttons").show();
-        let status = dt.rows('.selected').data().pluck('status')[0];
-        if (status == 'DRAFT') {
-            $("#tdata_148_wrapper .dt-action-buttons .buttons-create").show();
-            $("#tdata_148_wrapper .dt-action-buttons .buttons-edit").show();
-            $("#tdata_148_wrapper .dt-action-buttons .buttons-remove").show();
-            $("#tdata_148_wrapper .dt-action-buttons .btn-import").show();
+        }
+        else if (cnt == 1){
+            $("#tdata_148_wrapper .dt-action-buttons .dt-buttons").show();
+            let status = dt.rows('.selected').data().pluck('status')[0];
+            if (status == 'DRAFT') {
+                $("#tdata_148_wrapper .dt-action-buttons .buttons-create").show();
+                $("#tdata_148_wrapper .dt-action-buttons .buttons-edit").show();
+                $("#tdata_148_wrapper .dt-action-buttons .buttons-remove").show();
+                $("#tdata_148_wrapper .dt-action-buttons .btn-import").show();
 
+            }
+            else {
+                $("#tdata_148_wrapper .dt-action-buttons .buttons-create").hide();
+                $("#tdata_148_wrapper .dt-action-buttons .buttons-edit").hide();
+                $("#tdata_148_wrapper .dt-action-buttons .buttons-remove").hide();
+                $("#tdata_148_wrapper .dt-action-buttons .btn-import").hide();
+
+            }
         }
         else {
-            $("#tdata_148_wrapper .dt-action-buttons .buttons-create").hide();
-            $("#tdata_148_wrapper .dt-action-buttons .buttons-edit").hide();
-            $("#tdata_148_wrapper .dt-action-buttons .buttons-remove").hide();
-            $("#tdata_148_wrapper .dt-action-buttons .btn-import").hide();
+            $("#tdata_148_wrapper .dt-action-buttons .dt-buttons").hide();
 
         }
     }
-    else {
-        $("#tdata_148_wrapper .dt-action-buttons .dt-buttons").hide();
 
-    }
-}
-
-function onadd_pengadaan() {
-    alert("OnAdd");
-}
-
-function onedit_pengadaan() {
-    alert("OnEdit");
-}
-
-function ondelete_pengadaan() {
-    alert("OnDelete");
-}
-
-function conditional_edit(data, row, meta) {
-    if (data['status'] == 'DRAFT') {
-        return 1;
+    function onadd_pengadaan() {
+        alert("OnAdd");
     }
 
-    return 0;
-}
-
-function conditional_delete(data, row, meta) {
-    if (data['status'] == 'DRAFT') {
-        return 1;
+    function onedit_pengadaan() {
+        alert("OnEdit");
     }
 
-    return 0;
-}
-
-function conditional_approve(data, row, meta) {
-    if (data['status'] == 'DRAFT') {
-        return 1;
+    function ondelete_pengadaan() {
+        alert("OnDelete");
     }
 
-    return 0;
-}
+    function conditional_edit(data, row, meta) {
+        if (data['status'] == 'DRAFT') {
+            return 1;
+        }
 
-function conditional_close(data, row, meta) {
-    if (data['status'] == 'APPR') {
-        return 1;
+        return 0;
     }
 
-    return 0;
-}
+    function conditional_delete(data, row, meta) {
+        if (data['status'] == 'DRAFT') {
+            return 1;
+        }
+
+        return 0;
+    }
+
+    function conditional_approve(data, row, meta) {
+        if (data['status'] == 'DRAFT') {
+            return 1;
+        }
+
+        return 0;
+    }
+
+    function conditional_close(data, row, meta) {
+        if (data['status'] == 'APPR') {
+            return 1;
+        }
+
+        return 0;
+    }
+
+
+    function onclick_approve(rowIdx, dt, id) {
+        let row = dt.row("#"+id);
+        let data = row.data();
+        let label = data['transferrequestnum'];
+
+        //clear selection
+        //dt.rows().deselect();
+        row.select();
+
+        $.confirm({
+            title: 'Konfirmasi',
+            content: 'Setujui Perintah Transfer ' +label+ '?',
+            closeIcon: true,
+            columnClass: 'medium',
+            buttons: {
+                cancel: {
+                    text: 'Batal',
+                    keys: ['enter', 'shift'],
+                    action: function(){
+                        //do nothing
+                    }
+                },
+                confirm: {
+                    text: 'OK',
+                    btnClass: 'btn-info',
+                    action: function(){
+                        $.ajax({
+                            url: "{$site_url}disbekal/wfinventory/approvetr",
+                            type: 'POST',
+                            data: { id: id },
+                            dataType: 'json',
+                            // IMPORTANT: DO NOT set content-type to JSON. It is not supported well by codeigniter
+                            // beforeSend: function(request) {
+                            //     request.setRequestHeader("Content-Type", "application/json");
+                            // },
+                            success: function(response) {
+                                if (response.status === null || response.status == 0 || (response.error !== undefined && response.error !== null && response.error !== '')) {
+                                    //error
+                                    let msg = "Tidak spesifik";
+                                    if (response.error !== undefined && response.error !== null && response.error !== '') {
+                                        msg = response.error;
+                                    }
+                                    toastr.error("Tidak berhasil menyetujui Perintah Transfer " +label)
+                                    toastr.error(msg)
+                                    return;
+                                }
+
+                                //successful - reload
+                                if (response.data !== undefined && response.data !== null) {
+                                    row.data(response.data);
+                                }
+                                
+                                toastr.success("Berhasil menyetujui Perintah Transfer " +label+ ".");
+
+                                onselect_perintahtransfer(dt, null, null);
+                            },
+                            error: function(jqXhr, textStatus, errorMessage) {
+                                if (jqXhr.status == 403 || errorMessage == 'Forbidden' || 
+                                    (jqXhr.responseJSON !== undefined && jqXhr.responseJSON != null 
+                                        && jqXhr.responseJSON.error != undefined && jqXhr.responseJSON.error == 'not-login')
+                                    ) {
+                                    //login ulang
+                                    window.location.href = "{$site_url}" +'auth';
+                                }
+                                //send toastr message
+                                toastr.error(textStatus);
+                            }
+                        });
+                    }
+                },
+            }
+        });           
+    }
+
+    function onclick_close(rowIdx, dt, id) {
+        let row = dt.row("#"+id);
+        let data = row.data();
+        let label = data['transferrequestnum'];
+
+        //clear selection
+        //dt.rows().deselect();
+        row.select();
+
+        $.confirm({
+            title: 'Konfirmasi',
+            content: 'Arsipkan Perintah Transfer ' +label+ '?',
+            closeIcon: true,
+            columnClass: 'medium',
+            buttons: {
+                cancel: {
+                    text: 'Batal',
+                    keys: ['enter', 'shift'],
+                    action: function(){
+                        //do nothing
+                    }
+                },
+                confirm: {
+                    text: 'OK',
+                    btnClass: 'btn-info',
+                    action: function(){
+                        $.ajax({
+                            url: "{$site_url}disbekal/wfinventory/closetr",
+                            type: 'POST',
+                            data: { id: id },
+                            dataType: 'json',
+                            // IMPORTANT: DO NOT set content-type to JSON. It is not supported well by codeigniter
+                            // beforeSend: function(request) {
+                            //     request.setRequestHeader("Content-Type", "application/json");
+                            // },
+                            success: function(response) {
+                                if (response.status === null || response.status == 0 || (response.error !== undefined && response.error !== null && response.error !== '')) {
+                                    //error
+                                    let msg = "Tidak spesifik";
+                                    if (response.error !== undefined && response.error !== null && response.error !== '') {
+                                        msg = response.error;
+                                    }
+                                    toastr.error("Tidak berhasil mengarsipkan Perintah Transfer " +label)
+                                    toastr.error(msg)
+                                    return;
+                                }
+
+                                //successful - reload
+                                if (response.data !== undefined && response.data !== null) {
+                                    row.data(response.data);
+                                }
+                                
+                                toastr.success("Berhasil mengarsipkan Perintah Transfer " +label+ ".");
+
+                                onselect_perintahtransfer(dt, null, null);
+                            },
+                            error: function(jqXhr, textStatus, errorMessage) {
+                                if (jqXhr.status == 403 || errorMessage == 'Forbidden' || 
+                                    (jqXhr.responseJSON !== undefined && jqXhr.responseJSON != null 
+                                        && jqXhr.responseJSON.error != undefined && jqXhr.responseJSON.error == 'not-login')
+                                    ) {
+                                    //login ulang
+                                    window.location.href = "{$site_url}" +'auth';
+                                }
+                                //send toastr message
+                                toastr.error(textStatus);
+                            }
+                        });
+                    }
+                },
+            }
+        });           
+    }
+
 </script>
 
-<script type="text/javascript">
+<!-- <script type="text/javascript">
 
 $(document).ready(function() {
 
@@ -126,7 +276,7 @@ $(document).ready(function() {
                 window.location.href = "{$site_url}" +'auth';
             }
             //send toastr message
-            toastr.error(errorMessage);
+            toastr.error(textStatus);
             //build select2 with default options
             select2_build($('#f_siteid'), '-- Satuan Kerja --', '', '', null, _attr);
             // select_build($('#edit-korwil'), _options, _attr);
@@ -157,7 +307,7 @@ $(document).ready(function() {
                 window.location.href = "{$site_url}" +'auth';
             }
             //send toastr message
-            toastr.error(errorMessage);
+            toastr.error(textStatus);
             //build select2 with options
             select2_build($('#f_itemtypeid'), '-- Tipe Bekal --', '', '', null, _attr);
             // select_build($('#edit-korwil'), _options, _attr);
@@ -166,7 +316,7 @@ $(document).ready(function() {
 
 });
 
-</script>
+</script> -->
 
 {if $crud.filter || $crud.search}
 {include file='crud/_js-crud-filter.tpl'}

@@ -16,10 +16,11 @@ class Invstatus extends CI_Controller
         }
 
         //one-by-one. dont do in bulk
-        $id = $this->input->post('id');
+        $ids = $this->input->post('ids');
+        $ids = explode(',', $ids);
 
         $this->load->model('disbekal/Minventory');
-        $cnt = $this->Minventory->approve_writeoff($id);
+        $cnt = $this->Minventory->writeoff($ids);
 
         $json['status'] = 1;
         $json['count'] = $cnt;

@@ -10,9 +10,53 @@ class Minventory extends Mcrud_tablemeta
     }
 
     /**
+     * Delete all pending invreceive
+     */
+    public function delete_stockin_all() {
+        $userid = $this->session->userdata('user_id');
+
+        $tag = time();
+
+        $sql = "update tcg_invreceive a
+        set a.is_deleted=1, a.updated_on=now(), a.updated_by=?, a.tag=?
+        where a.status='DRAFT' and a.is_deleted=0";
+
+        $query = $this->db->query($sql, array($userid, $tag));
+        
+        $affected = $this->db->affected_rows();
+        if ($affected == 0) return 0;
+
+        return $affected;
+    }
+
+    /**
      * Change invreceive status from DRAFT to COMP. Create correspondingn new entry in inventory
      */
-    public function approve_receiving($ids) {
+    public function approve_stockin_all() {
+        $userid = $this->session->userdata('user_id');
+
+        $tag = time();
+
+        $sql = "update tcg_invreceive a
+        set a.tag=?
+        where a.status='DRAFT' and a.is_deleted=0";
+
+        $query = $this->db->query($sql, array($tag));
+        
+        $affected = $this->db->affected_rows();
+        if ($affected == 0) return 0;
+
+        //execute the bulk changes
+        $sql = "call usp_stockin_approvebytag(?,?)";
+        $query = $this->db->query($sql, array($tag, $userid));
+
+        return $affected;
+    }
+
+    /**
+     * Change invreceive status from DRAFT to COMP. Create correspondingn new entry in inventory
+     */
+    public function approve_stockin($ids) {
         if (empty($ids)) return 0;
 
         $userid = $this->session->userdata('user_id');
@@ -43,7 +87,7 @@ class Minventory extends Mcrud_tablemeta
     /**
      * Change invusage status from DRAFT to COMP
      */
-    public function approve_usage($ids) {
+    public function approve_stockout($ids) {
         if (empty($ids)) return 0;
 
         $userid = $this->session->userdata('user_id');
@@ -178,7 +222,7 @@ class Minventory extends Mcrud_tablemeta
             $this->db->where("YEAR(a.receiveddate)", $year);
         }
         if (!empty($itemtypeid)) {
-            $this->db->where("e.typeid", $itemtypeid);
+            $this->db->where("d.typeid", $itemtypeid);
         }
         if (!empty($siteid)) {
             $this->db->join("tcg_site x", "x.siteid=c.siteid AND x.is_deleted=0", "INNER");
@@ -196,7 +240,7 @@ class Minventory extends Mcrud_tablemeta
         $this->db->reset_query();
 
         $this->db->select("a.*");
-        $this->db->select("b.`description` as `itemid_label`");
+        $this->db->select("b.`description` as `itemid_label`, b.categoryid, b.typeid as itemtypeid, b.fastmoving");
         $this->db->select("c.`name` as `manufacturerid_label`");
         $this->db->select("d.`name` as `vendorid_label`");
         $this->db->select("e.`storecode` as `storeid_label`");
@@ -209,6 +253,7 @@ class Minventory extends Mcrud_tablemeta
         $this->db->select("a.`status` as `status_label`");
         $this->db->select("m.`filename` as `file1_filename`, m.`web_path` as `file1_path`, m.`thumbnail_path` as `file1_thumbnail`");
         $this->db->select("n.`label` as `unit_label`, o.label as shelflifeunit_label");
+        $this->db->select("p.`description` as `categoryid_label`, q.typecode as itemtypeid_label");
         //$this->db->from("tcg_invreceive a");
         $this->db->join("tcg_item b", "a.`itemid`=b.`itemid` AND b.`is_deleted`=0", "LEFT OUTER");
         $this->db->join("tcg_manufacturer c", "a.`manufacturerid`=c.`manufacturerid` AND c.`is_deleted`=0 ", "LEFT OUTER");
@@ -225,11 +270,12 @@ class Minventory extends Mcrud_tablemeta
         $this->db->join("lk_unit n", "a.`unit`=n.`unit` AND n.`is_deleted`=0", "LEFT OUTER");
         $this->db->join("dbo_lookups o", "a.`shelflifeunit`=o.`value` AND o.`is_deleted`=0 AND o.`group`='date_unit'", "LEFT OUTER");
         $this->db->join("tcg_itemcategory p", "p.categoryid=b.categoryid and p.is_deleted=0", "LEFT OUTER");
+        $this->db->join("tcg_itemtype q", "q.typeid=b.typeid and q.is_deleted=0", "LEFT OUTER");
 
         //filter
         $this->db->where($filter);
         if (!empty($itemtypeid)) {
-            $this->db->where("p.typeid", $itemtypeid);
+            $this->db->where("b.typeid", $itemtypeid);
         }
         if (!empty($siteid)) {
             $this->db->join("tcg_site x", "x.siteid=f.siteid AND x.is_deleted=0", "INNER");
@@ -316,7 +362,7 @@ class Minventory extends Mcrud_tablemeta
         unset($filter['typeid']);
 
         $this->db->select("a.inventoryid as value, concat(b.description, ' (', a.inventorycode, '-', year(a.receiveddate),')') as label");
-        $this->db->select("c.categoryid, c.typeid as itemtypeid");
+        $this->db->select("c.categoryid, b.typeid as itemtypeid");
         //$this->db->from("tcg_po a");
         $this->db->join("tcg_item b", "b.itemid=a.itemid AND b.is_deleted=0", "INNER");
         $this->db->join("tcg_itemcategory c", "c.categoryid=b.categoryid AND c.is_deleted=0", "LEFT OUTER");
@@ -333,7 +379,7 @@ class Minventory extends Mcrud_tablemeta
             }
         }
         if (!empty($typeid)) {
-            $this->db->where("c.typeid", $typeid);
+            $this->db->where("b.typeid", $typeid);
         }
 
         //soft delete
@@ -351,6 +397,85 @@ class Minventory extends Mcrud_tablemeta
         return $arr;
     }
 
+    function addx($valuepair, $enforce_edit_columns = true) {
+
+        // $typeid = $this->session->userdata("itemtypeid");
+        // if (!empty($typeid)) {
+        //     //enforce
+        //     $valuepair['itemtypeid'] = $typeid;
+        // }
+
+        // $siteid = $this->session->userdata("siteid");
+        // if (!empty($valuepair['siteid'])) {
+        //     $this->load->model('disbekal/Msite');
+        //     $siteid = $this->Msite->check_siteid($valuepair['siteid']);
+        // }
+        // if (!empty($siteid)) {
+        //     //enforce
+        //     $valuepair['siteid'] = $siteid;
+        // }
+
+        $valuepair['status'] = 'DRAFT';
+        
+        //default
+        unset($valuepair['inventoryid_label']);
+        unset($valuepair['itemid_label']);
+
+        //TODO: check against userdata('typeid') and userdata('siteid')
+
+        $id = parent::add($valuepair, $enforce_edit_columns);
+
+        // if ($id > 0) {
+        //     //run data consistency
+        //     $pengguna_id = $this->session->userdata("user_id");
+        //     $this->db->query("call usp_usage_dataconsistency(?,?)", array($id,$pengguna_id));
+        // }
+
+        return $id;
+    }   
+
+    function updatex($id, $valuepair, $filter = null, $enforce_edit_columns = true) {
+        if ($filter == null)    $filter = array();
+
+        $typeid = $this->session->userdata("itemtypeid");
+        if (!empty($typeid)) {
+            //enforce
+            $filter['typeid'] = $typeid;
+            $valuepair['typeid'] = $typeid;
+        }
+
+        $siteid = $this->session->userdata("siteid");
+        if (!empty($valuepair['siteid'])) {
+            $this->load->model('disbekal/Msite');
+            $siteid = $this->Msite->check_siteid($valuepair['siteid']);
+        }
+        if (!empty($siteid)) {
+            //enforce
+            $filter['siteid'] = $siteid;
+            $valuepair['siteid'] = $siteid;
+        }
+
+        $result = parent::update($id, $valuepair, $filter, $enforce_edit_columns);
+
+        if ($result > 0) {
+            //run data consistency
+            $pengguna_id = $this->session->userdata("user_id");
+            $this->db->query("call usp_usage_dataconsistency(?,?)", array($id,$pengguna_id));
+        }
+
+        return $result;
+    }   
+
+    function deletex($id, $filter = null) {
+ 
+        //TODO: check against userdata('typeid') and userdata('siteid')
+
+        parent::delete($id, $filter);
+
+        //run data consistency
+        $pengguna_id = $this->session->userdata("user_id");
+        $this->db->query("call usp_usage_dataconsistency(?,?)", array($id,$pengguna_id));
+    }     
 }
 
   

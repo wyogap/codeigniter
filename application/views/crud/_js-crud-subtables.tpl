@@ -16,7 +16,7 @@ $(document).ready(function() {
                 selected: true
             }).data();
 
-            if (data.length == 0) {
+            if (data.length == 0 || data.length > 1) {
                 //on deselect all, clear subtables
                 {foreach $subtables as $subtbl}
                 dt_{$subtbl.crud.table_id}.clear().draw();
@@ -24,6 +24,8 @@ $(document).ready(function() {
                 fkey_label_{$subtbl.crud.table_id} = "";
                 fdata_{$subtbl.crud.table_id} = null;
                 fkey_column_{$subtbl.crud.table_id} = "";
+                //disable edit        
+                $("#{$subtbl.crud.table_id}_wrapper .dt-action-buttons .dt-buttons").hide();
                 {/foreach}
             } else {
                 //on select, reload subtables
@@ -39,6 +41,8 @@ $(document).ready(function() {
                 {/if}
                 //reload retain paging
                 dt_{$subtbl.crud.table_id}.ajax.reload(null, false);
+                //enable edit (if necessary)
+                $("#{$subtbl.crud.table_id}_wrapper .dt-action-buttons .dt-buttons").show();
                 {/foreach}
             }
 
@@ -50,4 +54,8 @@ $(document).ready(function() {
 
 {foreach $subtables as $subtbl}
     {include file="crud/_js-crud-table.tpl" tbl=$subtbl.crud fsubtable='1' fkey=$subtbl.subtable_fkey_column flabel=$subtbl.label}
+    
+    //default disable edit in subtable
+    $("#{$subtbl.crud.table_id}_wrapper .dt-action-buttons .dt-buttons").hide();
 {/foreach}
+

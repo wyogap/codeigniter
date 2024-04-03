@@ -24,10 +24,12 @@ class Admin extends Base_Crud {
 		$navigation = $this->Mnavigation->get_navigation($this->session->userdata('role_id'));
 		$page_data['navigation']	 = $navigation;
 
+		$page_data['use_datatable'] = 1;
 		$page_data['use_geo'] = 1;
+		$page_data['use_select2'] = 1;
 		
 		// $this->smarty->render_theme('sistem/home.tpl', $page_data);
-		$this->smarty->render_theme('disbekal/kadis/dashboard.tpl', $page_data);
+		$this->smarty->render_theme('/disbekal/inventory/pencarian.tpl', $page_data);
 	}
 
 	public function api() {

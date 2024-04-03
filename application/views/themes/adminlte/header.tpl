@@ -7,8 +7,8 @@
                     class="fas fa-bars"></i></a>
         </li>
         <li class="nav-item">
-            <div class="nav-link page-title d-md-none"><b>{$app_short_name}</b></div>
-            <div class="nav-link page-title d-none d-md-block"><b>{$app_name}</b></div>
+            <div class="nav-link page-header d-md-none"><b>{$app_short_name}</b></div>
+            <div class="nav-link page-header d-none d-md-block"><b>{$app_name}</b></div>
         </li>
     </ul>
 

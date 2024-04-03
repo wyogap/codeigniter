@@ -10,6 +10,114 @@ class Mdashboard extends CI_Model
         //TODO
     }
 
+    public function fastmoving($storeid) {
+        $this->db->select("a.inventoryid, a.inventorycode, c.description as itemid_label, a.receiveddate, a.availableamount");
+        $this->db->join("tcg_item c", "c.itemid=a.itemid and c.is_deleted=0", "INNER");
+        $this->db->where("a.is_deleted", 0);
+        $this->db->where("a.storeid", $storeid);
+        $this->db->where("c.fastmoving=1");
+
+        $query = $this->db->get("tcg_inventory a");
+        if ($query == null)     return $query;
+
+        return $query->result_array();
+    }
+
+    public function rusakkadaluarsa($storeid) {
+        $this->db->select("b.inventoryid, b.inventorycode, c.description as itemid_label, a.status, d.label as status_label, a.statusupdatedate, a.count as amount");
+        $this->db->join("tcg_inventory b", "b.inventoryid=a.inventoryid and b.is_deleted=0", "INNER");
+        $this->db->join("tcg_item c", "c.itemid=b.itemid and c.is_deleted=0", "INNER");
+        $this->db->join("lk_status d", "d.value=a.status and d.is_deleted=0 and d.domain='stock_status'", "LEFT OUTER");
+        $this->db->where("a.is_deleted", 0);
+        $this->db->where("b.storeid", $storeid);
+        $this->db->group_start();
+        $this->db->where("a.status", "EXPIRED");
+        $this->db->or_where("a.status", "BROKEN");
+        $this->db->group_end();
+
+        $query = $this->db->get("tcg_invstatus a");
+        if ($query == null)     return $query;
+
+        return $query->result_array();
+    }
+
+    public function lowstock($storeid) {
+        $this->db->select("a.itemid, c.description as itemid_label, d.typecode as itemtypeid_label, c.fastmoving, a.minstock, a.count as availableamount, (a.minstock-a.count) as gapamount");
+        $this->db->join("tcg_item c", "c.itemid=a.itemid and c.is_deleted=0", "INNER");
+        $this->db->join("tcg_itemtype d", "d.typeid=c.typeid and d.is_deleted=0", "LEFT OUTER JOIN");
+        $this->db->where("a.storeid", $storeid);
+
+        $query = $this->db->get("rpt_lowstock a");
+        if ($query == null)     return $query;
+
+        return $query->result_array();
+    }
+
+    public function gisdetail($siteid, $itemtypeid, $age, $storeids, $str) {
+        //default
+        $v_siteid = $this->session->userdata("siteid");
+        if (!empty($siteid)) {
+            $this->load->model('disbekal/Msite');
+            $v_siteid = $this->Msite->check_siteid($siteid);
+        }
+        $siteid = $v_siteid;
+
+        $v_itemtypeid = $this->session->userdata("itemtypeid");
+        if (empty($v_itemtypeid) && !empty($itemtypeid)) {
+            $v_itemtypeid = $itemtypeid;
+        }
+        $itemtypeid = $v_itemtypeid;
+
+        if (!empty($storeids)) {
+            $storeids = explode(",", $storeids);
+        }
+
+        $this->db->select("a.inventorycode, a.availableamount, YEAR(a.receiveddate) as year");
+        $this->db->select("c.storecode as storeid_label, b.description as itemid_label");
+        $this->db->from("tcg_inventory a");
+        $this->db->join("tcg_item b", "b.itemid=a.itemid and b.is_deleted=0", "INNER");
+        $this->db->join("tcg_store c", "c.storeid=a.storeid and c.is_deleted=0", "INNER");
+        if (!empty($siteid)) {
+            $this->db->join("tcg_site d", "d.siteid=c.siteid and d.is_deleted=0", "INNER");
+            $this->db->join("tcg_site e", "e.siteid=d.parentid and e.is_deleted=0", "LEFT OUTER");
+            $this->db->join("tcg_site f", "f.siteid=e.parentid and f.is_deleted=0", "LEFT OUTER");
+            $this->db->group_start();
+            $this->db->where("d.siteid", $siteid);
+            $this->db->or_where("e.siteid", $siteid);
+            $this->db->or_where("f.siteid", $siteid);
+            $this->db->group_end();
+        }
+        $this->db->join("tcg_itemcategory g", "g.categoryid=b.categoryid and g.is_deleted=0", "INNER");
+        if (!empty($itemtypeid)) {
+            $this->db->where("b.typeid", $itemtypeid);
+        }
+        if (!empty($str)) {
+            $this->db->like("UPPER(b.description)",strtoupper($str));
+        }
+        if (!empty($age)) {
+            if ($age == 0) {
+                $this->db->where("YEAR(a.receiveddate)=YEAR(curdate())");
+            } else if ($age == 1) {
+                $this->db->where("YEAR(curdate())-YEAR(a.receiveddate)>=1 and YEAR(curdate())-YEAR(a.receiveddate)<=2");
+            } else if ($age == 2) {
+                $this->db->where("YEAR(curdate())-YEAR(a.receiveddate)>=3 and YEAR(curdate())-YEAR(a.receiveddate)<=4");
+            } else if ($age == 3) {
+                $this->db->where("YEAR(curdate())-YEAR(a.receiveddate)>=5");
+            }
+        }
+        if (!empty($storeids)) {
+            $this->db->where_in("a.storeid", $storeids);
+        }
+        $this->db->where("a.is_deleted", 0);
+        $this->db->where("a.status", 'INSTOCK');
+        $this->db->where("a.availableamount>0");
+
+        $result = $this->db->get()->result_array();
+        if ($result == null)    return $result;
+
+        return $result;
+    }
+
     public function gissearch($siteid, $itemtypeid, $age, $str) {
         //default
         $v_siteid = $this->session->userdata("siteid");
@@ -26,6 +134,10 @@ class Mdashboard extends CI_Model
         $itemtypeid = $v_itemtypeid;
 
         $this->db->select("c.storeid, c.storecode, c.description, c.latitude, c.longitude, sum(a.availableamount) as total");
+        $this->db->select("sum(case when YEAR(a.receiveddate)=YEAR(curdate()) then a.availableamount else 0 end) as total0");
+        $this->db->select("sum(case when YEAR(curdate())-YEAR(a.receiveddate)>=1 and YEAR(curdate())-YEAR(a.receiveddate)<=2 then a.availableamount else 0 end) as total1");
+        $this->db->select("sum(case when YEAR(curdate())-YEAR(a.receiveddate)>=3 and YEAR(curdate())-YEAR(a.receiveddate)<=4 then a.availableamount else 0 end) as total2");
+        $this->db->select("sum(case when YEAR(curdate())-YEAR(a.receiveddate)>=5 then a.availableamount else 0 end) as total3");
         $this->db->from("tcg_inventory a");
         $this->db->join("tcg_item b", "b.itemid=a.itemid and b.is_deleted=0", "INNER");
         $this->db->join("tcg_store c", "c.storeid=a.storeid and c.is_deleted=0", "INNER");
@@ -41,33 +153,14 @@ class Mdashboard extends CI_Model
         }
         $this->db->join("tcg_itemcategory g", "g.categoryid=b.categoryid and g.is_deleted=0", "INNER");
         if (!empty($itemtypeid)) {
-            $this->db->where("g.typeid", $itemtypeid);
+            $this->db->where("b.typeid", $itemtypeid);
         }
         if (!empty($str)) {
-            $this->db->like("b.description",$str);
+            $this->db->like("UPPER(b.description)",strtoupper($str));
         }
         $this->db->where("a.is_deleted", 0);
         $this->db->where("a.status", 'INSTOCK');
         $this->db->where("a.availableamount>0");
-        //TODO: more precise date substract
-        if ($age == 1) {
-            $this->db->where("(YEAR(curdate())-YEAR(a.receiveddate)) <= 1");
-        }
-        else if ($age == 2) {
-            $this->db->where("(YEAR(curdate())-YEAR(a.receiveddate)) = 2");
-        }
-        else if ($age == 3) {
-            $this->db->where("(YEAR(curdate())-YEAR(a.receiveddate)) = 3");
-        }
-        else if ($age == 4) {
-            $this->db->where("(YEAR(curdate())-YEAR(a.receiveddate)) = 4");
-        }
-        else if ($age == 5) {
-            $this->db->where("(YEAR(curdate())-YEAR(a.receiveddate)) = 5");
-        }
-        else if ($age == 6) {
-            $this->db->where("(YEAR(curdate())-YEAR(a.receiveddate)) > 5");
-        }
 
         $this->db->group_by("c.storeid, c.storecode, c.description");
 
@@ -189,10 +282,12 @@ class Mdashboard extends CI_Model
     public function stokpergudang($storeid = null)
     {
         if (empty($storeid)) {
-            $sql = "SELECT a.storeid, a.storecode, a.description, a.latitude, a.longitude, e.siteid, e.sitecode, f.orgid, f.orgcode
+            $sql = "SELECT a.storeid, a.storecode, a.description, a.latitude, a.longitude, x.siteid, x.sitecode, y.orgid, y.orgcode
                 , coalesce(b.nilai_total,0) as nilai_total
                 , coalesce(c.nilai_total,0) as rusak
                 , coalesce(d.nilai_total,0) as kadaluarsa
+                , coalesce(e.itemcnt, 0) as lowstock
+                , coalesce(f.nilai_total,0) as fastmoving
             from tcg_store a
             left join (
                 SELECT a.`storeid`, sum(a.unitprice * a.currentstock) as nilai_total 
@@ -212,16 +307,31 @@ class Mdashboard extends CI_Model
                 where a.is_deleted=0 and a.writeoff=0 and a.status='EXPIRED'
                 group by b.storeid
             ) d on d.storeid=a.storeid
-            join tcg_site e on e.siteid=a.siteid and e.is_deleted=0
-            join tcg_organisation f on f.orgid=e.orgid and f.is_deleted=0
+            left join (
+                select a.storeid, count(distinct a.itemid) as itemcnt
+                from rpt_lowstock a
+                where a.is_deleted=0
+                group by a.storeid
+            ) e on e.storeid=a.storeid
+            left join (
+                SELECT b.storeid, sum(b.unitprice * b.availableamount) as nilai_total, count(distinct b.itemid) as itemcnt 
+                from tcg_inventory b
+                join tcg_item c on c.itemid=b.itemid and c.is_deleted=0
+                where b.is_deleted=0 and c.fastmoving=1
+                group by b.storeid
+            ) f on f.storeid=a.storeid
+            join tcg_site x on x.siteid=a.siteid and x.is_deleted=0
+            join tcg_organisation y on y.orgid=x.orgid and y.is_deleted=0
             where a.is_deleted=0";
         }
         else {
             $storeidstr = $this->db->escape($storeid);
-            $sql = "SELECT a.storeid, a.storecode, a.description
+            $sql = "SELECT a.storeid, a.storecode, a.description, a.latitude, a.longitude, x.siteid, x.sitecode, y.orgid, y.orgcode
                 , coalesce(b.nilai_total,0) as nilai_total
                 , coalesce(c.nilai_total,0) as rusak
                 , coalesce(d.nilai_total,0) as kadaluarsa
+                , coalesce(e.itemcnt, 0) as lowstock
+                , coalesce(f.nilai_total,0) as fastmoving
             from tcg_store a
             left join (
                 SELECT a.`storeid`, sum(a.unitprice * a.currentstock) as nilai_total 
@@ -241,6 +351,21 @@ class Mdashboard extends CI_Model
                 where a.is_deleted=0 and a.writeoff=0 and a.status='EXPIRED' and (b.storeid=" .$storeidstr. ")
                 group by b.storeid
             ) d on d.storeid=a.storeid
+            left join (
+                select a.storeid, count(distinct a.itemid) as itemcnt
+                from rpt_lowstock a
+                where a.is_deleted=0
+                group by a.storeid
+            ) e on e.storeid=a.storeid
+            left join (
+                SELECT b.storeid, sum(b.unitprice * b.availableamount) as nilai_total, count(distinct b.itemid) as itemcnt 
+                from tcg_inventory b
+                join tcg_item c on c.itemid=b.itemid and c.is_deleted=0
+                where b.is_deleted=0 and (b.storeid=" .$storeidstr. ") and c.fastmoving=1
+                group by b.storeid
+            ) f on f.storeid=a.storeid
+            join tcg_site x on x.siteid=a.siteid and x.is_deleted=0
+            join tcg_organisation y on y.orgid=x.orgid and y.is_deleted=0
             where a.is_deleted=0 and a.storeid=" .$storeidstr. "";
         }
 
@@ -1113,46 +1238,32 @@ class Mdashboard extends CI_Model
         if ($periode == 'YTD') {
             $sql = "SELECT 
                     x.storeid, x.storecode, x.description, YEAR(".$datestr.") as tahun
-                    , coalesce(a.nilai_total,0) + coalesce(e.nilai_total,0) as nilai_total
-                    , coalesce(a.nilai_total,0) as penerimaan
-                    , coalesce(e.nilai_total,0) as transfer_masuk
+                    , coalesce(a.nilai_total,0) as nilai_total
+                    , coalesce(case when a.stockintype!='TRANSFER' then a.nilai_total else 0 end,0) as penerimaan
+                    , coalesce(case when a.stockintype='TRANSFER' then a.nilai_total else 0 end,0) as transfer_masuk
                 FROM tcg_store x
                 left join (
-                    SELECT a.storeid, sum(a.unitprice * a.receivedamount) as nilai_total from tcg_inventory a
+                    SELECT a.storeid, a.stockintype, sum(a.unitprice * a.acceptedamount) as nilai_total from tcg_invreceive a
                     where a.is_deleted=0 and a.status not in ('DRAFT')
                         and YEAR(a.receiveddate)=YEAR(".$datestr.")
-                    group by a.storeid
+                    group by a.storeid, a.stockintype
                 ) as a on a.storeid=x.storeid
-                left join (
-                    SELECT a.tostoreid, sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
-                    join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
-                    where a.is_deleted=0 and a.status not in ('DRAFT') 
-                        and YEAR(a.transferdate)=YEAR(".$datestr.")
-                    group by a.tostoreid
-                ) e on e.tostoreid=x.storeid
-                where x.is_deleted=0
+               where x.is_deleted=0
             ";
         }
         else if ($periode == 'MTD') {
             $sql = "SELECT 
                     x.storeid, x.storecode, x.description, YEAR(".$datestr.") as tahun, MONTH(".$datestr.") as bulan
-                    , coalesce(a.nilai_total,0) + coalesce(e.nilai_total,0) as nilai_total
-                    , coalesce(a.nilai_total,0) as penerimaan
-                    , coalesce(e.nilai_total,0) as transfer_masuk
+                    , coalesce(a.nilai_total,0) as nilai_total
+                    , coalesce(case when a.stockintype!='TRANSFER' then a.nilai_total else 0 end,0) as penerimaan
+                    , coalesce(case when a.stockintype='TRANSFER' then a.nilai_total else 0 end,0) as transfer_masuk
                 FROM tcg_store x
                 left join (
-                    SELECT a.storeid, sum(a.unitprice * a.receivedamount) as nilai_total from tcg_inventory a
+                    SELECT a.storeid, a.stockintype, sum(a.unitprice * a.acceptedamount) as nilai_total from tcg_invreceive a
                     where a.is_deleted=0 and a.status not in ('DRAFT')
                         and YEAR(a.receiveddate)=YEAR(".$datestr.") and MONTH(a.receiveddate)=MONTH(".$datestr.")
-                    group by a.storeid
+                    group by a.storeid, a.stockintype
                 ) as a on a.storeid=x.storeid
-                left join (
-                    SELECT a.tostoreid, sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
-                    join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
-                    where a.is_deleted=0 and a.status not in ('DRAFT') 
-                        and YEAR(a.transferdate)=YEAR(".$datestr.") and MONTH(a.transferdate)=MONTH(".$datestr.")
-                    group by a.tostoreid
-                ) e on e.tostoreid=x.storeid
                 where x.is_deleted=0
             ";
         }
@@ -1162,25 +1273,17 @@ class Mdashboard extends CI_Model
 
             $sql = "SELECT 
                     x.storeid, x.storecode, x.description, ".$datestr." as tanggal, " .$periodestr. " as periode
-                    , coalesce(a.nilai_total,0) + coalesce(e.nilai_total,0) as nilai_total
-                    , coalesce(a.nilai_total,0) as penerimaan
-                    , coalesce(e.nilai_total,0) as transfer_masuk
+                    , coalesce(a.nilai_total,0) as nilai_total
+                    , coalesce(case when a.stockintype!='TRANSFER' then a.nilai_total else 0 end,0) as penerimaan
+                    , coalesce(case when a.stockintype='TRANSFER' then a.nilai_total else 0 end,0) as transfer_masuk
                 FROM tcg_store x
                 left join (
-                    SELECT a.storeid, sum(a.unitprice * a.receivedamount) as nilai_total from tcg_inventory a
+                    SELECT a.storeid, a.stockintype, sum(a.unitprice * a.acceptedamount) as nilai_total from tcg_invreceive a
                     where a.is_deleted=0 and a.status not in ('DRAFT')
                         and datediff(a.receiveddate,".$datestr.") >= " .$periodestr. "
                         and datediff(a.receiveddate,".$datestr.") < 0
-                    group by a.storeid
+                    group by a.storeid, a.stockintype
                 ) as a on a.storeid=x.storeid
-                left join (
-                    SELECT a.tostoreid, sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
-                    join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
-                    where a.is_deleted=0 and a.status not in ('DRAFT') 
-                        and datediff(a.transferdate,".$datestr.") >= " .$periodestr. "
-                        and datediff(a.transferdate,".$datestr.") < 0
-                    group by a.tostoreid
-                ) e on e.tostoreid=x.storeid
                 where x.is_deleted=0
             ";
         }
@@ -1213,46 +1316,32 @@ class Mdashboard extends CI_Model
         if ($periode == 'YTD') {
             $sql = "SELECT 
                     YEAR(".$datestr.") as tahun, x.storeid
-                    , coalesce(a.nilai_total,0) + coalesce(e.nilai_total,0) as nilai_total
-                    , coalesce(a.nilai_total,0) as penerimaan
-                    , coalesce(e.nilai_total,0) as transfer_masuk
+                    , coalesce(a.nilai_total,0) as nilai_total
+                    , coalesce(case when a.stockintype!='TRANSFER' then a.nilai_total else 0 end,0) as penerimaan
+                    , coalesce(case when a.stockintype='TRANSFER' then a.nilai_total else 0 end,0) as transfer_masuk
                 FROM tcg_store x
                 left join (
-                    SELECT a.storeid, sum(a.unitprice * a.receivedamount) as nilai_total from tcg_inventory a
+                    SELECT a.storeid, a.stockintype, sum(a.unitprice * a.acceptedamount) as nilai_total from tcg_invreceive a
                     where a.is_deleted=0 and a.status not in ('DRAFT')
                         and YEAR(a.receiveddate)=YEAR(".$datestr.")
-                    group by a.storeid
+                    group by a.storeid, a.stockintype
                 ) as a on a.storeid=x.storeid
-                left join (
-                    SELECT a.tostoreid, sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
-                    join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
-                    where a.is_deleted=0 and a.status not in ('DRAFT') 
-                        and YEAR(a.transferdate)=YEAR(".$datestr.")
-                    group by a.tostoreid
-                ) e on e.tostoreid=x.storeid
                 where x.is_deleted=0 and x.storeid=" .$storeidstr. "
             ";
         }
         else if ($periode == 'MTD') {
             $sql = "SELECT 
                     YEAR(".$datestr.") as tahun, MONTH(".$datestr.") as bulan, x.storeid
-                    , coalesce(a.nilai_total,0) + coalesce(e.nilai_total,0) as nilai_total
-                    , coalesce(a.nilai_total,0) as penerimaan
-                    , coalesce(e.nilai_total,0) as transfer_masuk
+                    , coalesce(a.nilai_total,0) as nilai_total
+                    , coalesce(case when a.stockintype!='TRANSFER' then a.nilai_total else 0 end,0) as penerimaan
+                    , coalesce(case when a.stockintype='TRANSFER' then a.nilai_total else 0 end,0) as transfer_masuk
                 FROM tcg_store x
                 left join (
-                    SELECT a.storeid, sum(a.unitprice * a.receivedamount) as nilai_total from tcg_inventory a
+                    SELECT a.storeid, a.stockintype, sum(a.unitprice * a.acceptedamount) as nilai_total from tcg_invreceive a
                     where a.is_deleted=0 and a.status not in ('DRAFT')
                         and YEAR(a.receiveddate)=YEAR(".$datestr.") and MONTH(a.receiveddate)=MONTH(".$datestr.")
-                    group by a.storeid
+                    group by a.storeid, a.stockintype
                 ) as a on a.storeid=x.storeid
-                left join (
-                    SELECT a.tostoreid, sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
-                    join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
-                    where a.is_deleted=0 and a.status not in ('DRAFT') 
-                        and YEAR(a.transferdate)=YEAR(".$datestr.") and MONTH(a.transferdate)=MONTH(".$datestr.")
-                    group by a.tostoreid
-                ) e on e.tostoreid=x.storeid
                 where x.is_deleted=0 and a.storeid=" .$storeidstr. "
             ";
         }
@@ -1262,25 +1351,17 @@ class Mdashboard extends CI_Model
 
             $sql = "SELECT 
                     ".$datestr." as tanggal, " .$periodestr. " as periode, x.storeid
-                    , coalesce(a.nilai_total,0) + coalesce(e.nilai_total,0) as nilai_total
-                    , coalesce(a.nilai_total,0) as penerimaan
-                    , coalesce(e.nilai_total,0) as transfer_masuk
+                    , coalesce(a.nilai_total,0) as nilai_total
+                    , coalesce(case when a.stockintype!='TRANSFER' then a.nilai_total else 0 end,0) as penerimaan
+                    , coalesce(case when a.stockintype='TRANSFER' then a.nilai_total else 0 end,0) as transfer_masuk
                 FROM tcg_store x
                 left join (
-                    SELECT a.storeid, sum(a.unitprice * a.receivedamount) as nilai_total from tcg_inventory a
+                    SELECT a.storeid, a.stockintype, sum(a.unitprice * a.acceptedamount) as nilai_total from tcg_invreceive a
                     where a.is_deleted=0 and a.status not in ('DRAFT')
                         and datediff(a.receiveddate,".$datestr.") >= " .$periodestr. "
                         and datediff(a.receiveddate,".$datestr.") < 0
-                    group by a.storeid
+                    group by a.storeid, a.stockintype
                 ) as a on a.storeid=x.storeid
-                left join (
-                    SELECT a.tostoreid, sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
-                    join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
-                    where a.is_deleted=0 and a.status not in ('DRAFT') 
-                        and datediff(a.transferdate,".$datestr.") >= " .$periodestr. "
-                        and datediff(a.transferdate,".$datestr.") < 0
-                    group by a.tostoreid
-                ) e on e.tostoreid=x.storeid
                 where x.is_deleted=0 and a.storeid=" .$storeidstr. "
             ";
         }
@@ -1869,40 +1950,26 @@ class Mdashboard extends CI_Model
         if ($periode == 'YTD') {
             $sql = "SELECT 
                     YEAR(".$datestr.") as tahun, x.storeid, x.storecode, x.description
-                    , coalesce(b.nilai_total,0) + coalesce(c.nilai_total,0) + coalesce(d.nilai_total,0) + coalesce(f.nilai_total,0) as nilai_total
-                    , coalesce(b.nilai_total,0) as penggunaan
-                    , coalesce(c.nilai_total,0) as rusak
-                    , coalesce(d.nilai_total,0) as kadaluarsa
-                    , coalesce(f.nilai_total,0) as transfer_keluar
+                    , coalesce(b.nilai_total,0) + coalesce(c.nilai_total,0) as nilai_total
+                    , coalesce(case when b.stockouttype!='TRANSFER' then b.nilai_total else 0 end,0) as penggunaan
+                    , coalesce(case when c.status='BROKEN' then c.nilai_total else 0 end,0) as rusak
+                    , coalesce(case when c.status!='BROKEN' then c.nilai_total else 0 end,0) as kadaluarsa
+                    , coalesce(case when b.stockouttype='TRANSFER' then b.nilai_total else 0 end,0) as transfer_keluar
                 FROM tcg_store x
                 left join (
-                    SELECT b.storeid, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invusage a
+                    SELECT b.storeid, a.stockouttype, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invusage a
                     join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
                     where a.is_deleted=0 and a.status not in ('DRAFT')
                         and YEAR(a.checkoutdate)=YEAR(".$datestr.")
-                    group by b.storeid
+                    group by b.storeid, a.stockouttype
                 ) b on b.storeid=x.storeid
                 left join (
-                    SELECT b.storeid, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invstatus a
+                    SELECT b.storeid, a.status, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invstatus a
                     join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
-                    where a.is_deleted=0 and a.writeoff=1 and a.status='BROKEN'
+                    where a.is_deleted=0 and a.writeoff=1 and a.status in ('BROKEN', 'EXPIRED')
                         and YEAR(a.writeoffdate)=YEAR(".$datestr.")
-                    group by b.storeid
+                    group by b.storeid, a.status
                 ) c on c.storeid=x.storeid
-                left join (
-                    SELECT b.storeid, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invstatus a
-                    join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
-                    where a.is_deleted=0 and a.writeoff=1 and a.status='EXPIRED'
-                        and YEAR(a.writeoffdate)=YEAR(".$datestr.")
-                    group by b.storeid
-                ) d on d.storeid=x.storeid
-                left join (
-                    SELECT a.storeid, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
-                    join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
-                    where a.is_deleted=0 and a.status not in ('DRAFT')
-                        and YEAR(a.transferdate)=YEAR(".$datestr.")
-                    group by a.storeid
-                ) f on f.storeid=x.storeid
                 where x.is_deleted=0
             ";
         }
@@ -1910,40 +1977,26 @@ class Mdashboard extends CI_Model
             $sql = "SELECT
                     YEAR(".$datestr.") as tahun, MONTH(".$datestr.") as bulan
                     , x.storeid, x.storecode, x.description
-                    , coalesce(b.nilai_total,0) + coalesce(c.nilai_total,0) + coalesce(d.nilai_total,0) + coalesce(f.nilai_total,0) as nilai_total
-                    , coalesce(b.nilai_total,0) as penggunaan
-                    , coalesce(c.nilai_total,0) as rusak
-                    , coalesce(d.nilai_total,0) as kadaluarsa
-                    , coalesce(f.nilai_total,0) as transfer_keluar
+                    , coalesce(b.nilai_total,0) + coalesce(c.nilai_total,0) as nilai_total
+                    , coalesce(case when b.stockouttype!='TRANSFER' then b.nilai_total else 0 end,0) as penggunaan
+                    , coalesce(case when c.status='BROKEN' then c.nilai_total else 0 end,0) as rusak
+                    , coalesce(case when c.status!='BROKEN' then c.nilai_total else 0 end,0) as kadaluarsa
+                    , coalesce(case when b.stockouttype='TRANSFER' then b.nilai_total else 0 end,0) as transfer_keluar
                 FROM tcg_store x
                 left join (
-                    SELECT b.storeid, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invusage a
+                    SELECT b.storeid, a.stockouttype, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invusage a
                     join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
                     where a.is_deleted=0 and a.status not in ('DRAFT')
                         and YEAR(a.checkoutdate)=YEAR(".$datestr.") and MONTH(a.checkoutdate)=MONTH(".$datestr.")
-                    group by b.storeid
+                    group by b.storeid, a.stockouttype
                 ) b on b.storeid=x.storeid
                 left join (
-                    SELECT b.storeid, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invstatus a
+                    SELECT b.storeid, a.status, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invstatus a
                     join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
-                    where a.is_deleted=0 and a.writeoff=1 and a.status='BROKEN'
+                    where a.is_deleted=0 and a.writeoff=1 and a.status in ('BROKEN','EXPIRED')
                         and YEAR(a.writeoffdate)=YEAR(".$datestr.") and MONTH(a.writeoffdate)=MONTH(".$datestr.")
-                    group by b.storeid
+                    group by b.storeid, a.status
                 ) c on c.storeid=x.storeid
-                left join (
-                    SELECT b.storeid, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invstatus a
-                    join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
-                    where a.is_deleted=0 and a.writeoff=1 and a.status='EXPIRED'
-                        and YEAR(a.writeoffdate)=YEAR(".$datestr.") and MONTH(a.writeoffdate)=MONTH(".$datestr.")
-                    group by b.storeid
-                ) d on d.storeid=x.storeid
-                left join (
-                    SELECT a.storeid, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
-                    join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
-                    where a.is_deleted=0 and a.status not in ('DRAFT')
-                        and YEAR(a.transferdate)=YEAR(".$datestr.") and MONTH(a.transferdate)=MONTH(".$datestr.")
-                    group by a.storeid
-                ) f on f.storeid=x.storeid
                 where x.is_deleted=0
             ";
         }
@@ -1954,44 +2007,28 @@ class Mdashboard extends CI_Model
             $sql = "SELECT
                     ".$datestr." as tanggal, " .$periodestr. " as periode
                     , x.storeid, x.storecode, x.description
-                    , coalesce(b.nilai_total,0) + coalesce(c.nilai_total,0) + coalesce(d.nilai_total,0) + coalesce(f.nilai_total,0) as nilai_total
-                    , coalesce(b.nilai_total,0) as penggunaan
-                    , coalesce(c.nilai_total,0) as rusak
-                    , coalesce(d.nilai_total,0) as kadaluarsa
-                    , coalesce(f.nilai_total,0) as transfer_keluar
+                    , coalesce(b.nilai_total,0) + coalesce(c.nilai_total,0) as nilai_total
+                    , coalesce(case when b.stockouttype!='TRANSFER' then b.nilai_total else 0 end,0) as penggunaan
+                    , coalesce(case when c.status='BROKEN' then c.nilai_total else 0 end,0) as rusak
+                    , coalesce(case when c.status!='BROKEN' then c.nilai_total else 0 end,0) as kadaluarsa
+                    , coalesce(case when b.stockouttype='TRANSFER' then b.nilai_total else 0 end,0) as transfer_keluar
                 FROM tcg_store x
                 left join (
-                    SELECT b.storeid, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invusage a
+                    SELECT b.storeid, a.stockouttype, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invusage a
                     join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
                     where a.is_deleted=0 and a.status not in ('DRAFT')
                         and datediff(a.checkoutdate,".$datestr.") >= " .$periodestr. "
                         and datediff(a.checkoutdate,".$datestr.") < 0
-                    group by b.storeid
+                    group by b.storeid, a.stockouttype
                 ) b on b.storeid=x.storeid
                 left join (
-                    SELECT b.storeid, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invstatus a
+                    SELECT b.storeid, a.status, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invstatus a
                     join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
-                    where a.is_deleted=0 and a.writeoff=1 and a.status='BROKEN'
+                    where a.is_deleted=0 and a.writeoff=1 and a.status in ('BROKEN','EXPIRED')
                         and datediff(a.writeoffdate,".$datestr.") >= " .$periodestr. "
                         and datediff(a.writeoffdate,".$datestr.") < 0
-                    group by b.storeid
+                    group by b.storeid, a.status
                 ) c on c.storeid=x.storeid
-                left join (
-                    SELECT b.storeid, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invstatus a
-                    join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
-                    where a.is_deleted=0 and a.writeoff=1 and a.status='EXPIRED'
-                        and datediff(a.writeoffdate,".$datestr.") >= " .$periodestr. "
-                        and datediff(a.writeoffdate,".$datestr.") < 0
-                    group by b.storeid
-                ) d on d.storeid=x.storeid
-                left join (
-                    SELECT a.storeid, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
-                    join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
-                    where a.is_deleted=0 and a.status not in ('DRAFT')
-                        and datediff(a.transferdate,".$datestr.") >= " .$periodestr. "
-                        and datediff(a.transferdate,".$datestr.") < 0
-                    group by a.storeid
-                ) f on f.storeid=x.storeid
                 where x.is_deleted=0
             ";
         }
@@ -2024,80 +2061,52 @@ class Mdashboard extends CI_Model
         if ($periode == 'YTD') {
             $sql = "SELECT 
                     x.storeid, x.storecode, x.description, YEAR(".$datestr.") as tahun
-                    , coalesce(b.nilai_total,0) + coalesce(c.nilai_total,0) + coalesce(d.nilai_total,0) + coalesce(f.nilai_total,0) as nilai_total
-                    , coalesce(b.nilai_total,0) as penggunaan
-                    , coalesce(c.nilai_total,0) as rusak
-                    , coalesce(d.nilai_total,0) as kadaluarsa
-                    , coalesce(f.nilai_total,0) as transfer_keluar
+                    , coalesce(b.nilai_total,0) + coalesce(c.nilai_total,0) as nilai_total
+                    , coalesce(case when b.stockouttype!='TRANSFER' then b.nilai_total else 0 end,0) as penggunaan
+                    , coalesce(case when c.status='BROKEN' then c.nilai_total else 0 end,0) as rusak
+                    , coalesce(case when c.status!='BROKEN' then c.nilai_total else 0 end,0) as kadaluarsa
+                    , coalesce(case when b.stockouttype='TRANSFER' then b.nilai_total else 0 end,0) as transfer_keluar
                 FROM tcg_store x
                 left join (
-                    SELECT b.storeid, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invusage a
+                    SELECT b.storeid, a.stockouttype, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invusage a
                     join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
                     where a.is_deleted=0 and a.status not in ('DRAFT')
                         and YEAR(a.checkoutdate)=YEAR(".$datestr.")
-                    group by b.storeid 
+                    group by b.storeid, a.stockouttype 
                 ) b on b.storeid=x.storeid
                 left join (
-                    SELECT b.storeid, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invstatus a
+                    SELECT b.storeid, a.status, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invstatus a
                     join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
-                    where a.is_deleted=0 and a.writeoff=1 and a.status='BROKEN'
+                    where a.is_deleted=0 and a.writeoff=1 and a.status in ('BROKEN', 'EXPIRED')
                         and YEAR(a.writeoffdate)=YEAR(".$datestr.")
                     group by b.storeid
-                ) c on c.storeid=x.storeid
-                left join (
-                    SELECT b.storeid, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invstatus a
-                    join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
-                    where a.is_deleted=0 and a.writeoff=1 and a.status='EXPIRED'
-                        and YEAR(a.writeoffdate)=YEAR(".$datestr.")
-                    group by b.storeid
-                ) d on d.storeid=x.storeid
-                left join (
-                    SELECT a.storeid, sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
-                    join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
-                    where a.is_deleted=0 and a.status not in ('DRAFT')
-                        and YEAR(a.transferdate)=YEAR(".$datestr.")
-                    group by a.storeid
-                ) f on f.storeid=x.storeid
+                ) c on c.storeid=x.storeid, a.status
                 where x.is_deleted=0 and x.storeid=" .$storeidstr. "
                 ";
         }
         else if ($periode == 'MTD') {
             $sql = "SELECT 
                     x.storeid, x.storecode, x.description, YEAR(".$datestr.") as tahun, MONTH(".$datestr.") as bulan
-                    , coalesce(b.nilai_total,0) + coalesce(c.nilai_total,0) + coalesce(d.nilai_total,0) + coalesce(f.nilai_total,0) as nilai_total
-                    , coalesce(b.nilai_total,0) as pengunaan
-                    , coalesce(c.nilai_total,0) as rusak
-                    , coalesce(d.nilai_total,0) as kadaluarsa
-                    , coalesce(f.nilai_total,0) as transfer_keluar
+                    , coalesce(b.nilai_total,0) + coalesce(c.nilai_total,0) as nilai_total
+                    , coalesce(case when b.stockouttype!='TRANSFER' then b.nilai_total else 0 end,0) as penggunaan
+                    , coalesce(case when c.status='BROKEN' then c.nilai_total else 0 end,0) as rusak
+                    , coalesce(case when c.status!='BROKEN' then c.nilai_total else 0 end,0) as kadaluarsa
+                    , coalesce(case when b.stockouttype='TRANSFER' then b.nilai_total else 0 end,0) as transfer_keluar
                 FROM tcg_store x 
                 left join (
-                    SELECT b.storeid, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invusage a
+                    SELECT b.storeid, a.stockouttype, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invusage a
                     join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
                     where a.is_deleted=0 and a.status not in ('DRAFT')
                         and YEAR(a.checkoutdate)=YEAR(".$datestr.") and MONTH(a.checkoutdate)=MONTH(".$datestr.")
-                    group by b.storeid
+                    group by b.storeid, a.stockouttype
                 ) b on b.storeid=x.storeid
                 left join (
-                    SELECT b.storeid, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invstatus a
+                    SELECT b.storeid, a.status, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invstatus a
                     join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
-                    where a.is_deleted=0 and a.writeoff=1 and a.status='BROKEN'
+                    where a.is_deleted=0 and a.writeoff=1 and a.status in ('BROKEN', 'EXPIRED')
                         and YEAR(a.writeoffdate)=YEAR(".$datestr.") and MONTH(a.writeoffdate)=MONTH(".$datestr.")
-                    group by b.storeid
+                    group by b.storeid, a.status
                 ) c on c.storeid=x.storeid
-                left join (
-                    SELECT b.storeid, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invstatus a
-                    join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
-                    where a.is_deleted=0 and a.writeoff=1 and a.status='EXPIRED'
-                        and YEAR(a.writeoffdate)=YEAR(".$datestr.") and MONTH(a.writeoffdate)=MONTH(".$datestr.")
-                    group by b.storeid
-                ) d on d.storeid=x.storeid
-                left join (
-                    SELECT a.storeid, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
-                    join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
-                    where a.is_deleted=0 and a.status not in ('DRAFT')
-                        and YEAR(a.transferdate)=YEAR(".$datestr.") and MONTH(a.transferdate)=MONTH(".$datestr.")
-                    group by a.storeid
-                ) f on f.storeid=x.storeid
                 where x.is_deleted=0 and x.storeid=" .$storeidstr. "
             ";
         }
@@ -2107,44 +2116,28 @@ class Mdashboard extends CI_Model
 
             $sql = "SELECT
                     x.storeid, x.storecode, x.description, ".$datestr." as tanggal, " .$periodestr. " as periode
-                    , coalesce(b.nilai_total,0) + coalesce(c.nilai_total,0) + coalesce(d.nilai_total,0) + coalesce(f.nilai_total,0) as nilai_total
-                    , coalesce(b.nilai_total,0) as pengunaan
-                    , coalesce(c.nilai_total,0) as rusak
-                    , coalesce(d.nilai_total,0) as kadaluarsa
-                    , coalesce(f.nilai_total,0) as transfer_keluar
+                    , coalesce(b.nilai_total,0) + coalesce(c.nilai_total,0) as nilai_total
+                    , coalesce(case when b.stockouttype!='TRANSFER' then b.nilai_total else 0 end,0) as penggunaan
+                    , coalesce(case when c.status='BROKEN' then c.nilai_total else 0 end,0) as rusak
+                    , coalesce(case when c.status!='BROKEN' then c.nilai_total else 0 end,0) as kadaluarsa
+                    , coalesce(case when b.stockouttype='TRANSFER' then b.nilai_total else 0 end,0) as transfer_keluar
                 FROM tcg_store x
                 left join (
-                    SELECT b.storeid, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invusage a
+                    SELECT b.storeid, a.stockouttype, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invusage a
                     join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
                     where a.is_deleted=0 and a.status not in ('DRAFT')
                         and datediff(a.checkoutdate,".$datestr.") >= " .$periodestr. "
                         and datediff(a.checkoutdate,".$datestr.") < 0
-                    group by b.storeid
+                    group by b.storeid, a.stockouttype
                 ) b on b.storeid=x.storeid
                 left join (
-                    SELECT b.storeid, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invstatus a
+                    SELECT b.storeid, a.status, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invstatus a
                     join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
-                    where a.is_deleted=0 and a.writeoff=1 and a.status='BROKEN'
+                    where a.is_deleted=0 and a.writeoff=1 and a.status in ('BROKEN','EXPIRED')
                         and datediff(a.writeoffdate,".$datestr.") >= " .$periodestr. "
                         and datediff(a.writeoffdate,".$datestr.") < 0
-                    group by b.storeid
+                    group by b.storeid, a.status
                 ) c on c.storeid=x.storeid
-                left join (
-                    SELECT b.storeid, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invstatus a
-                    join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
-                    where a.is_deleted=0 and a.writeoff=1 and a.status='EXPIRED'
-                        and datediff(a.writeoffdate,".$datestr.") >= " .$periodestr. "
-                        and datediff(a.writeoffdate,".$datestr.") < 0
-                    group by b.storeid
-                ) d on d.storeid=x.storeid
-                left join (
-                    SELECT a.storeid, -1 * sum(b.unitprice * a.count) as nilai_total FROM tcg_invtransfer a
-                    join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0
-                    where a.is_deleted=0 and a.status not in ('DRAFT')
-                        and datediff(a.transferdate,".$datestr.") >= " .$periodestr. "
-                        and datediff(a.transferdate,".$datestr.") < 0
-                    group by a.storeid
-                ) f on f.storeid=x.storeid
                 where x.is_deleted=0 and x.storeid=" .$storeidstr. "
             ";
         }

@@ -74,7 +74,20 @@ function conditional_delete(data, row, meta) {
 }
 
 function conditional_approve(data, row, meta) {
+    //TODO
+
     if (data['status'] == 'DRAFT') {
+        return 1;
+    }
+
+    return 0;
+}
+
+function conditional_kontrak(data, row, meta) {
+    //TODO
+    return 0;
+    
+    if (data['status'] == 'INPROG') {
         return 1;
     }
 

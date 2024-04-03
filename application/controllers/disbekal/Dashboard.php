@@ -5,6 +5,89 @@ require_once(APPPATH.'controllers/system/Base_Json.php');
 
 class Dashboard extends Base_Json {
         
+    public function lowstock() {        
+        $storeid = $this->input->get('f_storeid');
+
+        $this->load->model('disbekal/Mdashboard');
+        
+        $json = array();
+        $data = $this->Mdashboard->lowstock($storeid);
+        if ($data == null) {
+            $json['status'] = 0;
+            $json['message'] = 'No data';
+            $json['data'] = array();
+        }
+        else {
+            $json['status'] = 1;
+            $json['data'] = $data;
+        }
+
+        echo json_encode($json, JSON_INVALID_UTF8_IGNORE);	
+    }
+        
+    public function rusakkadaluarsa() {        
+        $storeid = $this->input->get('f_storeid');
+
+        $this->load->model('disbekal/Mdashboard');
+        
+        $json = array();
+        $data = $this->Mdashboard->rusakkadaluarsa($storeid);
+        if ($data == null) {
+            $json['status'] = 0;
+            $json['message'] = 'No data';
+            $json['data'] = array();
+        }
+        else {
+            $json['status'] = 1;
+            $json['data'] = $data;
+        }
+
+        echo json_encode($json, JSON_INVALID_UTF8_IGNORE);	
+    }
+        
+    public function fastmoving() {        
+        $storeid = $this->input->get('f_storeid');
+
+        $this->load->model('disbekal/Mdashboard');
+        
+        $json = array();
+        $data = $this->Mdashboard->fastmoving($storeid);
+        if ($data == null) {
+            $json['status'] = 0;
+            $json['message'] = 'No data';
+            $json['data'] = array();
+        }
+        else {
+            $json['status'] = 1;
+            $json['data'] = $data;
+        }
+
+        echo json_encode($json, JSON_INVALID_UTF8_IGNORE);	
+    }
+        
+    public function gisdetail() {        
+        $siteid = $this->input->get('f_siteid');
+        $itemtypeid = $this->input->get('f_itemtypeid');
+        $age = $this->input->get('f_age');
+        $storeids = $this->input->get('f_storeids');
+        $str = $this->input->get('q');
+
+        $this->load->model('disbekal/Mdashboard');
+        
+        $json = array();
+        $data = $this->Mdashboard->gisdetail($siteid, $itemtypeid, $age, $storeids, $str);
+        if ($data == null) {
+            $json['status'] = 0;
+            $json['message'] = 'No data';
+        }
+        else {
+            $json['status'] = 1;
+            $json['data'] = $data;
+        }
+
+        echo json_encode($json, JSON_INVALID_UTF8_IGNORE);	
+    }
+
     public function gissearch() {        
         $siteid = $this->input->get('f_siteid');
         $itemtypeid = $this->input->get('f_itemtypeid');

@@ -1,34 +1,5 @@
 {include file="crud/_css.tpl"}
 
-<style>
-/** OPTION DROPDOWN **/
-.select2-container .select-option-level-1 {
-	padding-left: 0px !important;
-}
-
-.select2-container .select-option-level-2 {
-	padding-left: 12px !important;
-}
-
-.select2-container .select-option-level-3 {
-	padding-left: 24px !important;
-}
-
-.select2-container .select-option-level-4 {
-	padding-left: 36px !important;
-}
-
-.select2-container .select-option-level-5 {
-	padding-left: 48px !important;
-}
-
-.select2-container .select-option-group {
-	font-weight: bold !important;
-	color: black;
-}
-/** END OPTION-DROPDOWN **/
-</style>
-
 <div class="content-header">
     <div class="container-fluid">
         <div class="row ">
@@ -96,50 +67,7 @@
 </section>
 {else}
 
-<!-- //filtering -->
-<section class="content">
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-12">
-                <div class="card widget-inline">
-                    <div class="card-body">
-						<div class="row">
-							<div class="col-12 col-md-9"> <div class="row">
-								<div class="form-group col-4 mb-0 mt-1 col-12 col-md-6 col-lg-4">
-									<select id="f_itemtypeid" name="f_itemtypeid" class="form-control filter_select" placeholder="Tipe Bekal">
-										<option value="" data-select2-id="2">-- Tipe Bekal --</option>
-									</select>
-								</div>
-								<div class="form-group col-4 mb-0 mt-1 col-12 col-md-6 col-lg-4">
-									<select id="f_siteid" name="f_siteid" class="form-control filter_select" placeholder="Satuan Kerja">
-										<option value="" data-select2-id="2">-- Satuan Kerja --</option>
-									</select>
-								</div>
-								<div class="form-group col-4 mb-0 mt-1 col-12 col-md-6 col-lg-4">
-									<select id="f_year" name="f_year" class="form-control filter_select" placeholder="Tahun Anggaran">
-										<option value="" data-select2-id="2">-- Tahun Anggaran --</option>
-                                        {for $year = date('Y')-5; $year <= date('Y')+5; $year++}
-                                        <option value="{$year}" data-select2-id="{$year}" {if $year == date('Y')}selected{/if}>TA {$year}</option>
-                                        {/for}
-									</select>
-								</div>
-							</div></div>
-							<div class="col-12 col-md-3">
-							<div class="row">
-								<div class="col-12" style="margin-top: 4px;">
-								<button type="submit" class="btn btn-primary btn-block" id='btn_crud_filter'
-										name="button">{__('Tampilkan')}</button>
-								</div>
-							</div>
-							</div>
-						</div>
-					</div>
-				</div> <!-- end card-box-->
-            </div> <!-- end col-->
-        </div>
-    </div>
-</section>
-
+{include file='crud/crud-filter.tpl'}
 
 <section class="content">
     <div class="container-fluid">

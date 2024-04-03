@@ -145,7 +145,7 @@
 		},
 
 		set: function (conf, val) {
-			if ((typeof val === 'undefined' || val == null) && conf.attr.compulsory) {
+			if ((typeof val === 'undefined' || val === null) && conf.attr.compulsory) {
 				//set default value
 				val = conf.def;
 			}
@@ -418,10 +418,12 @@
 					
 					_select.append(_option);
 
+                    //console.log(_option.prop('outerHTML'));
 				};
 			}
-
+            
 			//re-set the value
+            //console.log(_value);
 			_select.val(_value);
 
 			//multiple select?
@@ -485,7 +487,7 @@
 				_select.select2({
 					minimumResultsForSearch: _attr.minimumResultsForSearch,
 					//dropdownParent: $(_input).parent().parent().parent().parent(),
-					dropdownParent: _dte,
+					dropdownParent: _body,
 					templateResult: function (data) {
 						// We only really care if there is an element to pull classes from
 						if (!data.element) {

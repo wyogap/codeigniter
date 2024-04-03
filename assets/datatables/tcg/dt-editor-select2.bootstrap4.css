@@ -81,7 +81,7 @@
 }
 
   @media screen and (min-width: 768px) {
-    div.DTE_Body div.DTE_Body_Content div.DTE_Field {
+    div.DTE_Body div.DTE_Body_Content div.DTE_Select2 {
       padding: 5px 10% !important;
     }
   }

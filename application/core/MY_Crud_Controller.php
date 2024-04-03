@@ -297,6 +297,9 @@ abstract class MY_Crud_Controller extends CI_Controller {
 			}
 			//override always autoload
 			$subtables[$key]['crud']['initial_load'] = false;
+            //since it is subtable, set filters to be the same as the parent
+            //then this can be used in parameter replace
+            $subtables[$key]['crud']['filter_columns'] = $tablemeta['filter_columns'];
 		}
 
 		//easy access
@@ -455,7 +458,6 @@ abstract class MY_Crud_Controller extends CI_Controller {
 		$page_data['controller'] = $controller;
 
 		$page_data['page_name']              = $page['name'];
-		
 		$page_data['page_role']           	 = $this->session->userdata('page_role');
 
 		$page_data['page_header'] 			 = $page['page_header'];

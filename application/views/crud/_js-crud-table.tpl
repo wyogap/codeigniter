@@ -14,6 +14,9 @@
 var editor_{$tbl.table_id} = null;
 var dt_{$tbl.table_id} = null;
 
+var {$tbl.table_id}_ajax_url = "{$tbl.ajax}";
+var {$tbl.table_id}_tbl_title = "{$tbl.title}";
+
 $(document).ready(function() {
     $.fn.dataTable.ext.errMode = 'throw';
     $.extend($.fn.dataTable.defaults, {
@@ -74,6 +77,8 @@ $(document).ready(function() {
                     mask: "#{$currency_thousand_separator}##0",
                     {else if $col.edit_field|@count>1}
                     type: "tcg_readonly",
+                    {else if empty($col.edit_type)}
+                    type: "tcg_text",
                     {else}
                     type: '{$col.edit_type}',
                     {/if}
@@ -105,7 +110,7 @@ $(document).ready(function() {
                     fieldInfo:  "{$col.edit_info|regex_replace:'/\r*\n/':'<br>'}",
                     {/if}
 
-                    {if $col.edit_readonly}
+                    {if $col.edit_readonly || $col.edit_type=='tcg_readonly' || (!empty($col.edit_attr) && !empty($col.edit_attr.readonly))}
                     readonly: 1,
                     {else if $fsubtable == 1 && $col.edit_field[0] == $fkey}
                     readonly: 1,
@@ -268,6 +273,11 @@ $(document).ready(function() {
             {assign var=cnt value=0}
             {foreach $tbl.columns as $col}
                 {if !isset($col.editor)} {continue} {/if}
+                {* Disable readonly field*}
+                {if empty($col.editor.allow_edit)}
+                this.field("{$col.editor.name}").disable();
+                {/if}
+                {* Subtable editor*}
                 {if $col.editor.edit_type=='tcg_table'}
                 {assign var=cnt value=$cnt+1}
                 {/if}
@@ -313,6 +323,7 @@ $(document).ready(function() {
             let val = '', el = null;
 
             {foreach $tbl.columns as $col}
+                {* $tbl.editor is now stored inside $tbl.column.editor *}
                 {if !isset($col.editor)} {continue} {/if}
                 {$col = $col.editor}
 
@@ -330,7 +341,7 @@ $(document).ready(function() {
                 params = {$col.options_data_url_params|json_encode};
 
                 params.forEach((p) => {
-                    {if !empty($tbl.filters)}
+                    {if !empty($tbl.filter_columns)}
                     if (p.substr(0,2) == 'f_') {
                         //get filter value
                         el = $("#" +p);
@@ -339,6 +350,11 @@ $(document).ready(function() {
                             if (val !== undefined && val !== null) {
                                 str = "{literal}{{{/literal}" +p+ "{literal}}}{/literal}";
                                 url = url.replace(str, val);
+                                return;
+                            }
+                            else {
+                                str = "{literal}{{{/literal}" +p+ "{literal}}}{/literal}";
+                                url = url.replace(str, 'xxx');
                                 return;
                             }
                         }
@@ -358,6 +374,11 @@ $(document).ready(function() {
                             if (val !== undefined && val !== null) {
                                 str = "{literal}{{{/literal}" +p+ "{literal}}}{/literal}";
                                 url = url.replace(str, val);
+                                return;
+                            }
+                            else {
+                                str = "{literal}{{{/literal}" +p+ "{literal}}}{/literal}";
+                                url = url.replace(str, 'xxx');
                                 return;
                             }
                          }
@@ -470,7 +491,7 @@ $(document).ready(function() {
                 if (!field.isMultiValue()) {
                     hasError = false;
                     {if isset($col.edit_compulsory) && $col.edit_compulsory == true}
-                    if (!field.val() || field.val() == 0) {
+                    if (!field.val() || field.val() == '') {
                         hasError = true;
                         field.error('{__("Harus diisi")}');
                     }
@@ -495,6 +516,14 @@ $(document).ready(function() {
                     return false;
                 }
             }
+
+            {if !empty($tbl.on_submit_custom_js)}
+            let status = {$tbl.on_submit_custom_js}(e, o, action, editor_{$tbl.table_id}, dt_{$tbl.table_id});
+            if (!status) {
+                this.error('{__("Data wajib belum diisi atau tidak berhasil divalidasi")}');
+                return false;
+            }
+            {/if}
 
             /* dont sent all data for remove */
             if (action === 'remove') {
@@ -543,7 +572,7 @@ $(document).ready(function() {
             {/if}
 
             //only reload the table if the value as specified by the filters has changed
-            {if count($tbl.filters) > 0}
+            {if count($tbl.filter_columns) > 0}
             if (action=="edit") {
                 let needreload = 0, key = null;
                 let olddata=null, newdata=null;
@@ -552,7 +581,7 @@ $(document).ready(function() {
                         newdata = json.data[i];
                         key = newdata["{$tbl.key_column}"];
                         olddata = dt_{$tbl.table_id}.rows("#" +key).data()[0];
-                        {foreach $tbl.filters as $f}
+                        {foreach $tbl.filter_columns as $f}
                         if (olddata !== undefined && olddata["{$f.name}"] !== undefined && newdata["{$f.name}"] != olddata["{$f.name}"]) {
                             needreload = 1;
                             break;
@@ -569,15 +598,19 @@ $(document).ready(function() {
         });
 
         var onchange_flag = false;
-        {foreach $tbl.editor_columns as $col}
+        {foreach $tbl.columns as $col}
+            {* $tbl.editor is now stored inside $tbl.column.editor *}
+            {if !isset($col.editor)} {continue} {/if}
+            {$col = $col.editor}
+
             {if empty($col.edit_onchange_js)} {continue} {/if}
             var v_{$col.name} = '';
             $(editor_{$tbl.table_id}.field('{$col.name}').node()).on('change', function() {
                 // let data = this.s.editData;
                 // if (typeof(data) === undefined)     return;
 
-                let val = editor_{$tbl.table_id}.field('{$col.name}').val();
-                if (val == null || v_{$col.name} === val) {
+                let newval = editor_{$tbl.table_id}.field('{$col.name}').val();
+                if (newval == null || v_{$col.name} === newval) {
                     return;
                 }
 
@@ -586,8 +619,8 @@ $(document).ready(function() {
 
                 onchange_flag = true;
                 try {
-                    let retval = {$col.edit_onchange_js}(editor_{$tbl.table_id}.field('{$col.name}'), v_{$col.name}, val, editor_{$tbl.table_id});
-                    if (retval != val) {
+                    let retval = {$col.edit_onchange_js}(editor_{$tbl.table_id}.field('{$col.name}'), v_{$col.name}, newval, editor_{$tbl.table_id}, dt_{$tbl.table_id});
+                    if (retval != newval) {
                         //reset the new value
                         editor_{$tbl.table_id}.field('{$col.name}').val(retval);
                     }
@@ -600,17 +633,6 @@ $(document).ready(function() {
                 v_{$col.name} = editor_{$tbl.table_id}.field('{$col.name}').val();
             });
         {/foreach}
-
-        {if 1==0}
-        {foreach $tbl.columns as $col}
-            {if isset($col.edit_event_js)}
-            $(editor_{$tbl.table_id}.field('{$col.edit_field[0]}').node()).on('change', function() {
-                let val = editor.field('{$col.edit_field[0]}').val();
-                {$col['edit_event_js']} (val, editor_{$tbl.table_id});
-            });
-            {/if}
-        {/foreach}
-        {/if}
           
         /* Activate the bubble editor on click of a table cell */
         $('#{$tbl.table_id}').on( 'click', 'tbody td.editable', function (e) {
@@ -733,9 +755,33 @@ $(document).ready(function() {
     //easy access
     api_{$tbl.table_id} = null;
 
+    {* Calculate position of responsive column *}
+    {assign var=colIdx value=0}
+    {* Get first visible column*}
+    {foreach $tbl.columns as $x}
+    {if !$x.visible}{continue}{/if}
+    {if isset($x.type) && ($x.type=='virtual' || $x.type=='tcg_table')}{continue}{/if}
+    {$colIdx=$x.column_no}
+    {break}
+    {/foreach}
+    {* Get column offset*}
+    {assign var=colOffset value=0}
+    {if $tbl.row_select_column || $tbl.inline_edit}
+    {$colOffset=$colOffset+1}
+    {/if}
+
     dt_{$tbl.table_id} = $('#{$tbl.table_id}').DataTable({
         "processing": true,
+        {if $colOffset==0}
         "responsive": true,
+        {else}
+        responsive: {
+            details: {
+                type: 'column',
+                target: {$colIdx+$colOffset}
+            }
+        },
+        {/if}
         "serverSide": false,
         "scrollX": false,
         orderCellsTop: true,
@@ -760,16 +806,31 @@ $(document).ready(function() {
         {else}
         dom: "<'row'<'col-sm-12 col-md-7 dt-action-buttons'B><'col-sm-12 col-md-5'fr>>t<'row'<'col-sm-12 col-md-8'i><'col-sm-12 col-md-4'p>>",
         {/if}
-        {if $tbl.multi_row_selection}
-        select: true,
-        {else}
-        select: 'single',
-        {/if}
+        select: {
+            {if $tbl.multi_row_selection}
+            style: 'os',
+            {else}
+            select: 'single',
+            {/if}
+            {if $tbl.row_select_column || $tbl.inline_edit}
+            selector: 'td.dt-col-select input',
+            {/if}
+        },
         buttons: {
             buttons: 
             [
                 {if $tbl.editor && ($form_mode!='detail')}
-                {if isset($tbl.table_actions) && $tbl.table_actions.add}
+                {if isset($tbl.table_actions) && $tbl.table_actions.add && $tbl.inline_edit}
+                {
+                    extend: 'create',
+                    editor: editor_{$tbl.table_id},
+                    className: 'btn-sm',
+                    // formOptions: {
+                    //     submitTrigger: -1,
+                    //     submitHtml: '<i class="fa fa-play"/>'
+                    // }
+                }
+                {else if isset($tbl.table_actions) && $tbl.table_actions.add}
                 {
                     extend: "create",
                     editor: editor_{$tbl.table_id},
@@ -826,10 +887,10 @@ $(document).ready(function() {
             "dataType": "json",
             "type": "POST",
             "data": function(d) {
-                {foreach $tbl.filters as $f}
+                {foreach $tbl.filter_columns as $f}
                 d.f_{$f.name} = v_{$f.name};
                 {/foreach}
-                {if $crud.search}
+                {if $tbl.search}
                 d.search = $('input#search').val();
                 {/if}
                 return d;
@@ -837,30 +898,36 @@ $(document).ready(function() {
         },
         {/if} 
         "columns": [
-            {if $tbl.row_select_column}
+            {if $tbl.row_select_column || $tbl.inline_edit}
             {
                 data: null,
-                className: "text-right",
+                className: "text-center dt-col-select",
                 orderable: false,
-                defaultContent: ''
+                render: function(data, type, row) {
+                    if (type == "display") {
+                        return '<input aria-label="Select row" class="dt-select-checkbox" type="checkbox">';
+                    }
+                    return '';
+                }
             },
             {/if}
             {if $tbl.row_id_column}
             {
                 data: null,
-                className: "text-right",
+                className: "text-center",
                 orderable: false,
                 defaultContent: ''
             },
             {/if}
-            {foreach $tbl.columns as $x}         
-                {* Hide virtual column *}
-                {if $x.type=="virtual" || $x.type=="tcg_table"}
-                    {continue}
-                {/if}
+            {foreach $tbl.columns as $x}  
+            {if !isset($x.type)}{$x.type='tcg_text'}{/if}     
             {    
                 {* Hide reference column when displaying as subtable *}
                 {if (!empty($fkey) && $fkey == $x.name) || $x.visible != 1}
+                    visible: false,
+                {/if}
+                {* Hide virtual column *}
+                {if $x.type=="virtual" || $x.type=="tcg_table"}
                     visible: false,
                 {/if}
                 {if $x.foreign_key && $x.type=="tcg_select2"}
@@ -876,9 +943,8 @@ $(document).ready(function() {
                     {/if}
                     {/if}
                 {/if}
-                className: "col_{$x.type} {$x.css} {if !empty($x.edit_bubble)}editable{/if} {if $x.export==0}no-export{/if} "
-                            + "{if isset($x.type) && $x.type=='tcg_toggle'}text-center{/if}"
-                            + "{if isset($x.type) && $x.type=='tcg_select2' && $x.reference_show_link && !empty($x.reference_controller)}text-nowrap{/if}",
+                colNumber: "{$x.column_no}",
+                className: "col_{$x.type} {$x.css}{if !empty($x.edit_bubble)} editable{/if}{if $x.export==0} no-export{/if}{if isset($x.type) && $x.type=='tcg_toggle'} text-center{/if}{if isset($x.type) && $x.type=='tcg_select2' && $x.reference_show_link && !empty($x.reference_controller)} text-nowrap{/if}{if $colOffset>0 && $x.column_no==$colIdx} control{/if}",
                 orderable: {if !empty($x.allow_sort)}true{else}false{/if},
                 {if isset($x.type) && $x.type=="tcg_select2"}
                 render: function ( data, type, row ) {
@@ -1142,6 +1208,8 @@ $(document).ready(function() {
             {/if}
         ],
         "columnDefs": [
+            //Important: columnDefs only works if it is not already defined in column declaration
+
             // {
             //     target: [
             //         {foreach from=$tbl.columns key=k item=v}
@@ -1153,14 +1221,21 @@ $(document).ready(function() {
             //     visible: false
             // },
 
-            // why do we need to disable ordering for first column?
+            // // why do we need to disable ordering for first column?
             // {
-            //     targets: [0],
+            //     targets: [0,1,2,3],
+            //     visible: true,
+            //     className: "control",
             //     orderable: false
             // }
         ],
         order: [
-            {foreach $tbl.sorting_columns as $x}[{$x.column_no}, {if $x.sort_asc}'asc'{else}'desc'{/if}], {/foreach}
+            //{$tbl.table_id}
+            {assign var=offset value=0}
+            {if $tbl.inline_edit}{$offset=$offset+1}
+            {/if}
+            //{$offset}
+            {foreach $tbl.sorting_columns as $x}[{$x.column_no + $offset}, {if $x.sort_asc}'asc'{else}'desc'{/if}], {/foreach}
         ],
         initComplete: function() {
             {if !empty($tbl.column_filter)}
@@ -1179,7 +1254,7 @@ $(document).ready(function() {
                     var title = $(cell).text().trim();
                     var col_filter = cell.attr('tcg-column-filter');
                     if ($(api.column(colIdx).header()).index() >= 0 && col_filter == 1) {
-                        $(cell).html('<input type="text" placeholder="' + title + '"/>');
+                        $(cell).html('<input type="text" placeholder="' + title + '" style="width: 100%;"/>');
                     } else {
                         $(cell).html('');
                     }                   
@@ -1258,16 +1333,54 @@ $(document).ready(function() {
         },
     });
 
+    {if !empty($tbl.on_select_custom_js)}
+    //debounce call to custom select js because dt will deselect all first before selecting new selection
+    var {$tbl.table_id}_select_custom_js = debounce(function (api) {
+        {$tbl.on_select_custom_js}(dt_{$tbl.table_id}, api, "{$tbl.table_id}");
+    }, 500);
+    {/if}
+
     dt_{$tbl.table_id}.on('select.dt deselect.dt', function(e, settings) {
         let that = dt_{$tbl.table_id};
-        let api = new $.fn.dataTable.Api( settings );
+
+        var api = new $.fn.dataTable.Api( settings );
         {$tbl.table_id}_refresh(api);    
         
         //custom select/deselect routine
         {if !empty($tbl.on_select_custom_js)}
-        {$tbl.on_select_custom_js}(dt_{$tbl.table_id}, api, "{$tbl.table_id}");
+        {$tbl.table_id}_select_custom_js(api);
         {/if}
+        
+        //update the checkbox
+        let data = dt_{$tbl.table_id}.rows({
+                selected: true
+            }).data();
+
+        //unchecked all 
+        $('#{$tbl.table_id} .dt-col-select input').attr('checked', false);
+
+        //check selected
+        let id = 0;
+        let val=null, el = null;
+        for(i=0; i<data.length; i++) {
+            val = data[i];
+            id = val[ "{$tbl.key_column}" ];
+            el = $("#{$tbl.table_id} tr#" +id+ " td.dt-col-select input");
+            el.attr("checked", true);
+        }
+
     });
+
+    $('#{$tbl.table_id} th.dt-col-select input').change(function() 
+    {
+        $('#{$tbl.table_id} td.dt-col-select input').attr('checked', this.checked).trigger("change");
+        if (this.checked) {
+            dt_{$tbl.table_id}.rows( { page:'current' } ).select();
+        }
+        else {
+            dt_{$tbl.table_id}.rows().deselect();
+        }
+    });   
 
     dt_{$tbl.table_id}.on( 'responsive-resize', function ( e, api, columns ) {
         {if !empty($tbl.column_filter)}
@@ -1310,6 +1423,9 @@ $(document).ready(function() {
     }).draw();
 
     dt_{$tbl.table_id}.buttons( 0, null ).container().addClass("mr-md-2 mb-1");
+
+    dt_{$tbl.table_id}.buttons( 0, null ).container().find(".buttons-edit").removeClass("btn-primary");
+    dt_{$tbl.table_id}.buttons( 0, null ).container().find(".buttons-remove").removeClass("btn-primary");
 
     {* Button group index*}
     {assign var=idx value=0}
@@ -1389,6 +1505,8 @@ $(document).ready(function() {
         buttons.container().addClass('mr-md-2 mb-1 dt-export-buttons');
     }
 
+    buttons.container().find(".btn-import").removeClass("btn-primary");
+
     dt_{$tbl.table_id}.buttons( {$idx}, null ).container().after(
         dt_{$tbl.table_id}.buttons( {$idx+1}, null ).container()
     );
@@ -1453,7 +1571,7 @@ $(document).ready(function() {
                     action: function ( e, dt, node, conf ) {
                         {$x.onclick_js}(e, dt, node, conf);
                     },
-                    className: 'btn-sm {$x.css}'
+                    className: 'btn-sm btn-custom-action {$x.css}'
                 },
                 {/foreach}
             ]
@@ -1461,12 +1579,17 @@ $(document).ready(function() {
     
         buttons.container().addClass('mr-md-2 mb-1 dt-custom-buttons');
 
+        buttons.container().find(".btn-custom-action").removeClass("btn-primary");
+
         dt_{$tbl.table_id}.buttons( {$idx}, null ).container().after(
             dt_{$tbl.table_id}.buttons( {$idx+1}, null ).container()
         );
     {/if}
 
-    dt_{$tbl.table_id}.on("user-select.dt", function (e, dt, type, cell, originalEvent) {
+    dt_{$tbl.table_id}.on("user-select.dt", function (e, api, type, cell, originalEvent) {
+
+        //IMPORTANT: This event is cancelable. So dont use it to call custom onselect event
+
         var $elem = $(originalEvent.target); // get element clicked on
         var tag = $elem[0].nodeName.toLowerCase(); // get element's tag name
 
@@ -1490,6 +1613,9 @@ $(document).ready(function() {
     });
     {/if}
 
+    {if $fsubtable} 
+    $("#{$tbl.table_id}_wrapper .dt-action-buttons .dt-buttons").hide();
+    {/if}
 });
 
 var dt_{$tbl.table_id}_initialized = false;
@@ -1539,7 +1665,7 @@ function dt_{$tbl.table_id}_ajax_load(data) {
             "dataType": "json",
             "type": "POST",
             "data": {
-                {foreach $tbl.filters as $f}
+                {foreach $tbl.filter_columns as $f}
                     {if $f.filter_type == 'js'}
                         f_{$f.name}: v_{$f.name},
                     {else}
@@ -1700,7 +1826,7 @@ function dt_{$tbl.table_id}_import(e, dt, node, conf){
                         timeout: 60000,
                         dataType: 'json',
                         success: function(json) {
-                            if (typeof json.error !== 'undefined' && json.error != "" && json.error != null) {
+                            if (json.error !== undefined && json.error != "" && json.error != null) {
                                 let message = that.$content.find('#error');
                                 message.html(json.error);
                                 message.removeClass("d-none");
@@ -1715,8 +1841,14 @@ function dt_{$tbl.table_id}_import(e, dt, node, conf){
                             //hide spinner
                             spinner.addClass('d-none');
 
-                            //reload, retain paging
-                            dt.ajax.reload(null, false);
+                            if (json.status==2) {
+                                toastr.info('Import dilakukan di belakang. Cek hasilnya beberapa saat lagi.');
+                            }
+                            else {
+                                toastr.success('Import berhasil dilakukan.');
+                                //reload, retain paging
+                                dt.ajax.reload(null, false);
+                            }
                             that.close();
                         },
                         error: function(jqXHR, textStatus, errorThrown) {

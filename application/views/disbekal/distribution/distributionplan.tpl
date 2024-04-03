@@ -4,9 +4,7 @@
 <script src="{$base_url}assets/highcharts/highcharts-more.js"></script>
 <script src="{$base_url}assets/highcharts/themes/grid-light.js"></script>
 
-<style>
-
-</style>
+{include file="disbekal/css.tpl"}
 
 <div class="content-header">
     <div class="container-fluid">
@@ -87,7 +85,7 @@
 								</div>
 							</div></div>
 							<div class="col-12 col-md-3">
-							<div class="row">
+							<div class="row d-none">
 								<div class="col-12" style="margin-top: 4px;">
 								<button type="submit" class="btn btn-primary btn-block" id='btn_crud_filter'
 										name="button">{__('Tampilkan')}</button>
@@ -473,22 +471,22 @@
             tdata_173_refresh(api);
         }).draw();
 
-        dt_tdata_173.on("user-select.dt", function(e, dt, type, cell, originalEvent) {
-            var $elem = $(originalEvent.target);
-            // get element clicked on
-            var tag = $elem[0].nodeName.toLowerCase();
-            // get element's tag name
+        // dt_tdata_173.on("user-select.dt", function(e, dt, type, cell, originalEvent) {
+        //     var $elem = $(originalEvent.target);
+        //     // get element clicked on
+        //     var tag = $elem[0].nodeName.toLowerCase();
+        //     // get element's tag name
 
-            if (!$elem.closest("div.dt-row-actions").length) {
-                return;
-                // ignore any element not in the dropdown
-            }
+        //     if (!$elem.closest("div.dt-row-actions").length) {
+        //         return;
+        //         // ignore any element not in the dropdown
+        //     }
 
-            if (tag === "i" || tag === "a" || tag === "button") {
-                return false;
-                // cancel the select event for the row
-            }
-        });
+        //     if (tag === "i" || tag === "a" || tag === "button") {
+        //         return false;
+        //         // cancel the select event for the row
+        //     }
+        // });
 		
         var tusagerequest_refresh = debounce(function(api) {
             //recalc responsive columns
@@ -961,7 +959,7 @@
                     window.location.href = "{$site_url}" +'auth';
                 }
                 //send toastr message
-                toastr.error(errorMessage);
+                toastr.error(textStatus);
             }
         });
 

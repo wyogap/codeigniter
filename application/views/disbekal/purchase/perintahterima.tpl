@@ -1,34 +1,5 @@
 {include file="crud/_css.tpl"}
 
-<style>
-/** OPTION DROPDOWN **/
-.select2-container .select-option-level-1 {
-	padding-left: 0px !important;
-}
-
-.select2-container .select-option-level-2 {
-	padding-left: 12px !important;
-}
-
-.select2-container .select-option-level-3 {
-	padding-left: 24px !important;
-}
-
-.select2-container .select-option-level-4 {
-	padding-left: 36px !important;
-}
-
-.select2-container .select-option-level-5 {
-	padding-left: 48px !important;
-}
-
-.select2-container .select-option-group {
-	font-weight: bold !important;
-	color: black;
-}
-/** END OPTION-DROPDOWN **/
-</style>
-
 <div class="content-header">
     <div class="container-fluid">
         <div class="row ">
@@ -125,7 +96,7 @@
 								</div>
 							</div></div>
 							<div class="col-12 col-md-3">
-							<div class="row">
+							<div class="row d-none">
 								<div class="col-12" style="margin-top: 4px;">
 								<button type="submit" class="btn btn-primary btn-block" id='btn_crud_filter'
 										name="button">{__('Tampilkan')}</button>

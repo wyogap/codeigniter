@@ -4,25 +4,24 @@ class Mtablemeta extends CI_Model
 {
     public static $TABLE = array (
         'table_id' => 'tdata',
-        'ajax' => "",
+        'table_name' => '',
         'key_column' => "",
         'lookup_column' => "",
+        'columns' => [],
+        'ajax' => "",
         'initial_load' => false,
         'editor' => false,
         'filter' => false,
         'column_filter' => false,
-        'columns' => [],
         'editor_columns' => [],
-        'sorting_columns' => [],
         'filter_columns' => [],
-        'filters' => [],
+        'sorting_columns' => [],
         'orderings' => [],
         'table_actions' => [],
         'custom_actions' => [],
         'row_actions' => [],
         'row_id_column' => true,
         'row_select_column' => false,
-        'table_name' => '',
         'editable_table_name' => '',
         'soft_delete' => true,
         'join_tables' => [],
@@ -47,6 +46,7 @@ class Mtablemeta extends CI_Model
         'readonly' => false,
         'show_paging_options' => false,
         'multi_edit' => false,
+        'inline_edit' => false,
     );
     
     public static $COLUMN = array (

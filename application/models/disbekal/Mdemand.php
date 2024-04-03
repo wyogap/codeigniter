@@ -1,16 +1,14 @@
 <?php if(!defined('BASEPATH')) exit('No direct script access allowed');
 
-require_once(APPPATH.'models/Mcrud_tablemeta.php');
+require_once(APPPATH.'models/Mcrud_ext.php');
 
-class Mdemand extends Mcrud_tablemeta
+class Mdemand extends Mcrud_ext
 {
+    protected static $TABLE_ID = 156;
     protected static $TABLE_NAME = "tcg_demand";
     protected static $PRIMARY_KEY = "demandid";
+    protected static $LOOKUP_KEY = "description";
     protected static $COLUMNS = array();
-    protected static $FILTERS = array();
-
-    protected static $COL_LABEL = 'description';
-    protected static $COL_VALUE = 'demandid';
 
     protected static $SOFT_DELETE = true;
 
@@ -20,11 +18,10 @@ class Mdemand extends Mcrud_tablemeta
         //call sp
         $sql = "call usp_demand_approve(?, ?)";
 
-        $arr = $this->db->query($sql, array($id, $userid));
-        if ($arr == null)    return $arr;
+        $this->db->query($sql, array($id, $userid));
  
         $detail = $this->detail($id);
-        if ($detail['status'] != 'APPR') {
+        if ($detail == null ||  $detail['status'] != 'APPR') {
             return null;
         }
 
@@ -37,8 +34,7 @@ class Mdemand extends Mcrud_tablemeta
         //call sp
         $sql = "call usp_demand_close(?, ?)";
 
-        $query = $this->db->query($sql, array($id, $userid));
-        if ($query == null)    return $query;
+        $this->db->query($sql, array($id, $userid));
  
         $detail = $this->detail($id);
         if ($detail['status'] != 'CLOSED') {
@@ -48,15 +44,14 @@ class Mdemand extends Mcrud_tablemeta
         return $detail;
     }
 
-    function buatpengadaan($id, $year, $ponum) {
+    function buatpengadaan($id, $year, $ponum = null) {
         $userid = $this->session->userdata('user_id');
       
         //call sp
         $tag = uniqid();
         $sql = "call usp_po_createfromdemand(?, ?, ?, ?, ?)";
 
-        $arr = $this->db->query($sql, array($id, $year, $ponum, $tag, $userid));
-        if ($arr == null)    return $arr;
+        $this->db->query($sql, array($id, $year, $ponum, $tag, $userid));
  
         return $this->_get_poid_bytag($tag);
     }
@@ -64,7 +59,10 @@ class Mdemand extends Mcrud_tablemeta
     function _get_poid_bytag($tag) {
         $sql = "select poid from tcg_po where tag=?";
 
-        $arr = $this->db->query($sql, array($tag))->row_result();
+        $query = $this->db->query($sql, array($tag));
+        if ($query == null)     return 0;
+
+        $arr = $query->row_array();
         if ($arr == null)   return 0;
 
         return $arr['poid'];
@@ -73,8 +71,6 @@ class Mdemand extends Mcrud_tablemeta
     function list($filter = null, $limit = null, $offset = null, $orderby = null) {
         $this->reset_error();
         
-        if (!$this->initialized)   return null;
-
         if ($filter == null)    $filter = array();
 
         //default
@@ -299,8 +295,10 @@ class Mdemand extends Mcrud_tablemeta
         $typeid = $this->session->userdata("itemtypeid");
         if (!empty($typeid)) {
             //enforce
-            $valuepair['typeid'] = $typeid;
+            $valuepair['itemtypeid'] = $typeid;
         }
+
+        $valuepair['status'] = 'DRAFT';
 
         //default
         if (empty($valuepair['demandnum'])) {
@@ -324,8 +322,8 @@ class Mdemand extends Mcrud_tablemeta
         $typeid = $this->session->userdata("itemtypeid");
         if (!empty($typeid)) {
             //enforce
-            $filter['typeid'] = $typeid;
-            $valuepair['typeid'] = $typeid;
+            $filter['itemtypeid'] = $typeid;
+            $valuepair['itemtypeid'] = $typeid;
         }
 
         $result = parent::update($id, $valuepair, $filter, $enforce_edit_columns);

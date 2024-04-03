@@ -4,9 +4,7 @@
 <script src="{$base_url}assets/highcharts/highcharts-more.js"></script>
 <script src="{$base_url}assets/highcharts/themes/grid-light.js"></script>
 
-<style>
-
-</style>
+{include file="disbekal/css.tpl"}
 
 <div class="content-header">
     <div class="container-fluid">
@@ -59,48 +57,7 @@
     </div>
 </div>
 
-<!-- //filtering -->
-<section class="content">
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-12">
-                <div class="card widget-inline">
-                    <div class="card-body">
-						<div class="row">
-							<div class="col-12 col-md-9"> <div class="row">
-								<div class="form-group col-4 mb-0 mt-1 col-12 col-md-6 col-lg-4">
-									<select id="f_itemtypeid" name="itemtypeid" class="form-control filter_select" placeholder="Tipe Bekal">
-										<option value="" data-select2-id="2">-- Tipe Bekal --</option>
-									</select>
-								</div>
-								<div class="form-group col-4 mb-0 mt-1 col-12 col-md-6 col-lg-4">
-									<select id="f_siteid" name="siteid" class="form-control filter_select" placeholder="Satuan Kerja">
-										<option value="" data-select2-id="2">-- Satuan Kerja --</option>
-									</select>
-								</div>
-								<div class="form-group col-4 mb-0 mt-1 col-12 col-md-6 col-lg-4">
-									<select id="f_year" name="year" class="form-control filter_select" placeholder="Tahun Anggaran">
-                                        {for $year = date('Y'); $year <= date('Y')+5; $year++}
-                                        <option value="{$year}" data-select2-id="{$year}" {if $year == date('Y')}selected{/if}>TA {$year}</option>
-                                        {/for}
-									</select>
-								</div>
-							</div></div>
-							<div class="col-12 col-md-3">
-							<div class="row">
-								<div class="col-12" style="margin-top: 4px;">
-								<button type="submit" class="btn btn-primary btn-block" id='btn_crud_filter'
-										name="button">{__('Tampilkan')}</button>
-								</div>
-							</div>
-							</div>
-						</div>
-					</div>
-				</div> <!-- end card-box-->
-            </div> <!-- end col-->
-        </div>
-    </div>
-</section>
+{include file='crud/crud-filter.tpl'}
 
 <section class="content">
     <div class="container-fluid">
@@ -121,7 +78,7 @@
 
 <div class="row ">
 	<div class="col-xl-12">
-		<div class="info-box bg-white" style="min-height: 0px;">
+		<div class="info-box bg-theme" style="min-height: 0px;">
 			<div class="info-box-content">
 			<div class="page-title" style="display: flex;"><h4 class="item-name" style="margin: auto; margin-bottom: 0px;">PILIH BEKAL</h4>
 			</div>
@@ -416,7 +373,7 @@
                     var title = $(cell).text().trim();
                     var col_filter = cell.attr('tcg-column-filter');
                     if ($(api.column(colIdx).header()).index() >= 0 && col_filter == 1) {
-                        $(cell).html('<input type="text" placeholder="' + title + '"/>');
+                        $(cell).html('<input type="text" placeholder="' + title + '" style="width: 100%;"/>');
                     } else {
                         $(cell).html('');
                     }
@@ -495,22 +452,12 @@
             tdata_171_refresh(api);
         }).draw();
 
-        dt_tdata_171.on("user-select.dt", function(e, dt, type, cell, originalEvent) {
-            var $elem = $(originalEvent.target);
-            // get element clicked on
-            var tag = $elem[0].nodeName.toLowerCase();
-            // get element's tag name
+        // dt_tdata_171.on("user-select.dt", function(e, dt, type, cell, originalEvent) {
+        //     let that = dt_tdata_171;
+        //     // let api = new $.fn.dataTable.Api(settings);
+        //     tdata_171_refresh(dt);
 
-            if (!$elem.closest("div.dt-row-actions").length) {
-                return;
-                // ignore any element not in the dropdown
-            }
-
-            if (tag === "i" || tag === "a" || tag === "button") {
-                return false;
-                // cancel the select event for the row
-            }
-        });
+        // });
 		
         var tdemand_refresh = debounce(function(api) {
             //recalc responsive columns
@@ -960,7 +907,7 @@
                     window.location.href = "{$site_url}" +'auth';
                 }
                 //send toastr message
-                toastr.error(errorMessage);
+                toastr.error(textStatus);
             }
         });
 

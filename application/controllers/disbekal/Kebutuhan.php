@@ -21,9 +21,10 @@ class Kebutuhan extends Base_Crud {
         $json = array();
 
         $this->load->model('disbekal/Mdemand');
-        $status = $this->Mdemand->approve($id);
-        if ($status) {
+        $detail = $this->Mdemand->approve($id);
+        if ($detail) {
             $json['status'] = 1;
+            $json['data'] = $detail;
         } 
         else {
             $json['status'] = 0;
@@ -92,7 +93,7 @@ class Kebutuhan extends Base_Crud {
         $json = array();
 
         $this->load->model('disbekal/Mdemand');
-        $poid = $this->Mdemand->buatpengadaan($id, $year);
+        $poid = $this->Mdemand->buatpengadaan($id, $year, $ponum);
         if ($poid) {
             $json['status'] = 1;
             $json['editurl'] = site_url() .$controller. "/pengadaan/edit/" .$poid;

@@ -3,6 +3,32 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Select extends CI_Controller {
 
+    public function tahunanggaran() {
+        $year = date('Y');
+
+        $arr = array();
+        for($i=$year-5; $i<=$year+5; $i++) {
+            $arr[] = array( "value" => $i, "label" => "TA " .$i );
+        }   
+
+        $json['status'] = 1;
+        $json['data'] = $arr;
+        echo json_encode($json, JSON_INVALID_UTF8_IGNORE);	
+    }
+
+    public function tahunperencanaan() {
+        $year = date('Y');
+
+        $arr = array();
+        for($i=$year; $i<=$year+5; $i++) {
+            $arr[] = array( "value" => $i, "label" => "TA " .$i );
+        }   
+
+        $json['status'] = 1;
+        $json['data'] = $arr;
+        echo json_encode($json, JSON_INVALID_UTF8_IGNORE);	
+    }
+
     public function manufacturer()
     {
         $q = $this->input->get('q');

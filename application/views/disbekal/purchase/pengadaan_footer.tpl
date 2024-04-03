@@ -1,3 +1,45 @@
+{* This footer template is still included even in form-edit/form-detail mode. So we have to exclude part of it if necessary! *}
+
+{* This display-formatting function is used in both form-mode and table-mode *}
+<script type="text/javascript">
+    function display_pengadaan_doid(value, tipe, data) {
+        if(value === undefined || value === null || value == '' || value == 0)  return '';
+
+        let json = JSON.parse("[" +data['doid_label']+ "]");
+        if (json.length==0) {
+            return "";
+        }
+
+        let str = "";
+        for (i=0; i<json.length; i++) {
+            if (str.length > 0)     str += ", ";
+            str += json[i]["donum"] + " <a target='_blank' href='{$site_url}{$controller}/perintahterima/detail/" +json[i]["doid"]+ "'><i class='fa fas fa-external-link-alt'></i></a>";
+        }
+
+        return str;
+    }
+
+    function conditional_edit(data, row, meta) {
+        if (data['status'] == 'DRAFT') {
+            return 1;
+        }
+
+        return 0;
+    }
+
+    function conditional_delete(data, row, meta) {
+        if (data['status'] == 'DRAFT') {
+            return 1;
+        }
+
+        return 0;
+    }
+
+</script>
+
+{if empty($form_mode)}
+{* The utility functions below are only used in table-mode *}
+
 {literal}
 <script id="popover-po" type="text/template">
     <td class="child"><ul class="dtr-details">
@@ -109,26 +151,10 @@
 
     })
 
-    // function onchange_demandtype(field, oldvalue, newvalue, editor) {
-    //     if (newvalue == "0") {
-    //         editor.field('frequency').hide();
-    //         editor.field('frequencyunit').hide();
-    //         editor.field('enddate').hide();
-    //     } else {
-    //         editor.field('frequency').show();
-    //         editor.field('frequencyunit').show();
-    //         editor.field('enddate').show();
-    //     }
-    // }
-
     function onselect_pengadaan(dt, api, table_name) {
-        let data = dt.rows('.selected').data();
-
-        // let pos1 = $('.wf-state:has(#wf-pos1)');
-        // let pos2 = $('.wf-state:has(#wf-pos2)');
-        // let pos3 = $('.wf-state:has(#wf-pos3)');
-        // let pos4 = $('.wf-state:has(#wf-pos4)');
-        // let pos5 = $('.wf-state:has(#wf-pos5)');
+        let data = dt.rows({
+                selected: true
+            }).data();
 
         let states = [];
         states.push($('.wf-state:has(#wf-pos1)')); 
@@ -155,22 +181,14 @@
             };
         }
 
-        // states.forEach(pos => {
-        //     pos.popover('hide');
-        // });
-
-        // pos1.popover('hide');
-        // pos2.popover('hide');
-        // pos3.popover('hide');
-        // pos4.popover('hide');
-        // pos5.popover('hide');
-
         if (data.length == 0 || data.length > 1) {
             update_wf_images(null);
 
             states.forEach(pos => {
                 pos.disable();
             });
+
+            // $("#detail").hide();
 
             $("#tdata_93_wrapper .dt-action-buttons .dt-buttons").hide();
 
@@ -186,6 +204,9 @@
 
             return;
         }
+
+        // //show detail
+        // $("#detail").show();
 
         let po = data[0];
 
@@ -322,22 +343,6 @@
         alert("OnDelete");
     }
 
-    function conditional_edit(data, row, meta) {
-        if (data['status'] == 'DRAFT') {
-            return 1;
-        }
-
-        return 0;
-    }
-
-    function conditional_delete(data, row, meta) {
-        if (data['status'] == 'DRAFT') {
-            return 1;
-        }
-
-        return 0;
-    }
-
     function conditional_approve(data, row, meta) {
         if (data['status'] == 'DRAFT') {
             return 1;
@@ -432,7 +437,7 @@
                     window.location.href = "{$site_url}" +'auth';
                 }
                 //send toastr message
-                toastr.error(errorMessage);
+                toastr.error(textStatus);
             }
         });
         {/literal}
@@ -504,7 +509,7 @@
                                         window.location.href = "{$site_url}" +'auth';
                                     }
                                     //send toastr message
-                                    toastr.error(errorMessage);
+                                    toastr.error(textStatus);
                                 }
                             });
                         }
@@ -658,7 +663,7 @@
                                         window.location.href = "{$site_url}" +'auth';
                                     }
                                     //send toastr message
-                                    toastr.error(errorMessage);
+                                    toastr.error(textStatus);
                                 }
                             });
                         }
@@ -798,7 +803,7 @@
                                         window.location.href = "{$site_url}" +'auth';
                                     }
                                     //send toastr message
-                                    toastr.error(errorMessage);
+                                    toastr.error(textStatus);
                                 }
                             });
                         }
@@ -873,7 +878,7 @@
                                         window.location.href = "{$site_url}" +'auth';
                                     }
                                     //send toastr message
-                                    toastr.error(errorMessage);
+                                    toastr.error(textStatus);
                                 }
                             });
                         }
@@ -885,9 +890,9 @@
 
     function onclick_createpofromdemand(e, dt, node, conf) {
 
-        let itemtypeid = $("f_itemtypeid").val();
-        let siteid = $("f_siteid").val();
-        let url = "{$site_url}{$controller}/kebutuhan/lookup?itemtypeid=" +itemtypeid+ "&siteid=" +siteid;
+        let itemtypeid = $("#f_itemtypeid").val();
+        let siteid = $("#f_siteid").val();
+        let url = "{$site_url}{$controller}/kebutuhan/lookup?itemtypeid=" +(itemtypeid==null?'':itemtypeid)+ "&siteid=" +(siteid==null?'':siteid);
         editor_pofromdemand.field('demandid').ajax(url);
         editor_pofromdemand.field('demandid').reload();
 
@@ -946,7 +951,7 @@
     //                 window.location.href = "{$site_url}" +'auth';
     //             }
     //             //send toastr message
-    //             toastr.error(errorMessage);
+    //             toastr.error(textStatus);
     //         }
     //     });
     //     {/literal}
@@ -1114,23 +1119,6 @@
             $('#wf-pos5').attr("src","{$site_url}images/wf/pos5b.png");
             $('#wf-arrow-end').attr("src","{$site_url}images/wf/arrow0.png");
         }
-    }
-
-    function display_pengadaan_doid(value, tipe, data) {
-        if(value === undefined || value === null || value == '' || value == 0)  return '';
-
-        let json = JSON.parse("[" +data['doid_label']+ "]");
-        if (json.length==0) {
-            return "";
-        }
-
-        let str = "";
-        for (i=0; i<json.length; i++) {
-            if (str.length > 0)     str += ", ";
-            str += json[i]["donum"] + " <a target='_blank' href='{$site_url}{$controller}/perintahterima/detail/" +json[i]["doid"]+ "'><i class='fa fas fa-external-link-alt'></i></a>";
-        }
-
-        return str;
     }
 
 </script>
@@ -1906,6 +1894,10 @@
 
         editor_pofromdemand.on('postSubmit', function(e, json, data, action, xhr) {
 
+            //let row = v_dt.row("#" +v_id);
+            // let value = row.data();
+            // let label = value['ponum'];
+
             if (json === null || json.status === null || json.status == 0 || (json.error !== undefined && json.error !== null && json.error !== '')) {
                 //error
                 let msg = "Tidak spesifik";
@@ -1922,22 +1914,22 @@
 
             //successful - reload
             if (json.data !== undefined && json.data !== null) {
-                row.data(json.data[0]);
+                dt_tdata_150.row.add(json.data[0]);
             }
             
             toastr.success("Berhasil membuat Perintah Pengadaan baru");
 
-            onselect_pengadaan(v_dt, null, null);
+            onselect_pengadaan(dt_tdata_150, null, null);
 
         });
 
         editor_pofromdemand.on( 'open' , function ( e, type ) {
-            let year = $("f_year").val();
+            let year = $("#f_year").val();
             if (year == null || year == 0) {
                 year = new Date().getFullYear();
             }
             editor_pofromdemand.field('year').set(year);
-            editor_pofromdemand.disable();
+            editor_pofromdemand.field('year').disable();
         });
 
     });
@@ -1945,3 +1937,5 @@
 </script>
 
 {include file='crud/_js.tpl'}
+
+{/if}

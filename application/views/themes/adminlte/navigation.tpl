@@ -8,7 +8,7 @@
         <span class="brand-text font-weight-light">{$app_short_name}</span>
     </a>
 
-    <div class="sidebar">
+    <div class="sidebar" style="overflow: hidden !important;">
         <!-- Sidebar user panel (optional) -->
         <div class="user-panel mt-3 pb-3 mb-3 d-flex">
             

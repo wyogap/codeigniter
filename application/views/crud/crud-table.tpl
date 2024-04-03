@@ -7,137 +7,20 @@
 {assign var=fkey value=0}
 {/if}
 
-<style>
-    .dataTable tbody tr:hover {
-        background-color: #48a4f3 !important;
-        color: white;
-    }
 
-    .dataTable tbody tr:hover > .sorting_1 {
-        background-color: #48a4f3 !important;
-        color: white;
-    }
-
-    .dataTable tbody tr.selected:hover {
-        background-color: #0275d8 !important;
-        color: white;
-    }
-
-    .dataTable tbody tr.selected:hover > .sorting_1 {
-        background-color: #0275d8 !important;
-        color: white;
-    }
-    
-    .dataTable > tbody > tr.child:hover {
-        color: black !important;
-    }
-
-    {if $tbl.row_reorder}
-    td.reorder {
-        position: relative;
-    }
-
-    td.reorder:after {  
-        top: 16px;
-        right: 8px;
-        height: 14px;
-        width: 14px;
-        display: block;
-        position: absolute;
-        text-align: center;
-        text-indent: 0 !important;
-        font-family: 'Font Awesome 5 Free';
-        font-weight: 900;
-        line-height: 14px;
-        content: '\f0b2';
-    }
-
-    td.inline-actions {
-        padding-right: 4px !important;
-    }
-    {/if}
-
-    .editor-layout div.tab-pane.active {
-        display: flex;
-        flex-wrap: wrap;
-    }
-
-    .editor-layout div.tab-pane > .form-group {
-        flex: 0 0 100%;
-    }
-
-    thead input {
-        width: 100%;
-    }
-
-    /* so that any custom css will still align properly */
-    .DTE .form-group {
-        padding-left: 0px;
-        padding-left: 0px;
-    }
-
-    @media (min-width: 992px) {
-        /*  
-         * .dt-horizontal-2x : full horizontal field, label and field in one row, adjusted for 2 field per row
-        **/
-        .dt-horizontal-2x label {
-            -ms-flex: 0 0 16.666667% !important;
-            flex: 0 0 16.666667% !important;
-            max-width: 16.666667% !important;        
-        }
-
-        .dt-horizontal-2x div[data-dte-e="input"] {
-            -ms-flex: 0 0 83.333333% !important;
-            flex: 0 0 83.333333% !important;
-            max-width: 83.333333% !important;    
-            margin-right: -7.5px;
-            margin-left: -7.5px;    
-        }
-
-        /*  
-         * .dt-vertical : full horizontal field, input in the next row
-        **/
-        .DTE .form-group.dt-vertical label {  
-            flex: 0 0 100%;
-            max-width: 100%;
-        }
-
-        .DTE .form-group.dt-vertical div[data-dte-e="input"] {  
-            flex: 0 0 100%;
-            max-width: 100%;
-        }
-
-        /* Hack: since the input field makes most of the top padding, when the input field is under the label the top margin needs to be compensated. */
-        .dt-vertical {
-            margin-top: -1em;
-        }
-
-        /*  
-         * .dt-horizontal-6 : half row field, but empty space in the next space
-        **/
-        .dt-horizontal-6 {
-            -ms-flex: 0 0 100%;
-            flex: 0 0 100%;
-            max-width: 100%;
-        }
-
-        .dt-horizontal-6 .form-group {
-            max-width: 51%;
-        }
-
-    }
-
-</style>
 
 <div class="table-responsive-sm">
     <table id="{$tbl.table_id}" class="table table-striped dt-responsive nowrap" width="100%">
         <thead>
             <tr>
-                {if $tbl.row_select_column}
-                <th class="text-center" data-priority="1">#</th>
+                {if $tbl.row_select_column || $tbl.inline_edit}
+                <th class="text-center dt-col-select" data-priority="1">
+                <input class="dt-select-checkbox" type="checkbox" aria-label="Select all rows">
+                </th>
                 {/if}
                 {if $tbl.row_id_column}
-                <th class="text-center" data-priority="1">#</th>
+                <th class="text-center" data-priority="1">#
+                </th>
                 {/if}
                 {foreach from=$tbl.columns key=i item=col}
                     {* Hide virtual column *}
@@ -163,8 +46,8 @@
         {if $tbl.footer_row}
         <tfoot>
             <tr>
-                {if $tbl.row_select_column}
-                <th class="text-center" data-priority="1">#</th>
+                {if $tbl.row_select_column || $tbl.inline_edit}
+                <th class="text-center" data-priority="1"></th>
                 {/if}
                 {if $tbl.row_id_column}
                 <th class="text-center" data-priority="1">#</th>
@@ -215,7 +98,7 @@
         {if empty($grp.editors)} {continue} {/if}
         <div class="tab-pane {if $i==0}active{/if}" id="{$tbl.table_id}-{$grp.id}">
             {foreach from=$grp.editors key=j item=col}
-            <div class="form-group {$col.edit_css}" data-editor-template="{$col.name}"></div>
+            <div class="form-field {$col.edit_css}" data-editor-template="{$col.name}"></div>
             {/foreach}
         </div>
         {/foreach}
@@ -226,7 +109,7 @@
     <div class="tab-pane active" id="{$tbl.table_id}-1">
         {foreach from=$tbl.columns key=j item=col}
         {if !empty($col.editor)}
-        <div class="form-group {$col.editor.edit_css}" data-editor-template="{$col.editor.name}"></div>
+        <div class="form-field {$col.editor.edit_css}" data-editor-template="{$col.editor.name}"></div>
         {/if}
         {/foreach}
     </div>

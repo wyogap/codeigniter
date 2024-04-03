@@ -140,7 +140,7 @@
                     window.location.href = "{$site_url}" +'auth';
                 }
                 //send toastr message
-                toastr.error(errorMessage);
+                toastr.error(textStatus);
                 //select_build($('#edit-korwil'), '-- Semua --', '', korwil, null, _attr);
                 // select_build($('#edit-korwil'), _options, _attr);
             }

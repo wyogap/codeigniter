@@ -14,117 +14,118 @@
 
 <style>
 
-.myDivIcon {
-  text-align: center;
-  /* Horizontally center the text (icon) */
-  line-height: 20px;
-  /* Vertically center the text (icon) */
-}
+    .myDivIcon {
+        text-align: center;
+        /* Horizontally center the text (icon) */
+        line-height: 20px;
+        /* Vertically center the text (icon) */
+    }
 
-a > .info-box.bg-purple:hover {
-	background-color: #8e54f9!important;
-}
+    a > .info-box.bg-purple:hover {
+        background-color: #8e54f9!important;
+    }
 
-a > .info-box.bg-red:hover {
-	background-color: #f33c4d!important;
-}
+    a > .info-box.bg-red:hover {
+        background-color: #f33c4d!important;
+    }
 
-a > .info-box.bg-blue:hover {
-	background-color: #3293fb!important;
-}
+    a > .info-box.bg-blue:hover {
+        background-color: #3293fb!important;
+    }
 
-.highcharts-container {
-	margin: auto;
-}
+    .highcharts-container {
+        margin: auto;
+    }
 
-.info-box {
-    text-align: center;
-}
+    .info-box {
+        text-align: center;
+    }
 
-.info-box .info-box-number {
-    font-size: xx-large;
-}
+    .info-box .info-box-number {
+        font-size: xx-large;
+    }
 
-.nav-tabs > li.active > a, 
-.nav-tabs > li.active > a:focus, 
-.nav-tabs > li.active > a:hover {
-  /* background-color: #ccc !important; */
-  border-left-color: #3c8dbc !important;
-  border-right-color: #3c8dbc !important;
-}
+    .nav-tabs > li.active > a, 
+    .nav-tabs > li.active > a:focus, 
+    .nav-tabs > li.active > a:hover {
+        /* background-color: #ccc !important; */
+        border-left-color: #3c8dbc !important;
+        border-right-color: #3c8dbc !important;
+    }
 
-.nav-tabs-custom > .nav-tabs {
-    border-bottom-color: #3c8dbc;
-}
+    .nav-tabs-custom > .nav-tabs {
+        border-bottom-color: #3c8dbc;
+    }
 
-@media screen and (max-width: 480px) {
+    @media screen and (max-width: 480px) {
 
-	.nav-justified .nav-item {
-		-ms-flex-preferred-size: 0;
-		flex-basis: 100%;
-	}
-}
+        .nav-justified .nav-item {
+            -ms-flex-preferred-size: 0;
+            flex-basis: 100%;
+        }
+    }
 
-@media screen and (max-width: 767px) {
+    @media screen and (max-width: 767px) {
 
+        .navbar-toggle {
+            z-index: 999 !important;
+        }
 
-.navbar-toggle {
-	z-index: 999 !important;
-}
+        div.dataTables_paginate {
+            display: inline-block;
+            float: left !important;
+            padding-top: 0.5em !important;
+        }
 
-div.dataTables_paginate {
-	display: inline-block;
-	float: left !important;
-	padding-top: 0.5em !important;
-}
+        div.dataTables_info {
+            display: inline-block;
+            clear: left !important;
+            float: left !important;
+            padding-top: 0.835em !important;
+            margin-left: 0px;
+        }
 
-div.dataTables_info {
-	display: inline-block;
-	clear: left !important;
-	float: left !important;
-	padding-top: 0.835em !important;
-	margin-left: 0px;
-}
+        div.dataTables_length {
+            display: inline-block;
+            padding-top: 0.750em !important;
+            clear: right !important;
+            float: right !important;
+        }
 
-div.dataTables_length {
-	display: inline-block;
-	padding-top: 0.750em !important;
-	clear: right !important;
-	float: right !important;
-}
+        .nav-tabs > li.active > a, 
+        .nav-tabs > li.active > a:focus, 
+        .nav-tabs > li.active > a:hover {
+        background-color: #f4f4f4 !important; 
+        border-bottom-color: #3c8dbc !important;
+        border-left-color: #3c8dbc !important;
+        border-right-color: #3c8dbc !important;
+        }
 
-.nav-tabs > li.active > a, 
-.nav-tabs > li.active > a:focus, 
-.nav-tabs > li.active > a:hover {
-background-color: #f4f4f4 !important; 
-border-bottom-color: #3c8dbc !important;
-border-left-color: #3c8dbc !important;
-border-right-color: #3c8dbc !important;
-}
+        .tahun-selection {
+            position: relative;
+            margin-top: 5px;
+            top: 0;
+            right: 0;
+            float: none;
+            padding-left: 0px;
+            margin-left: -12px;
+        }
 
-.tahun-selection {
-	position: relative;
-	margin-top: 5px;
-	top: 0;
-	right: 0;
-	float: none;
-	padding-left: 0px;
-	margin-left: -12px;
-}
+        .navbar-collapse.pull-left + .navbar-custom-menu {
+            display: block;
+            position: absolute;
+            top: 0;
+            right: 60px !important;
+        }
 
-.navbar-collapse.pull-left + .navbar-custom-menu {
-	display: block;
-	position: absolute;
-	top: 0;
-	right: 60px !important;
-}
-
-.dropdown-menu > li > a {
-	color: #fff;
-}
-}
+        .dropdown-menu > li > a {
+            color: #fff;
+        }
+    }
 
 </style>
+
+{include file="disbekal/css.tpl"}
 
 <div class="content-header">
     <div class="container-fluid">
@@ -569,7 +570,7 @@ border-right-color: #3c8dbc !important;
                     window.location.href = "{$site_url}" +'auth';
                 }
                 //send toastr message
-                toastr.error(errorMessage);
+                toastr.error(textStatus);
 			}
         });
 
@@ -600,7 +601,7 @@ border-right-color: #3c8dbc !important;
                     window.location.href = "{$site_url}" +'auth';
                 }
                 //send toastr message
-                toastr.error(errorMessage);
+                toastr.error(textStatus);
 			}
         });
 
@@ -632,7 +633,7 @@ border-right-color: #3c8dbc !important;
                     window.location.href = "{$site_url}" +'auth';
                 }
                 //send toastr message
-                toastr.error(errorMessage);
+                toastr.error(textStatus);
 			}
         });
 
@@ -1234,7 +1235,7 @@ border-right-color: #3c8dbc !important;
                     window.location.href = "{$site_url}" +'auth';
                 }
                 //send toastr message
-                toastr.error(errorMessage);
+                toastr.error(textStatus);
             }
         });
 
@@ -1284,7 +1285,7 @@ border-right-color: #3c8dbc !important;
                     window.location.href = "{$site_url}" +'auth';
                 }
                 //send toastr message
-                toastr.error(errorMessage);
+                toastr.error(textStatus);
             }
         });
 
@@ -1329,7 +1330,7 @@ border-right-color: #3c8dbc !important;
                     window.location.href = "{$site_url}" +'auth';
                 }
                 //send toastr message
-                toastr.error(errorMessage);
+                toastr.error(textStatus);
             }
         });
 
@@ -1374,7 +1375,7 @@ border-right-color: #3c8dbc !important;
                     window.location.href = "{$site_url}" +'auth';
                 }
                 //send toastr message
-                toastr.error(errorMessage);
+                toastr.error(textStatus);
             }
         });
 
@@ -1418,7 +1419,7 @@ border-right-color: #3c8dbc !important;
                     window.location.href = "{$site_url}" +'auth';
                 }
                 //send toastr message
-                toastr.error(errorMessage);
+                toastr.error(textStatus);
             }
         });
 
@@ -1462,7 +1463,7 @@ border-right-color: #3c8dbc !important;
                     window.location.href = "{$site_url}" +'auth';
                 }
                 //send toastr message
-                toastr.error(errorMessage);
+                toastr.error(textStatus);
             }
         });
 
@@ -1507,7 +1508,7 @@ border-right-color: #3c8dbc !important;
                     window.location.href = "{$site_url}" +'auth';
                 }
                 //send toastr message
-                toastr.error(errorMessage);
+                toastr.error(textStatus);
             }
         });
 
@@ -1559,7 +1560,7 @@ border-right-color: #3c8dbc !important;
                     window.location.href = "{$site_url}" +'auth';
                 }
                 //send toastr message
-                toastr.error(errorMessage);
+                toastr.error(textStatus);
             }
         });
 
@@ -1603,7 +1604,7 @@ border-right-color: #3c8dbc !important;
                     window.location.href = "{$site_url}" +'auth';
                 }
                 //send toastr message
-                toastr.error(errorMessage);
+                toastr.error(textStatus);
             }
         });
 
@@ -1647,7 +1648,7 @@ border-right-color: #3c8dbc !important;
                     window.location.href = "{$site_url}" +'auth';
                 }
                 //send toastr message
-                toastr.error(errorMessage);
+                toastr.error(textStatus);
             }
         });
 
@@ -1699,7 +1700,7 @@ border-right-color: #3c8dbc !important;
                     window.location.href = "{$site_url}" +'auth';
                 }
                 //send toastr message
-                toastr.error(errorMessage);
+                toastr.error(textStatus);
             }
         });
 
@@ -1743,7 +1744,7 @@ border-right-color: #3c8dbc !important;
                     window.location.href = "{$site_url}" +'auth';
                 }
                 //send toastr message
-                toastr.error(errorMessage);
+                toastr.error(textStatus);
             }
         });
 
@@ -1787,7 +1788,7 @@ border-right-color: #3c8dbc !important;
                     window.location.href = "{$site_url}" +'auth';
                 }
                 //send toastr message
-                toastr.error(errorMessage);
+                toastr.error(textStatus);
             }
         });
 
@@ -1831,7 +1832,7 @@ border-right-color: #3c8dbc !important;
                     window.location.href = "{$site_url}" +'auth';
                 }
                 //send toastr message
-                toastr.error(errorMessage);
+                toastr.error(textStatus);
             }
         });
 

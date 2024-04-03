@@ -72,6 +72,9 @@
     }
 
     function conditional_approve(data, row, meta) {
+        //TODO
+        return 0;
+
         if (data['status'] == 'DRAFT') {
             return 1;
         }
@@ -80,6 +83,9 @@
     }
 
     function conditional_close(data, row, meta) {
+        //TODO
+        return 0;
+
         if (data['status'] == 'COMP') {
             return 1;
         }
@@ -137,7 +143,7 @@
                     window.location.href = "{$site_url}" +'auth';
                 }
                 //send toastr message
-                toastr.error(errorMessage);
+                toastr.error(textStatus);
             }
         });
         {/literal}
@@ -187,7 +193,7 @@
                     window.location.href = "{$site_url}" +'auth';
                 }
                 //send toastr message
-                toastr.error(errorMessage);
+                toastr.error(textStatus);
             }
         });
         {/literal}
@@ -237,7 +243,7 @@
                     window.location.href = "{$site_url}" +'auth';
                 }
                 //send toastr message
-                toastr.error(errorMessage);
+                toastr.error(textStatus);
             }
         });
         {/literal}
@@ -373,7 +379,7 @@
                                         window.location.href = "{$site_url}" +'auth';
                                     }
                                     //send toastr message
-                                    toastr.error(errorMessage);
+                                    toastr.error(textStatus);
                                 }
                             });
                         }

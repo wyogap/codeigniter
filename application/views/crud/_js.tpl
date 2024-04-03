@@ -1,5 +1,5 @@
 
-{if $crud.custom_js}
+{if isset($crud.custom_js)}
 <script type="text/javascript" defer>
     {$crud.custom_js}
 </script>
@@ -9,8 +9,6 @@
 
     var base_url = "{$base_url}";
     var site_url = "{$site_url}";
-    var ajax_url = "{$crud.ajax}";
-    var tbl_title = "{$crud.title}";
 
     var level1_name = "{if !empty($level1_name)}{$level1_name}{/if}";
     var level1_id = "{if !empty($level1_id)}{$level1_id}{/if}";

@@ -1,8 +1,8 @@
 <?php if(!defined('BASEPATH')) exit('No direct script access allowed');
 
-require_once(APPPATH.'models/Mcrud_tablemeta.php');
+require_once(APPPATH.'models/Mcrud_ext.php');
 
-class Mcontract extends Mcrud_tablemeta
+class Mcontract extends Mcrud_ext
 {
     protected static $TABLE_NAME = "tcg_contract";
     protected static $PRIMARY_KEY = "contractid";
@@ -162,6 +162,7 @@ class Mcontract extends Mcrud_tablemeta
         //build query
         $this->db->select("a.contractid as value, a.contractnum as label");
         //$this->db->from("tcg_contract a");
+        $this->db->join("tcg_po b", "b.poid=a.poid and b.is_deleted=0", "INNER");
 
         //filter
         $ci_name = null;
@@ -202,18 +203,26 @@ class Mcontract extends Mcrud_tablemeta
 
     function add($valuepair, $enforce_edit_columns = true) {
 
-        $typeid = $this->session->userdata("itemtypeid");
-        if (!empty($typeid)) {
-            //enforce
-            $valuepair['typeid'] = $typeid;
+        //must have poid
+        if (empty($valuepair['poid'])) {
+            return 0;
         }
+
+        $valuepair['status'] = 'DRAFT';
+
+        //default
+        if (empty($valuepair['contractnum'])) {
+            $valuepair['contractnum'] = 'CT0000';
+        }
+
+        //TODO: check against userdata('typeid') and userdata('siteid')
 
         $id = parent::add($valuepair, $enforce_edit_columns);
 
         if ($id > 0) {
             //run data consistency
             $pengguna_id = $this->session->userdata("user_id");
-            $this->db->query("call usp_po_dataconsistency(?,?)", array($id,$pengguna_id));
+            $this->db->query("call usp_contract_dataconsistency(?,?)", array($id,$pengguna_id));
         }
 
         return $id;
@@ -222,26 +231,25 @@ class Mcontract extends Mcrud_tablemeta
     function update($id, $valuepair, $filter = null, $enforce_edit_columns = true) {
         if ($filter == null)    $filter = array();
 
-        $typeid = $this->session->userdata("itemtypeid");
-        if (!empty($typeid)) {
-            //enforce
-            $filter['typeid'] = $typeid;
-            $valuepair['typeid'] = $typeid;
-        }
+        //TODO: check against userdata('typeid') and userdata('siteid')
 
         $result = parent::update($id, $valuepair, $filter, $enforce_edit_columns);
 
         if ($result > 0) {
             //run data consistency
             $pengguna_id = $this->session->userdata("user_id");
-            $this->db->query("call usp_po_dataconsistency(?,?)", array($id,$pengguna_id));
+            $this->db->query("call usp_contract_dataconsistency(?,?)", array($id,$pengguna_id));
         }
 
         return $result;
     }   
 
     function delete($id, $filter = null) {
+
+        //TODO: check against userdata('typeid') and userdata('siteid')
+
         parent::delete($id, $filter);
+
         //run data consistency
         $pengguna_id = $this->session->userdata("user_id");
         $this->db->query("call usp_contract_dataconsistency(?,?)", array($id,$pengguna_id));

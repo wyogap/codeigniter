@@ -80,22 +80,62 @@ class Msite extends Mcrud_tablemeta
 
     function list($filter = null, $limit = null, $offset = null, $orderby = null) {
         $this->reset_error();
+                
+        $siteid = $this->session->userdata("siteid");
+        if (!empty($filter['siteid'])) {
+            $this->load->model('disbekal/Msite');
+            $siteid = $this->Msite->check_siteid($filter['siteid']);
+        }
+        unset($filter['siteid']);
+
+        //primary key from detail
+        $pkey = null;
+        if (!empty($filter['pkey'])) {
+            $pkey = $filter['pkey'];
+        }
+        unset($filter['pkey']);
+
+        $this->db->select("a.*");
+        $this->db->select("case when a.level=0 then concat(a.orgid,'-',lpad(`a`.`siteid`,3,'0')) 
+                                when a.level=1 then concat(a.orgid,'-',lpad(`b`.`siteid`,3,'0'),'-',lpad(`a`.`siteid`,3,'0')) 
+                                else concat(a.orgid,'-',lpad(`c`.`siteid`,3,'0'),'-',lpad(`b`.`siteid`,3,'0'),'-',lpad(`a`.`siteid`,3,'0')) 
+                            end AS `compname`");
+        $this->db->select("b.sitecode as parentcode, b.name as parentname");
+        $this->db->select("coalesce(c.siteid,b.siteid) as kotamaid, coalesce(c.sitecode,b.sitecode) as kotamacode, coalesce(c.name,b.name) as kotamaname");
+        $this->db->select("d.name as orgid_label, b.name as parentid_label");
+        $this->db->from("tcg_site a");
+        $this->db->where("a.is_deleted=0");
+        $this->db->join("tcg_site b", "b.siteid=a.parentid and b.is_deleted=0", "LEFT OUTER");
+        $this->db->join("tcg_site c", "c.siteid=b.parentid and c.is_deleted=0", "LEFT OUTER");
+        $this->db->join("tcg_organisation d", "d.orgid=a.orgid and d.is_deleted=0", "LEFT OUTER");
+
+        //clean up non existing filter columns
+        $ci_name = null;
+        foreach($filter as $key => $val) {
+            $ci_name = strtoupper($key);
+            if (false !== array_search($ci_name, $this->columns)) {
+                $this->db->where("a.$key", $val);
+            }
+        }
+        if (!empty($siteid)) {
+            $this->db->group_start();
+            $this->db->where("a.siteid", $siteid);
+            $this->db->or_where("b.siteid", $siteid);
+            $this->db->or_where("c.siteid", $siteid);
+            $this->db->group_end();
+        }
+
+        //primary key from detail();
+        if (!empty($pkey)) {
+            $this->db->where("a.siteid", $pkey);
+        }
+
+        $subquery1 = $this->db->get_compiled_select();
+
+        $this->db->reset_query();
         
-        //TODO: implement other filters!
-
-        $sql = "SELECT a.*, b.sitecode as parentcode, b.name as parentname, c.siteid as kotamaid, c.sitecode as kotamacode, c.name as kotamaname, 
-            case when a.level=0 then concat(`a`.`siteid`) 
-                when a.level=1 then concat(`c`.`siteid`,'-',lpad(`a`.`siteid`,3,'0')) 
-                else concat(`c`.`siteid`,'-',lpad(`b`.`siteid`,3,'0'),'-',lpad(`a`.`siteid`,3,'0')) 
-                end AS `compname`,
-            d.name as orgid_label, b.name as parentid_label 
-        FROM tcg_site a
-        left join tcg_site b on b.siteid=a.parentid and b.is_deleted=0
-        left join tcg_site c on c.orgid=a.orgid and c.level=0 and c.is_deleted=0 and a.level>0
-        left join tcg_organisation d on d.orgid=a.orgid and d.is_deleted=0
-        where a.is_deleted=0";
-
-        $query = $this->db->query($sql);
+        $query = $this->db->query("select a.* from (" .$subquery1. ") a order by a.compname asc");
+        if ($query == null)     return $query;
 
         $result = $query->result_array();
         if ($result == null) return $result;
@@ -112,40 +152,133 @@ class Msite extends Mcrud_tablemeta
         }
 
         return $result;
+
+        // $sql = "SELECT a.*, b.sitecode as parentcode, b.name as parentname, c.siteid as kotamaid, c.sitecode as kotamacode, c.name as kotamaname, 
+        //     case when a.level=0 then concat(`a`.`siteid`) 
+        //         when a.level=1 then concat(`c`.`siteid`,'-',lpad(`a`.`siteid`,3,'0')) 
+        //         else concat(`c`.`siteid`,'-',lpad(`b`.`siteid`,3,'0'),'-',lpad(`a`.`siteid`,3,'0')) 
+        //         end AS `compname`,
+        //     d.name as orgid_label, b.name as parentid_label 
+        // FROM tcg_site a
+        // left join tcg_site b on b.siteid=a.parentid and b.is_deleted=0
+        // left join tcg_site c on c.orgid=a.orgid and c.level=0 and c.is_deleted=0 and a.level>0
+        // left join tcg_organisation d on d.orgid=a.orgid and d.is_deleted=0
+        // where a.is_deleted=0";
+
+        // $query = $this->db->query($sql);
+
+        // $result = $query->result_array();
+        // if ($result == null) return $result;
+
+        // for($i=0; $i<count($result); $i++) {
+        //     $coord = json_decode($result[$i]['latlong']);
+        //     if ($coord == null) {
+        //         $result[$i]['latitude'] = null;
+        //         $result[$i]['longitude'] = null;    
+        //     } else {
+        //         $result[$i]['latitude'] = $coord[0];
+        //         $result[$i]['longitude'] = $coord[1];
+        //     }
+        // }
+
+        // return $result;
     }    
 
     function detail($key, $filter = null) {
         $this->reset_error();
+
+        if ($filter == null)    $filter = array();
+
+        //add filter based on key
+        $filter['pkey'] = $key;
+
+        $arr = $this->list($filter);
+        if ($arr == null || count($arr) == 0)       return $arr;
+
+        return $arr[0];
               
-        //TODO: use list() for consistency
+        // $siteid = $this->session->userdata("siteid");
+        // if (!empty($filter['siteid'])) {
+        //     $this->load->model('disbekal/Msite');
+        //     $siteid = $this->Msite->check_siteid($filter['siteid']);
+        // }
+        // unset($filter['siteid']);
 
-        $sql = "SELECT a.*, b.sitecode as parentcode, b.name as parentname, c.siteid as kotamaid, c.sitecode as kotamacode, c.name as kotamaname, 
-        case when a.level=0 then concat(`a`.`siteid`) 
-            when a.level=1 then concat(`c`.`siteid`,'-',lpad(`a`.`siteid`,3,'0')) 
-            else concat(`c`.`siteid`,'-',lpad(`b`.`siteid`,3,'0'),'-',lpad(`a`.`siteid`,3,'0')) 
-            end AS `compname`,
-            d.name as orgid_label, b.name as parentid_label 
-        FROM tcg_site a
-        left join tcg_site b on b.siteid=a.parentid and b.is_deleted=0
-        left join tcg_site c on c.orgid=a.orgid and c.level=0 and c.is_deleted=0 and a.level>0
-        left join tcg_organisation d on d.orgid=a.orgid and d.is_deleted=0
-        where a.is_deleted=0 and a.siteid=?";
+        // $this->db->select("a.*");
+        // $this->db->select("case when a.level=0 then concat(a.orgid,'-',lpad(`a`.`siteid`,3,'0')) 
+        //                         when a.level=1 then concat(a.orgid,'-',lpad(`b`.`siteid`,3,'0'),'-',lpad(`a`.`siteid`,3,'0')) 
+        //                         else concat(a.orgid,'-',lpad(`c`.`siteid`,3,'0'),'-',lpad(`b`.`siteid`,3,'0'),'-',lpad(`a`.`siteid`,3,'0')) 
+        //                     end AS `compname`");
+        // $this->db->select("b.sitecode as parentcode, b.name as parentname, c.siteid as kotamaid, c.sitecode as kotamacode, c.name as kotamaname");
+        // $this->db->select("d.name as orgid_label, b.name as parentid_label");
+        // //$this->db->from("tcg_site a");
+        // $this->db->where("a.is_deleted=0");
+        // $this->db->join("tcg_site b", "b.siteid=a.parentid and b.is_deleted=0", "LEFT OUTER");
+        // $this->db->join("tcg_site c", "c.siteid=b.parentid and c.is_deleted=0", "LEFT OUTER");
+        // $this->db->join("tcg_organisation d", "d.orgid=a.orgid and d.is_deleted=0", "LEFT OUTER");
+
+        // //clean up non existing filter columns
+        // $ci_name = null;
+        // foreach($filter as $key => $val) {
+        //     $ci_name = strtoupper($key);
+        //     if (false !== array_search($ci_name, $this->columns)) {
+        //         $this->db->where("a.$key", $val);
+        //     }
+        // }
+        // if (!empty($siteid)) {
+        //     $this->db->group_start();
+        //     $this->db->where("a.siteid", $siteid);
+        //     $this->db->or_where("b.siteid", $siteid);
+        //     $this->db->or_where("c.siteid", $siteid);
+        //     $this->db->group_end();
+        // }
+
+        // $this->db->where("a.siteid", $key);
+
+        // $query = $this->db->get("tcg_site a");
+        // if ($query == null)     return $query;
+
+        // $result = $query->row_array();
+        // if ($result == null)    return $result;
+
+        // $coord = json_decode($result['latlong']);
+        // if ($coord == null) {
+        //     $result['latitude'] = null;
+        //     $result['longitude'] = null;    
+        // } else {
+        //     $result['latitude'] = $coord[0];
+        //     $result['longitude'] = $coord[1];
+        // }
+
+        // return $result;
+
+        // // $sql = "SELECT a.*, b.sitecode as parentcode, b.name as parentname, c.siteid as kotamaid, c.sitecode as kotamacode, c.name as kotamaname, 
+        // // case when a.level=0 then concat(`a`.`siteid`) 
+        // //     when a.level=1 then concat(`c`.`siteid`,'-',lpad(`a`.`siteid`,3,'0')) 
+        // //     else concat(`c`.`siteid`,'-',lpad(`b`.`siteid`,3,'0'),'-',lpad(`a`.`siteid`,3,'0')) 
+        // //     end AS `compname`,
+        // //     d.name as orgid_label, b.name as parentid_label 
+        // // FROM tcg_site a
+        // // left join tcg_site b on b.siteid=a.parentid and b.is_deleted=0
+        // // left join tcg_site c on c.orgid=a.orgid and c.level=0 and c.is_deleted=0 and a.level>0
+        // // left join tcg_organisation d on d.orgid=a.orgid and d.is_deleted=0
+        // // where a.is_deleted=0 and a.siteid=?";
    
-        $query = $this->db->query($sql, array($key));
+        // // $query = $this->db->query($sql, array($key));
 
-        $result = $query->row_array();
-        if ($result == null) return $result;
+        // // $result = $query->row_array();
+        // // if ($result == null) return $result;
 
-        $coord = json_decode($result['latlong']);
-        if ($coord == null) {
-            $result['latitude'] = null;
-            $result['longitude'] = null;    
-        } else {
-            $result['latitude'] = $coord[0];
-            $result['longitude'] = $coord[1];
-        }
+        // // $coord = json_decode($result['latlong']);
+        // // if ($coord == null) {
+        // //     $result['latitude'] = null;
+        // //     $result['longitude'] = null;    
+        // // } else {
+        // //     $result['latitude'] = $coord[0];
+        // //     $result['longitude'] = $coord[1];
+        // // }
         
-        return $result;
+        // // return $result;
     }
 
     function add($valuepair, $enforce_edit_columns = true) {
@@ -157,6 +290,8 @@ class Msite extends Mcrud_tablemeta
 
         unset($valuepair['latitude']);
         unset($valuepair['longitude']);
+
+        //TODO: enforce setting for userdata('siteid')
 
         return parent::add($valuepair, $enforce_edit_columns);
     }
@@ -171,6 +306,8 @@ class Msite extends Mcrud_tablemeta
         unset($valuepair['latitude']);
         unset($valuepair['longitude']);
 
+        //TODO: enforce setting for userdata('siteid')
+
         return parent::update($id, $valuepair, $filter, $enforce_edit_columns);
     }
 
@@ -182,17 +319,19 @@ class Msite extends Mcrud_tablemeta
             }
         }
 
+        //TODO: enforce setting for userdata('siteid')
+
         return $columns;
     }
 
     protected function __update_custom_column($table_name) {
         //concat the coordinate
-        $sql = "update " .$table_name. "
-            set latlong = concat('[\"', latitude, '\",\"', longitude, '\"]')
-            where latitude is not null and latitude!='' and longitude is not null and longitude!=''
-        ";
+        // $sql = "update " .$table_name. "
+        //     set latlong = concat('[\"', latitude, '\",\"', longitude, '\"]')
+        //     where latitude is not null and latitude!='' and longitude is not null and longitude!=''
+        // ";
 
-        $this->db->query($sql);
+        // $this->db->query($sql);
     }
 
     function lookup($filter = null) {
