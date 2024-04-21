@@ -230,12 +230,12 @@ class Mtable extends CI_Model
         return 0;
     }
 
-    public function import($file) {
+    public function import($file, $filters = null) {
         if (!$this->initialized)   return 0;
 
         //use data model
         if ($this->data_model != null) {
-            return $this->data_model->import($file);
+            return $this->data_model->import($file, $filters);
         }
 
         return 0;

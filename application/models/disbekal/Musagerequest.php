@@ -227,11 +227,8 @@ class Musagerequest extends Mcrud_ext
             $valuepair['itemtypeid'] = $typeid;
         }
 
+        //this is used to determine who can edit this usage request
         $siteid = $this->session->userdata("siteid");
-        if (!empty($valuepair['siteid'])) {
-            $this->load->model('disbekal/Msite');
-            $siteid = $this->Msite->check_siteid($valuepair['siteid']);
-        }
         if (!empty($siteid)) {
             //enforce
             $valuepair['siteid'] = $siteid;
@@ -267,11 +264,8 @@ class Musagerequest extends Mcrud_ext
             $valuepair['typeid'] = $typeid;
         }
 
+        //this is used to determine who can edit this usage request
         $siteid = $this->session->userdata("siteid");
-        if (!empty($valuepair['siteid'])) {
-            $this->load->model('disbekal/Msite');
-            $siteid = $this->Msite->check_siteid($valuepair['siteid']);
-        }
         if (!empty($siteid)) {
             //enforce
             $filter['siteid'] = $siteid;
@@ -290,14 +284,22 @@ class Musagerequest extends Mcrud_ext
     }   
 
     function delete($id, $filter = null) {
+        if ($filter == null)    $filter = array();
  
-        //TODO: check against userdata('typeid') and userdata('siteid')
+        //this is used to determine who can edit this usage request
+        $siteid = $this->session->userdata("siteid");
+        if (!empty($siteid)) {
+            //enforce
+            $filter['siteid'] = $siteid;
+        }
 
-        parent::delete($id, $filter);
+        $result = parent::delete($id, $filter);
 
         //run data consistency
         $pengguna_id = $this->session->userdata("user_id");
         $this->db->query("call usp_usage_dataconsistency(?,?)", array($id,$pengguna_id));
+
+        return $result;
     }  
 }
 

@@ -62,7 +62,7 @@ class JasperReport
         $input = FCPATH. $templatefile;  
         $output = FCPATH. $outputfile;  
         $options = [
-            'format' => ['pdf'],
+            'format' => ['xlsx'],
             'locale' => 'en',
         ];
         

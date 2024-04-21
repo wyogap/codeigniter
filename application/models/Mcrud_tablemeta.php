@@ -1992,20 +1992,42 @@ class Mcrud_tablemeta extends CI_Model
         return $id;
     }
 
-    function import($file) {
+    function import($file, $filters = null) {
         $this->reset_error();
-        
+
         if (!$this->initialized)   return 0;
 
         if (!$this->table_actions['import'])    return 0;
 
-        // $this->error['message'] = "";
+        if ($filters == null) $filters = array();
         
         $table_id = $this->table_id;
         $table_name = $this->table_name;
         $columns = $this->table_metas['columns'];
         $key_col_name = $this->table_metas['key_column'];
         $join_tables = $this->table_metas['join_tables'];
+
+        foreach($filters as $col=>$val) {
+            $found = 0;
+            for($i=0; $i<count($columns); $i++) {
+                if ($columns[$i]['name'] == $col) {
+                    $columns[$i]['visible'] = 1;
+                    $columns[$i]['allow_insert'] = 1;
+                    $columns[$i]['allow_edit'] = 1;
+                    $found = 1;
+                }
+            }
+            //add invalid filter
+            if ($found == 0) {
+                $column = array();
+                $column['name'] = $col;
+                $column['visible'] = 1;
+                $column['allow_insert'] = 1;
+                $column['allow_edit'] = 1;
+                $column['type'] == 'tcg_text';
+                $columns[] = $column;
+            }
+        }
 
         //custom columns
         $columns = $this->__get_custom_column($columns);
@@ -2053,8 +2075,17 @@ class Mcrud_tablemeta extends CI_Model
             return 0;
         }
 
+        //enforce filter value
+        if ($filters != null && count($filters)>0) {
+            $this->db->update($temp_table_name, $filters);
+        }
+        
         //check if it is an update
-        $sql = "update " .$temp_table_name. " a join " .$table_name. " b on b." .$key_col_name. "=a." .$key_col_name. " set a._update_=1";
+        $sql = "update " .$temp_table_name. " a join " .$table_name. " b on b." .$key_col_name. "=a." .$key_col_name;
+        foreach($filters as $col=>$val) {
+            $sql .= " and b." .$col. "=a." .$col;
+        }
+        $sql .= " set a._update_=1";
         //enforce level1 filter if any
         if (!empty($this->level1_filter) && count($this->level1_filter) > 0) {
             $level1_filter = '';
@@ -2124,11 +2155,13 @@ class Mcrud_tablemeta extends CI_Model
             return null;
         }
 
+        $userid = $this->session->userdata("user_id");
+
         //copy to dbo_imports
         $import_id = 0;
-        $sql = "insert into dbo_imports(table_id, filename, file_path, web_path, thumbnail_path, status, processing_start_on) " .
-                "select ?, filename, path, web_path, thumbnail_path, ?, now() from dbo_uploads where is_deleted=0 and id=?";
-        $query = $this->db->query($sql, array($table_id, "started", $upload_id));
+        $sql = "insert into dbo_imports(table_id, filename, file_path, web_path, thumbnail_path, status, processing_start_on, created_by) " .
+                "select ?, filename, path, web_path, thumbnail_path, ?, now(), ? from dbo_uploads where is_deleted=0 and id=?";
+        $query = $this->db->query($sql, array($table_id, "started", $userid, $upload_id));
         if ($query) {
             $import_id = $this->db->insert_id();
         } 
@@ -2433,6 +2466,12 @@ class Mcrud_tablemeta extends CI_Model
             $import_values[] = $value;
         }
 
+        if(count($import_values) == 0) {
+            //error message
+            $this->set_error(-1, 'No-data');
+            return 0;
+        }
+
         //batch insert
         if(!$this->db->insert_batch($temp_table_name, $import_values)) {
             //error message
@@ -2441,7 +2480,6 @@ class Mcrud_tablemeta extends CI_Model
         }
 
         return 1;
-
     }
 
     // /**
@@ -2520,6 +2558,8 @@ class Mcrud_tablemeta extends CI_Model
             $this->db->query($sql);
         }
 
+        $userid = $this->session->userdata("user_id");
+
         //insert new entry
         if ($this->table_actions['add']) {
             $column_list = implode(',', $import_columns);
@@ -2529,8 +2569,8 @@ class Mcrud_tablemeta extends CI_Model
                     $column_list .= ',$key';
                 }
             }
-            $sql = "insert into " .$table_name. "(" .$column_list. ") select " .$column_list. " from " .$temp_table_name. " where _update_ != 1";
-            $this->db->query($sql);
+            $sql = "insert into " .$table_name. "(" .$column_list. ", created_by) select " .$column_list. ", ? from " .$temp_table_name. " where _update_ != 1";
+            $this->db->query($sql, array($userid));
         }
 
         //update entry
@@ -2549,10 +2589,9 @@ class Mcrud_tablemeta extends CI_Model
                                 )
                             );
 
-            $user_id = $this->session->userdata('user_id');
             $timestamp = date('Y/m/d H:i:s');
             //update entry
-            $sql = "update " .$table_name. " a join " .$temp_table_name. " b on b." .$key_column_name. "=a." .$key_column_name. " set " .$update_list. ", a.is_deleted=0, a.updated_by=" .$user_id. ", a.updated_on='" .$timestamp. "' where b._update_=1";
+            $sql = "update " .$table_name. " a join " .$temp_table_name. " b on b." .$key_column_name. "=a." .$key_column_name. " set " .$update_list. ", a.is_deleted=0, a.updated_by=" .$userid. ", a.updated_on='" .$timestamp. "' where b._update_=1";
 
             $this->db->query($sql);
         }

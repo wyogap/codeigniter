@@ -62,13 +62,15 @@ class Mitem extends Mcrud_tablemeta
         $this->db->select("a.*");
         $this->db->select("b.name as manufacturerid_label");
         $this->db->select("c.description as categoryid_label");
-        $this->db->select("d.typecode as typeid_label");
+        //$this->db->select("d.typecode as typeid_label");
+        $this->db->select("c.typeid, d.typecode as typeid_label");
         $this->db->select("e.name as preferredvendorid_label");
         $this->db->select("f.label as issueunit_label, g.label as orderunit_label");
         //$this->db->from("tcg_item a");
         $this->db->join("tcg_manufacturer b", "b.manufacturerid=a.manufacturerid AND b.is_deleted=0", "LEFT OUTER");
         $this->db->join("tcg_itemcategory c", "c.categoryid=a.categoryid AND c.is_deleted=0", "LEFT OUTER");
-        $this->db->join("tcg_itemtype d", "d.typeid=a.typeid AND d.is_deleted=0", "LEFT OUTER");
+        //$this->db->join("tcg_itemtype d", "d.typeid=a.typeid AND d.is_deleted=0", "LEFT OUTER");
+        $this->db->join("tcg_itemtype d", "d.typeid=c.typeid AND d.is_deleted=0", "LEFT OUTER");
         $this->db->join("tcg_vendor e", "e.vendorid=a.preferredvendorid AND e.is_deleted=0", "LEFT OUTER");
         $this->db->join("lk_unit f", "f.unit=a.issueunit AND f.is_deleted=0", "LEFT OUTER");
         $this->db->join("lk_unit g", "g.unit=a.orderunit AND g.is_deleted=0", "LEFT OUTER");
@@ -85,7 +87,7 @@ class Mitem extends Mcrud_tablemeta
             }
         }
         if (!empty($typeid)) {
-            $this->db->where("a.typeid", $typeid);
+            $this->db->where("c.typeid", $typeid);
         }
         if ($fastmoving != null) {
             $this->db->where("a.fastmoving", $fastmoving);
@@ -173,7 +175,15 @@ class Mitem extends Mcrud_tablemeta
             $valuepair['typeid'] = $typeid;
         }
 
-        return parent::add($valuepair, $enforce_edit_columns);
+        $id = parent::add($valuepair, $enforce_edit_columns);
+
+        if ($id > 0) {
+            //run data consistency
+            $pengguna_id = $this->session->userdata("user_id");
+            $this->db->query("call usp_item_dataconsistency(?,?)", array($id,$pengguna_id));
+        }
+
+        return $id;
     }   
 
     function update($id, $valuepair, $filter = null, $enforce_edit_columns = true) {
@@ -183,9 +193,18 @@ class Mitem extends Mcrud_tablemeta
         if (!empty($typeid)) {
             //enforce
             $filter['typeid'] = $typeid;
+            $valuepair['typeid'] = $typeid;
         }
 
-        return parent::update($id, $valuepair, $filter, $enforce_edit_columns);
+        $result = parent::update($id, $valuepair, $filter, $enforce_edit_columns);
+
+        if ($result > 0) {
+            //run data consistency
+            $pengguna_id = $this->session->userdata("user_id");
+            $this->db->query("call usp_item_dataconsistency(?,?)", array($id,$pengguna_id));
+        }
+
+        return $result;
     }   
 
     function delete($id, $filter = null) {
@@ -197,7 +216,13 @@ class Mitem extends Mcrud_tablemeta
             $filter['typeid'] = $typeid;
         }
 
-        return parent::delete($id, $filter);
+        $result = parent::delete($id, $filter);
+
+        //run data consistency
+        $pengguna_id = $this->session->userdata("user_id");
+        $this->db->query("call usp_item_dataconsistency(?,?)", array($id,$pengguna_id));
+
+        return $result;
     }   
 
     function lookup($filter = null) {
@@ -221,7 +246,8 @@ class Mitem extends Mcrud_tablemeta
         //$this->db->from("tcg_item a");
         $this->db->join("tcg_manufacturer b", "b.manufacturerid=a.manufacturerid AND b.is_deleted=0", "LEFT OUTER");
         $this->db->join("tcg_itemcategory c", "c.categoryid=a.categoryid AND c.is_deleted=0", "LEFT OUTER");
-        $this->db->join("tcg_itemtype d", "d.typeid=a.typeid AND d.is_deleted=0", "LEFT OUTER");
+        // $this->db->join("tcg_itemtype d", "d.typeid=a.typeid AND d.is_deleted=0", "LEFT OUTER");
+        $this->db->join("tcg_itemtype d", "d.typeid=c.typeid AND d.is_deleted=0", "LEFT OUTER");
         $this->db->join("tcg_vendor e", "e.vendorid=a.preferredvendorid AND e.is_deleted=0", "LEFT OUTER");
 
         //clean up non existing filter columns
@@ -235,7 +261,7 @@ class Mitem extends Mcrud_tablemeta
             }
         }
         if (!empty($typeid)) {
-            $this->db->where("a.typeid", $typeid);
+            $this->db->where("c.typeid", $typeid);
         }
         if ($fastmoving != null) {
             $this->db->where("a.fastmoving", $fastmoving);

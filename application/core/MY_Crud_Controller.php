@@ -992,7 +992,14 @@ abstract class MY_Crud_Controller extends CI_Controller {
 				$this->json_not_authorized();
 			}
 
-			$status = $model->import($_FILES['upload']);
+            $fkey_column = $this->input->post("fkey_column");
+            $fkey_value = $this->input->post("fkey_value");
+            $filters = array();
+            if (!empty($fkey_column)) {
+                $filters[$fkey_column] = $fkey_value;
+            }
+
+			$status = $model->import($_FILES['upload'], $filters);
 
             if($status == 0) {
 				$data['status'] = 0;
@@ -1215,7 +1222,14 @@ abstract class MY_Crud_Controller extends CI_Controller {
 				$this->json_not_authorized();
 			}
 
-			$status = $model->import($_FILES['upload']);
+            $fkey_column = $this->input->post("fkey_column");
+            $fkey_value = $this->input->post("fkey_value");
+            $filters = array();
+            if (!empty($fkey_column)) {
+                $filters[$fkey_column] = $fkey_value;
+            }
+            
+			$status = $model->import($_FILES['upload'], $filters);
 
             if($status == 0) {
                 $data['error'] = $model->get_error_message();

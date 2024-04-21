@@ -1816,6 +1816,10 @@ function dt_{$tbl.table_id}_import(e, dt, node, conf){
                     var formData = new FormData();
                     formData.append("upload", file, file.name);
                     formData.append("action", "import");
+                    {if $fsubtable}
+                    formData.append("fkey_column", fkey_column_{$tbl.table_id});
+                    formData.append("fkey_value", fkey_value_{$tbl.table_id});
+                    {/if}
 
                     spinner.removeClass('d-none');
 
