@@ -96,12 +96,16 @@ class Msite extends Mcrud_tablemeta
         unset($filter['pkey']);
 
         $this->db->select("a.*");
-        $this->db->select("case when a.level=0 then concat(a.orgid,'-',lpad(`a`.`siteid`,3,'0')) 
-                                when a.level=1 then concat(a.orgid,'-',lpad(`b`.`siteid`,3,'0'),'-',lpad(`a`.`siteid`,3,'0')) 
-                                else concat(a.orgid,'-',lpad(`c`.`siteid`,3,'0'),'-',lpad(`b`.`siteid`,3,'0'),'-',lpad(`a`.`siteid`,3,'0')) 
-                            end AS `compname`");
+        // $this->db->select("case when a.level=1 then concat(a.orgid,'-',lpad(`a`.`siteid`,3,'0')) 
+        //                         when a.level=2 then concat(a.orgid,'-',lpad(`b`.`siteid`,3,'0'),'-',lpad(`a`.`siteid`,3,'0')) 
+        //                         else concat(a.orgid,'-',lpad(`c`.`siteid`,3,'0'),'-',lpad(`b`.`siteid`,3,'0'),'-',lpad(`a`.`siteid`,3,'0')) 
+        //                     end AS `compname`");
+        $this->db->select("case when a.level=1 then concat(lpad(`a`.`siteid`,3,'0')) 
+                            when a.level=2 then concat(lpad(`b`.`siteid`,3,'0'),'-',lpad(`a`.`siteid`,3,'0')) 
+                            else concat(lpad(`c`.`siteid`,3,'0'),'-',lpad(`b`.`siteid`,3,'0'),'-',lpad(`a`.`siteid`,3,'0')) 
+                        end AS `compname`");
         $this->db->select("b.sitecode as parentcode, b.name as parentname");
-        $this->db->select("coalesce(c.siteid,b.siteid) as kotamaid, coalesce(c.sitecode,b.sitecode) as kotamacode, coalesce(c.name,b.name) as kotamaname");
+        //$this->db->select("coalesce(c.siteid,b.siteid) as kotamaid, coalesce(c.sitecode,b.sitecode) as kotamacode, coalesce(c.name,b.name) as kotamaname");
         $this->db->select("d.name as orgid_label, b.name as parentid_label");
         $this->db->from("tcg_site a");
         $this->db->where("a.is_deleted=0");

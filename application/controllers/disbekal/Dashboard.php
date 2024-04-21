@@ -452,4 +452,22 @@ class Dashboard extends Base_Json {
         echo json_encode($json, JSON_INVALID_UTF8_IGNORE);	
     }
 
+    public function stokpergudangpertahunterima() {
+        $storeid = $this->input->get('s');
+
+        $this->load->model('disbekal/Mdashboard');
+        
+        $json = array();
+        $data = $this->Mdashboard->stokpergudangpertahunterima($storeid);
+        if ($data == null) {
+            $json['status'] = 0;
+            $json['message'] = 'No data';
+        }
+        else {
+            $json['status'] = 1;
+            $json['data'] = $data;
+        }
+
+        echo json_encode($json, JSON_INVALID_UTF8_IGNORE);	
+    }
 }
