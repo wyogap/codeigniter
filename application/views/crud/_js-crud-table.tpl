@@ -824,17 +824,17 @@ $(document).ready(function() {
                 {
                     extend: 'create',
                     editor: editor_{$tbl.table_id},
-                    className: 'btn-sm',
+                    className: 'btn-sm btn-primary',
                     // formOptions: {
                     //     submitTrigger: -1,
                     //     submitHtml: '<i class="fa fa-play"/>'
                     // }
-                }
+                },
                 {else if isset($tbl.table_actions) && $tbl.table_actions.add}
                 {
                     extend: "create",
                     editor: editor_{$tbl.table_id},
-                    className: 'btn-sm'
+                    className: 'btn-sm btn-primary'
                 },
                 {/if}
                 {if isset($tbl.table_actions) && $tbl.table_actions.edit && ($tbl.multi_edit || !$tbl.edit_row_action)}
@@ -1427,6 +1427,10 @@ $(document).ready(function() {
     dt_{$tbl.table_id}.buttons( 0, null ).container().find(".buttons-edit").removeClass("btn-primary");
     dt_{$tbl.table_id}.buttons( 0, null ).container().find(".buttons-remove").removeClass("btn-primary");
 
+    dt_{$tbl.table_id}.buttons( 0, null ).container().find(".buttons-edit").removeClass("btn-secondary");
+    dt_{$tbl.table_id}.buttons( 0, null ).container().find(".buttons-edit").removeClass("btn-secondary");
+    dt_{$tbl.table_id}.buttons( 0, null ).container().find(".buttons-remove").removeClass("btn-secondary");
+
     {* Button group index*}
     {assign var=idx value=0}
 
@@ -1507,6 +1511,9 @@ $(document).ready(function() {
 
     buttons.container().find(".btn-import").removeClass("btn-primary");
 
+    buttons.container().find(".btn-export").addClass("btn-secondary");
+    buttons.container().find(".btn-import").removeClass("btn-secondary");
+
     dt_{$tbl.table_id}.buttons( {$idx}, null ).container().after(
         dt_{$tbl.table_id}.buttons( {$idx+1}, null ).container()
     );
@@ -1580,6 +1587,7 @@ $(document).ready(function() {
         buttons.container().addClass('mr-md-2 mb-1 dt-custom-buttons');
 
         buttons.container().find(".btn-custom-action").removeClass("btn-primary");
+        buttons.container().find(".btn-custom-action").removeClass("btn-secondary");
 
         dt_{$tbl.table_id}.buttons( {$idx}, null ).container().after(
             dt_{$tbl.table_id}.buttons( {$idx+1}, null ).container()

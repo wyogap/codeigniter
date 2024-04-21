@@ -38,7 +38,7 @@ class Musagerequest extends Mcrud_ext
         $userid = $this->session->userdata('user_id');
 
         //call sp
-        $sql = "call usp_usage_approvex(?, ?)";
+        $sql = "call usp_usage_approve(?, ?)";
 
         $this->db->query($sql, array($id, $userid));
  

@@ -23,6 +23,8 @@
 
 {if !empty($use_datatable)}
 <!-- datatables -->
+<!-- <link href="{$base_url}assets/datatables/datatables.min.css" rel="stylesheet" type="text/css" /> -->
+
 <link href="{$base_url}assets/datatables/DataTables-1.10.20/css/dataTables.bootstrap4.css" rel="stylesheet" type="text/css" />
 <link href="{$base_url}assets/datatables/Responsive-2.2.3/css/responsive.bootstrap4.css" rel="stylesheet" type="text/css" />
 <link href="{$base_url}assets/datatables/Buttons-1.6.1/css/buttons.bootstrap4.css" rel="stylesheet" type="text/css" />
@@ -34,7 +36,10 @@
 <link href="{$base_url}assets/datatables/SearchPanes-1.4.0/css/searchPanes.bootstrap4.css" rel="stylesheet" type="text/css" >
 
 {if !empty($use_editor)}
+<!-- <link href="{$base_url}assets/datatables/editor.min.css" rel="stylesheet" type="text/css" /> -->
+
 <link href="{$base_url}assets/datatables/Editor-1.9.2/css/editor.bootstrap4.css" rel="stylesheet" type="text/css" >
+
 <link href="{$base_url}assets/datatables/tcg/dt-editor-mask.css" rel="stylesheet" />
 <link href="{$base_url}assets/datatables/tcg/dt-editor-toggle.bootstrap4.css" rel="stylesheet" />
 <link href="{$base_url}assets/datatables/tcg/dt-editor-checkbox.css" rel="stylesheet" />

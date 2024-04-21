@@ -49,6 +49,7 @@ class Wfpengadaan extends Base_Json {
             $json['error'] = $this->Mpo->get_error_message();
         }
         else {
+            //TODO: generate pdf attachment
             $json['status'] = 1;
             $json['data'] = $data;
         }

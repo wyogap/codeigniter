@@ -22,6 +22,7 @@
 
 {if !empty($use_datatable)}
 <!-- datatables -->
+<!-- <script src="{$base_url}assets/datatables/datatables.min.js" defer></script> -->
 
 <script src="{$base_url}assets/datatables/DataTables-1.10.20/js/jquery.dataTables.min.js" defer></script>
 <script src="{$base_url}assets/datatables/DataTables-1.10.20/js/dataTables.bootstrap4.min.js" defer></script>
@@ -48,6 +49,8 @@
 <script src="{$base_url}assets/datatables/SearchPanes-1.4.0/js/searchPanes.bootstrap4.min.js" defer></script>
 
 {if !empty($use_editor)}
+<!-- <script src="{$base_url}assets/datatables/editor.min.js" defer></script> -->
+
 <script src="{$base_url}assets/datatables/Editor-1.9.2/js/dataTables.editor.min.js" defer></script>
 <script src="{$base_url}assets/datatables/Editor-1.9.2/js/editor.bootstrap4.min.js" defer></script>
 

@@ -8,6 +8,22 @@ use Aws\S3\S3Client;
 
 class Playground extends CI_Controller {
 
+    public function jasperreport() {
+        $this->load->library(array('JasperReport'=>'jasper'));
+
+        $table = 'tcg_usagerequest';
+        $reporttype = null;
+        $id = 11;
+
+        $report = $this->jasper->get($table, $id, $reporttype);
+
+        if ($report != null) {
+            redirect(base_url() .$report);
+        }
+        // echo $report;
+        // //redirect(base_url() .$report);
+    }
+
 	public function index()
 	{
 		$this->load->view('playground/bubble');

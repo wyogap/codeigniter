@@ -90,6 +90,85 @@
         border-color: var(--theme-info-active);
     }
 
+    /* datatable2.x */
+    table.dataTable.table > tbody > tr.selected > * {
+        /* box-shadow: inset 0 0 0 9999px rgb(2, 117, 216); */
+        box-shadow: inset 0 0 0 9999px rgb(var(--theme-color));
+    }
+
+    table.dataTable.table.table-striped
+	> tbody
+	> tr:nth-of-type(2n + 1).selected
+	> * {
+        /* box-shadow: inset 0 0 0 9999px rgb(2, 117, 216); */
+        box-shadow: inset 0 0 0 9999px rgb(var(--theme-color));
+    }
+    table.dataTable.table.table-hover > tbody > tr.selected:hover > * {
+        /* box-shadow: inset 0 0 0 9999px rgb(2, 117, 216); */
+        box-shadow: inset 0 0 0 9999px rgb(var(--theme-color));
+    }
+
+    table.dataTable > tbody > tr > .selected {
+        background-color: var(--theme-color) !important;
+        color: black !important;
+    }
+
+    table.dataTable.dtr-inline.collapsed>tbody>tr>td.dtr-control, table.dataTable.dtr-inline.collapsed>tbody>tr>th.dtr-control {
+        position: relative;
+        padding-left: 30px;
+        cursor: pointer;
+    }
+
+    table.dataTable.dtr-inline.collapsed > tbody > tr > td.dtr-control:before, 
+    table.dataTable.dtr-inline.collapsed > tbody > tr > th.dtr-control:before {
+        top: 12px;
+        left: 8px;
+        height: 14px;
+        width: 14px;
+        display: block;
+        position: absolute;
+        color: white;
+        box-shadow: 0 0 3px #444;
+        box-sizing: content-box;
+        text-align: center;
+        text-indent: 0 !important;
+        font-family: 'Courier New', Courier, monospace;
+        line-height: 14px;
+        border: 2px solid white;
+        border-radius: 14px;
+        content: '+';
+        background-color: #0275d8;
+    }            
+
+    table.dataTable.dtr-inline.collapsed > tbody > tr.dtr-expanded > td.dtr-control:before, 
+    table.dataTable.dtr-inline.collapsed > tbody > tr.dtr-expanded > th.dtr-control:before {        
+        /* top: 12px;
+        left: 4px;
+        height: 14px;
+        width: 14px;
+        display: block;
+        position: absolute;
+        color: white;
+        box-shadow: 0 0 3px #444;
+        box-sizing: content-box;
+        text-align: center;
+        text-indent: 0 !important;
+        font-family: 'Courier New', Courier, monospace;
+        line-height: 14px; */
+        border: 2px solid white;
+        border-radius: 14px;
+        content: '-';
+        background-color: #d33333;
+    }   
+
+    div.dt-container div.dt-paging {
+        padding-top: 0.5em;
+        white-space: nowrap;
+        float: right;
+    }    
+
+    /* end of datatable2.x */
+
     .dataTable tbody tr:hover {
         background-color: var(--theme-primary) !important;
         color: black;

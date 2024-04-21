@@ -23,6 +23,7 @@ class Manalisastok extends Mcrud_tablemeta
             $sql = "
             select MONTH(a.deliverydate) as `month`, sum(count) as cnt
             from (
+                /* pengadaan */
                 select 
                     a.poid, a.ponum, coalesce(c.contractid) as contractid, coalesce(c.contractnum) as contractnum
                     , a.status
@@ -67,6 +68,7 @@ class Manalisastok extends Mcrud_tablemeta
 
                 union all
 
+                /* langsung invreceive */
                 SELECT null as poid, ponum, null as contractid, contractnum
                     , 'COMP' as status
                     , a.receiveddate as deliverydate
@@ -294,9 +296,10 @@ class Manalisastok extends Mcrud_tablemeta
             $sql = "
             SELECT MONTH(a.writeoffdate) as `month`, sum(a.count) as cnt 
             FROM tcg_invstatus a
+            join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0 
             where a.is_deleted=0
                 and a.writeoff=1
-                and a.itemid=" .$itemid. "
+                and b.itemid=" .$itemid. "
                 and YEAR(a.writeoffdate)=" .$year. "
             group by MONTH(a.writeoffdate)
             ";
@@ -307,13 +310,14 @@ class Manalisastok extends Mcrud_tablemeta
             $sql = "
             SELECT MONTH(a.writeoffdate) as `month`, sum(a.count) as cnt 
             FROM tcg_invstatus a
-            join tcg_store b on b.storeid=a.storeid and b.is_deleted=0
-            join tcg_site x on x.siteid=b.siteid and x.is_deleted=0
+            join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0 
+            join tcg_store c on c.storeid=b.storeid and c.is_deleted=0
+            join tcg_site x on x.siteid=c.siteid and x.is_deleted=0
 			left join tcg_site y on y.siteid=x.parentid and y.is_deleted=0
 			left join tcg_site z on z.siteid=y.parentid and z.is_deleted=0
             where a.is_deleted=0
                 and a.writeoff=1
-                and a.itemid=" .$itemid. "
+                and b.itemid=" .$itemid. "
                 and YEAR(a.writeoffdate)=" .$year. "
 			and (x.siteid=" .$siteid. " or y.siteid=" .$siteid. " or z.siteid=" .$siteid. ")
             group by MONTH(a.writeoffdate)
@@ -356,7 +360,7 @@ class Manalisastok extends Mcrud_tablemeta
             select sum(a.availableamount) as stock
             from rpt_invsnapshot a
             join tcg_store b on b.storeid=a.storeid and a.is_deleted=0
-            join tcg_site x on x.siteid=c.siteid and x.is_deleted=0
+            join tcg_site x on x.siteid=b.siteid and x.is_deleted=0
 			left join tcg_site y on y.siteid=x.parentid and y.is_deleted=0
 			left join tcg_site z on z.siteid=y.parentid and z.is_deleted=0
             where a.snapshotdate=concat(" .$year. ",'-01-01') and a.is_deleted=0
@@ -393,9 +397,10 @@ class Manalisastok extends Mcrud_tablemeta
             $sql = "
             SELECT a.writeoffdate, a.status, sum(a.count) as count 
             FROM tcg_invstatus a
+            join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0 
             where a.is_deleted=0
                 and a.writeoff=1
-                and a.itemid=" .$itemid. "
+                and b.itemid=" .$itemid. "
                 and YEAR(a.writeoffdate)=" .$year. "
             group by a.writeoffdate, a.status
             ";
@@ -406,13 +411,14 @@ class Manalisastok extends Mcrud_tablemeta
             $sql = "
             SELECT a.writeoffdate, a.status, sum(a.count) as count 
             FROM tcg_invstatus a
-            join tcg_store b on b.storeid=a.storeid and b.is_deleted=0
-            join tcg_site x on x.siteid=b.siteid and x.is_deleted=0
+            join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0 
+            join tcg_store c on c.storeid=b.storeid and c.is_deleted=0
+            join tcg_site x on x.siteid=c.siteid and x.is_deleted=0
 			left join tcg_site y on y.siteid=x.parentid and y.is_deleted=0
 			left join tcg_site z on z.siteid=y.parentid and z.is_deleted=0
             where a.is_deleted=0
                 and a.writeoff=1
-                and a.itemid=" .$itemid. "
+                and b.itemid=" .$itemid. "
                 and YEAR(a.writeoffdate)=" .$year. "
 			and (x.siteid=" .$siteid. " or y.siteid=" .$siteid. " or z.siteid=" .$siteid. ")
             group by a.writeoffdate, a.status
@@ -751,9 +757,10 @@ class Manalisastok extends Mcrud_tablemeta
                 , coalesce(i.count,0)-coalesce(h.count,0) as transfer
                 , coalesce(j.count,0) as writeoff
             from (
+                /* yang ada di stock -> invusage sudah tercover di sini*/
                 SELECT distinct a.itemid
                 FROM rpt_invsnapshot a
-                where a.is_deleted=0 -- and a.poid is null
+                where a.is_deleted=0 /* and a.poid is null */
                     and a.snapshotdate=concat(" .$year. ",'-01-01')
             
                 union
@@ -772,7 +779,7 @@ class Manalisastok extends Mcrud_tablemeta
                     and a.financial_year=" .$year. "
             ) a
             left join (
-                -- stock awal tahun
+                /* stock awal tahun */
                 select a.itemid, sum(a.availableamount) as stock
                 from rpt_invsnapshot a
                 where a.is_deleted=0
@@ -780,7 +787,7 @@ class Manalisastok extends Mcrud_tablemeta
                 group by a.itemid
             ) b on b.itemid=a.itemid
             left join (
-                -- bekal masuk tanpa PO (initial data)
+                /* bekal masuk tanpa PO (initial data) */
                 select a.itemid, sum(a.receivedamount) as count
                 from tcg_invreceive a
                 where a.is_deleted=0 and a.status!='DRAFT'
@@ -788,36 +795,47 @@ class Manalisastok extends Mcrud_tablemeta
                 group by a.itemid
             ) c on c.itemid=a.itemid
             left join (
-                -- bekal masuk: delivered
+                /* bekal masuk: delivered -> po yang sudah COMP / CLOSED pasti sudah lewat ini*/
                 select b.itemid, sum(b.count) as count
                 from tcg_contract a
                 join tcg_contractitem b on b.contractid=a.contractid and b.is_deleted=0
                 join tcg_po c on c.poid=a.poid and c.is_deleted=0
-                where a.is_deleted=0 and (a.status='COMP' or a.status='CLOSED')
+                where a.is_deleted=0
+                    /* contract status -> sudah selesai */ 
+                    and (a.status='COMP' or a.status='CLOSED')
                     and c.financial_year=" .$year. "
                 group by b.itemid
             ) d on d.itemid=a.itemid
             left join (
-                -- bekal masuk: belum/sedang delivery
+                /* bekal masuk: belum/sedang delivery */
                 select b.itemid, sum(b.count) as count
                 from tcg_contract a
                 join tcg_contractitem b on b.contractid=a.contractid and b.is_deleted=0
                 join tcg_po c on c.poid=a.poid and c.is_deleted=0
-                where a.is_deleted=0 and a.status='APPR'
+                where a.is_deleted=0 
+                    /* contract status -> belum selesai */ 
+                    and a.status='APPR'
                     and c.financial_year=" .$year. "
                 group by b.itemid
             ) e on e.itemid=a.itemid
             left join (
-                -- bekal masuk: belum kontrak
+                /* bekal masuk: belum kontrak */
                 select b.itemid, sum(b.count) as count
                 from tcg_po a
                 join tcg_poitem b on b.poid=a.poid and b.is_deleted=0
-                where a.is_deleted=0 and a.status in ('APPR', 'TENDER')
+                left join tcg_contract c on c.contractid=a.contractid and c.is_deleted=0
+                where a.is_deleted=0 
+                    and (
+                        /* po belum/dalam tender */
+                        a.status in ('APPR', 'TENDER') 
+                        /* po sudah contrak (tender selesai) tapi contract belum disetujui */
+                        or (a.status = 'CONTRACT' and c.status = 'DRAFT')
+                    )
                     and a.financial_year=" .$year. "
                 group by b.itemid
             ) f on f.itemid=a.itemid
             left join (
-                -- bekal keluar
+                /* bekal keluar */
                 SELECT b.itemid, sum(b.count) as count 
                 FROM tcg_usagerequest a
                 join tcg_usagerequestitem b on b.usagerequestid=a.usagerequestid and b.is_deleted=0
@@ -826,7 +844,7 @@ class Manalisastok extends Mcrud_tablemeta
                 group by b.itemid
             ) g on g.itemid=a.itemid
             left join (
-                -- transfer out
+                /* transfer out */
                 SELECT b.itemid, sum(b.count) as count 
                 FROM tcg_transferrequest a
                 join tcg_transferrequestitem b on b.transferrequestid=a.transferrequestid and b.is_deleted=0
@@ -836,7 +854,7 @@ class Manalisastok extends Mcrud_tablemeta
                 group by b.itemid
             ) h on h.itemid=a.itemid
             left join (
-                -- transfer-in
+                /* transfer-in */
                 SELECT b.itemid, sum(b.count) as count 
                 FROM tcg_transferrequest a
                 join tcg_transferrequestitem b on b.transferrequestid=a.transferrequestid and b.is_deleted=0
@@ -846,13 +864,14 @@ class Manalisastok extends Mcrud_tablemeta
                 group by b.itemid
             ) i on i.itemid=a.itemid
             left join (
-                -- hapus buku
-                SELECT a.itemid, sum(a.count) as count 
+                /* hapus buku */
+                SELECT b.itemid, sum(a.count) as count 
                 FROM tcg_invstatus a
+                join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0 
                 where a.is_deleted=0
                     and a.writeoff=1
                     and YEAR(a.writeoffdate)=" .$year. "
-                group by a.itemid
+                group by b.itemid
             ) j on j.itemid=a.itemid
             join tcg_item x on x.itemid=a.itemid and x.is_deleted=0
             join tcg_itemcategory y on y.categoryid=x.categoryid and y.is_deleted=0
@@ -888,7 +907,7 @@ class Manalisastok extends Mcrud_tablemeta
                 join tcg_site x on x.siteid=b.siteid and x.is_deleted=0
                 left join tcg_site y on y.siteid=x.parentid and y.is_deleted=0
                 left join tcg_site z on z.siteid=y.parentid and z.is_deleted=0
-                where a.is_deleted=0 -- and a.poid is null
+                where a.is_deleted=0 /* and a.poid is null */
                     and a.snapshotdate=concat(" .$year. ",'-01-01')
                     and (x.siteid=" .$siteid. " or y.siteid=" .$siteid. " or z.siteid=" .$siteid. ")
             
@@ -917,7 +936,7 @@ class Manalisastok extends Mcrud_tablemeta
                     and (x.siteid=" .$siteid. " or y.siteid=" .$siteid. " or z.siteid=" .$siteid. ")
             ) a
             left join (
-                -- stock awal tahun
+                /* stock awal tahun */
                 select a.itemid, sum(a.availableamount) as stock
                 from rpt_invsnapshot a
                 join tcg_store b on b.storeid=a.storeid and b.is_deleted=0
@@ -930,7 +949,7 @@ class Manalisastok extends Mcrud_tablemeta
                 group by a.itemid
             ) b on b.itemid=a.itemid
             left join (
-                -- bekal masuk tanpa PO (initial data)
+                /* bekal masuk tanpa PO (initial data) */
                 select a.itemid, sum(a.receivedamount) as count
                 from tcg_invreceive a
                 join tcg_store b on b.storeid=a.storeid and b.is_deleted=0
@@ -943,7 +962,7 @@ class Manalisastok extends Mcrud_tablemeta
                 group by a.itemid
             ) c on c.itemid=a.itemid
             left join (
-                -- bekal masuk: delivered
+                /* bekal masuk: delivered -> po yang sudah COMP / CLOSED pasti sudah lewat ini*/
                 select b.itemid, sum(b.count) as count
                 from tcg_contract a
                 join tcg_contractitem b on b.contractid=a.contractid and b.is_deleted=0
@@ -951,13 +970,15 @@ class Manalisastok extends Mcrud_tablemeta
                 join tcg_site x on x.siteid=c.siteid and x.is_deleted=0
                 left join tcg_site y on y.siteid=x.parentid and y.is_deleted=0
                 left join tcg_site z on z.siteid=y.parentid and z.is_deleted=0
-                where a.is_deleted=0 and (a.status='COMP' or a.status='CLOSED')
+                where a.is_deleted=0 
+                    /* contract status -> sudah selesai */ 
+                    and (a.status='COMP' or a.status='CLOSED')
                     and c.financial_year=" .$year. "
                     and (x.siteid=" .$siteid. " or y.siteid=" .$siteid. " or z.siteid=" .$siteid. ")
                 group by b.itemid
             ) d on d.itemid=a.itemid
             left join (
-                -- bekal masuk: belum/sedang delivery
+                /* bekal masuk: belum/sedang delivery */
                 select b.itemid, sum(b.count) as count
                 from tcg_contract a
                 join tcg_contractitem b on b.contractid=a.contractid and b.is_deleted=0
@@ -965,26 +986,35 @@ class Manalisastok extends Mcrud_tablemeta
                 join tcg_site x on x.siteid=c.siteid and x.is_deleted=0
                 left join tcg_site y on y.siteid=x.parentid and y.is_deleted=0
                 left join tcg_site z on z.siteid=y.parentid and z.is_deleted=0
-                where a.is_deleted=0 and a.status='APPR'
+                where a.is_deleted=0 
+                    /* contract status -> belum selesai */ 
+                    and a.status='APPR'
                     and c.financial_year=" .$year. "
                     and (x.siteid=" .$siteid. " or y.siteid=" .$siteid. " or z.siteid=" .$siteid. ")
                 group by b.itemid
             ) e on e.itemid=a.itemid
             left join (
-                -- bekal masuk: belum kontrak
+                /* bekal masuk: belum kontrak */
                 select b.itemid, sum(b.count) as count
                 from tcg_po a
                 join tcg_poitem b on b.poid=a.poid and b.is_deleted=0
+                left join tcg_contract c on c.contractid=a.contractid and c.is_deleted=0
                 join tcg_site x on x.siteid=a.siteid and x.is_deleted=0
                 left join tcg_site y on y.siteid=x.parentid and y.is_deleted=0
                 left join tcg_site z on z.siteid=y.parentid and z.is_deleted=0
-                where a.is_deleted=0 and a.status in ('APPR', 'TENDER')
+                where a.is_deleted=0 
+                    and (
+                        /* po belum/dalam tender */
+                        a.status in ('APPR', 'TENDER') 
+                        /* po sudah contrak (tender selesai) tapi contract belum disetujui */
+                        or (a.status = 'CONTRACT' and c.status = 'DRAFT')
+                    )
                     and a.financial_year=" .$year. "
                     and (x.siteid=" .$siteid. " or y.siteid=" .$siteid. " or z.siteid=" .$siteid. ")
                 group by b.itemid
             ) f on f.itemid=a.itemid
             left join (
-                -- bekal keluar
+                /* bekal keluar */
                 SELECT b.itemid, sum(b.count) as count 
                 FROM tcg_usagerequest a
                 join tcg_usagerequestitem b on b.usagerequestid=a.usagerequestid and b.is_deleted=0
@@ -997,7 +1027,7 @@ class Manalisastok extends Mcrud_tablemeta
                 group by b.itemid
             ) g on g.itemid=a.itemid
             left join (
-                -- transfer out
+                /* transfer out */
                 SELECT b.itemid, sum(b.count) as count 
                 FROM tcg_transferrequest a
                 join tcg_transferrequestitem b on b.transferrequestid=a.transferrequestid and b.is_deleted=0
@@ -1012,7 +1042,7 @@ class Manalisastok extends Mcrud_tablemeta
                 group by b.itemid
             ) h on h.itemid=a.itemid
             left join (
-                -- transfer-in
+                /* transfer-in */
                 SELECT b.itemid, sum(b.count) as count 
                 FROM tcg_transferrequest a
                 join tcg_transferrequestitem b on b.transferrequestid=a.transferrequestid and b.is_deleted=0
@@ -1027,18 +1057,19 @@ class Manalisastok extends Mcrud_tablemeta
                 group by b.itemid
             ) i on i.itemid=a.itemid
             left join (
-                -- hapus buku
-                SELECT a.itemid, sum(a.count) as count 
+                /* hapus buku */
+                SELECT b.itemid, sum(a.count) as count 
                 FROM tcg_invstatus a
-                join tcg_store b on b.storeid=a.storeid and b.is_deleted=0
-                join tcg_site x on x.siteid=b.siteid and x.is_deleted=0
+                join tcg_inventory b on b.inventoryid=a.inventoryid and b.is_deleted=0 
+                join tcg_store c on c.storeid=b.storeid and c.is_deleted=0
+                join tcg_site x on x.siteid=c.siteid and x.is_deleted=0
                 left join tcg_site y on y.siteid=x.parentid and y.is_deleted=0
                 left join tcg_site z on z.siteid=y.parentid and z.is_deleted=0
                 where a.is_deleted=0
                     and a.writeoff=1
                     and YEAR(a.writeoffdate)=" .$year. "
                     and (x.siteid=" .$siteid. " or y.siteid=" .$siteid. " or z.siteid=" .$siteid. ")
-                group by a.itemid
+                group by b.itemid
             ) j on j.itemid=a.itemid
             join tcg_item x on x.itemid=a.itemid and x.is_deleted=0
             join tcg_itemcategory y on y.categoryid=x.categoryid and y.is_deleted=0

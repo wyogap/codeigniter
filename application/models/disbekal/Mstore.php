@@ -14,6 +14,12 @@ class Mstore extends Mcrud_tablemeta
 
     protected static $SOFT_DELETE = true;
 
+    /**
+     * Akses gudang:
+     * - Satuan kerja langsung
+     * - Satuan kerja di bawahnya (semua level)
+     * - Satuan kerja 1 level di atasnya
+     */
     function lookup($filter = null) {
         $this->reset_error();
         

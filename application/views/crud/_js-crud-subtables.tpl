@@ -54,8 +54,5 @@ $(document).ready(function() {
 
 {foreach $subtables as $subtbl}
     {include file="crud/_js-crud-table.tpl" tbl=$subtbl.crud fsubtable='1' fkey=$subtbl.subtable_fkey_column flabel=$subtbl.label}
-    
-    //default disable edit in subtable
-    $("#{$subtbl.crud.table_id}_wrapper .dt-action-buttons .dt-buttons").hide();
 {/foreach}
 

@@ -128,6 +128,7 @@ class Wfinventory extends Base_Json {
             $json['error'] = $this->Musagerequest->get_error_message();
         }
         else {
+            //TODO: generate pdf report
             $json['status'] = 1;
             $json['data'] = $data;
         }
@@ -150,6 +151,7 @@ class Wfinventory extends Base_Json {
             $json['error'] = $this->Mtransferrequest->get_error_message();
         }
         else {
+            //TODO: generate pdf report
             $json['status'] = 1;
             $json['data'] = $data;
         }
@@ -201,4 +203,7 @@ class Wfinventory extends Base_Json {
         echo json_encode($json, JSON_INVALID_UTF8_IGNORE);	
     }    
 
+    protected function createattachmentur() {
+        //TODO
+    }
 }

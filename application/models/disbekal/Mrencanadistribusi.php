@@ -249,9 +249,10 @@ class Mrencanadistribusi extends Mcrud_tablemeta
 
         if (empty($siteid)) {
             $sql = "
-            select a.*, b.count
+            select a.*, b.count, c.contractid, c.contractnum
             from tcg_po a
             join tcg_poitem b on b.poid=a.poid and b.is_deleted=0
+            left join tcg_contract c on c.contractid=a.contractid and c.is_deleted=0
             where a.status != 'DRAFT' and a.is_deleted=0
                 and a.financial_year=" .$year. "
                 and b.itemid=" .$itemid. "
@@ -259,9 +260,10 @@ class Mrencanadistribusi extends Mcrud_tablemeta
         } 
         else {
             $sql = "
-            select a.*, b.count
+            select a.*, b.count, c.contractid, c.contractnum
             from tcg_po a
             join tcg_poitem b on b.poid=a.poid and b.is_deleted=0
+            left join tcg_contract c on c.contractid=a.contractid and c.is_deleted=0
             join tcg_site x on x.siteid=a.siteid and x.is_deleted=0
 			left join tcg_site y on y.siteid=x.parentid and y.is_deleted=0
 			left join tcg_site z on z.siteid=y.parentid and z.is_deleted=0

@@ -392,7 +392,7 @@
                     var title = $(cell).text().trim();
                     var col_filter = cell.attr('tcg-column-filter');
                     if ($(api.column(colIdx).header()).index() >= 0 && col_filter == 1) {
-                        $(cell).html('<input type="text" placeholder="' + title + '"/>');
+                        $(cell).html('<input type="text" placeholder="' + title + '" style="width: 100%;"/>');
                     } else {
                         $(cell).html('');
                     }

@@ -418,7 +418,7 @@ class Mcrud_tablemeta extends CI_Model
             $row_action['label'] = "Edit";
             $row_action['icon'] = "fa fa-edit fas";
             $row_action['icon_only'] = true;
-            $row_action['css'] = "btn-info";
+            $row_action['css'] = "btn-inline-edit btn-info";
             $row_action['onclick_js'] = "dt_tdata_".$this->table_id."_edit_row";
             if(!empty($this->table_actions['edit_conditional_js'])) {
                 $row_action['conditional_js'] = $this->table_actions['edit_conditional_js'];
@@ -433,7 +433,7 @@ class Mcrud_tablemeta extends CI_Model
             $row_action['label'] = "Delete";
             $row_action['icon'] = "fa fa-trash fas";
             $row_action['icon_only'] = true;
-            $row_action['css'] = "btn-danger";
+            $row_action['css'] = "btn-inline-delete btn-danger";
             $row_action['onclick_js'] = "dt_tdata_".$this->table_id."_delete_row";
             if(!empty($this->table_actions['delete_conditional_js'])) {
                 $row_action['conditional_js'] = $this->table_actions['delete_conditional_js'];
